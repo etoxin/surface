@@ -200,7 +200,7 @@ Example:
 ```surf
 surface-lang 0.1
 
-application expense_manager {
+application expenseManager {
     name = "Expense Manager"
     version = "0.1.0"
     purpose = "Manage employee expenses."
@@ -214,7 +214,7 @@ application expense_manager {
 The fundamental unit of Surface Language is a declaration.
 
 ```surf
-declaration_type identifier {
+declarationType identifier {
     attribute = value
 }
 ```
@@ -289,7 +289,7 @@ An identifier:
 * MUST begin with an ASCII letter;
 * MAY contain ASCII letters;
 * MAY contain digits;
-* MAY contain underscores;
+* MUST NOT contain underscores;
 * MUST NOT contain spaces;
 * MUST NOT contain periods;
 * MUST NOT contain hyphens in version 0.1;
@@ -300,8 +300,8 @@ Valid identifiers:
 ```text
 employee
 expense
-expense_submit
-approval_policy
+expenseSubmit
+approvalPolicy
 manager2
 ```
 
@@ -312,9 +312,10 @@ Invalid identifiers:
 expense.submit
 expense-submit
 expense submit
+expense_submit
 ```
 
-The recommended identifier style is lowercase `snake_case`.
+Identifiers SHOULD use lower camel case (`camelCase`).
 
 Keywords MUST NOT be used as identifiers.
 
@@ -414,9 +415,9 @@ Strings are case-sensitive.
 Surface Language supports integers and decimal numbers.
 
 ```surf
-maximum_attempts = 5
-approval_limit = 7500.00
-minimum_amount = 0.01
+maximumAttempts = 5
+approvalLimit = 7500.00
+minimumAmount = 0.01
 temperature = -5
 ```
 
@@ -449,7 +450,7 @@ $20
 Units and currencies SHOULD be represented using objects.
 
 ```surf
-approval_limit = {
+approvalLimit = {
     amount = 7500
     currency = "AUD"
 }
@@ -564,7 +565,7 @@ References begin with `@`.
 Reference format:
 
 ```surf
-@declaration_type.identifier
+@declarationType.identifier
 ```
 
 Examples:
@@ -572,8 +573,8 @@ Examples:
 ```surf
 @actor.employee
 @entity.expense
-@event.expense_submitted
-@behavior.expense_submit
+@event.expenseSubmitted
+@behavior.expenseSubmit
 ```
 
 The segment before the period identifies the declaration type.
@@ -587,13 +588,13 @@ Forward references are permitted.
 Example:
 
 ```surf
-behavior expense_submit {
+behavior expenseSubmit {
     emits = [
-        @event.expense_submitted,
+        @event.expenseSubmitted,
     ]
 }
 
-event expense_submitted {
+event expenseSubmitted {
     name = "Expense Submitted"
 }
 ```
@@ -658,19 +659,22 @@ deployment
 extension
 ```
 
-Tools MAY support custom declaration types beginning with `x_`.
+Tools MAY support custom declaration types beginning with `x` followed by an
+uppercase ASCII letter.
 
 Example:
 
 ```surf
-x_analytics reporting {
+xAnalytics reporting {
     provider = "Example Analytics"
 }
 ```
 
-A custom declaration type MUST begin with `x_`.
+A custom declaration type MUST begin with `x` followed by an uppercase ASCII
+letter, as in `xAnalytics`.
 
-Unknown declaration types that do not begin with `x_` MUST produce a validation error.
+Unknown declaration types that do not use this prefix MUST produce a validation
+error.
 
 ---
 
@@ -679,7 +683,7 @@ Unknown declaration types that do not begin with `x_` MUST produce a validation 
 A project MUST contain exactly one `application` declaration.
 
 ```surf
-application expense_manager {
+application expenseManager {
     name = "Expense Manager"
     version = "0.1.0"
 
@@ -688,10 +692,10 @@ application expense_manager {
     and managers to review eligible submissions.
     """
 
-    specification_status = structured_draft
+    specificationStatus = structuredDraft
     locale = "en-AU"
     timezone = "Australia/Sydney"
-    default_currency = "AUD"
+    defaultCurrency = "AUD"
 }
 ```
 
@@ -711,10 +715,10 @@ An `application` declaration MAY contain:
 
 ```text
 description
-specification_status
+specificationStatus
 locale
 timezone
-default_currency
+defaultCurrency
 owners
 repository
 documentation
@@ -723,14 +727,14 @@ tags
 
 ## 25.3 Specification Status
 
-The recommended `specification_status` values are:
+The recommended `specificationStatus` values are:
 
 ```text
 concept
-structured_draft
-prototype_ready
-implementation_ready
-production_review
+structuredDraft
+prototypeReady
+implementationReady
+productionReview
 ```
 
 These values describe maturity only. They do not guarantee completeness or correctness.
@@ -781,7 +785,7 @@ external
 Example:
 
 ```surf
-actor payment_provider {
+actor paymentProvider {
     name = "Payment Provider"
     kind = external
 }
@@ -814,7 +818,7 @@ entity expense {
         },
         {
             id = "status"
-            type = @enum.expense_status
+            type = @enum.expenseStatus
             required = true
             default = "draft"
         },
@@ -855,8 +859,8 @@ generated
 unique
 minimum
 maximum
-minimum_length
-maximum_length
+minimumLength
+maximumLength
 sensitive
 deprecated
 examples
@@ -901,7 +905,7 @@ Primitive types are descriptive in version 0.1 and do not yet have normative run
 A `value` represents a reusable domain value without an independent application identity.
 
 ```surf
-value email_address {
+value emailAddress {
     name = "Email Address"
     base = "string"
 
@@ -939,7 +943,7 @@ examples
 An `enum` declares a fixed set of allowed symbolic values.
 
 ```surf
-enum expense_status {
+enum expenseStatus {
     values = [
         "draft",
         "submitted",
@@ -965,7 +969,7 @@ Enum values:
 An `event` represents something that has occurred within or outside the application.
 
 ```surf
-event expense_submitted {
+event expenseSubmitted {
     name = "Expense Submitted"
 
     payload = [
@@ -975,7 +979,7 @@ event expense_submitted {
             required = true
         },
         {
-            id = "submitted_by"
+            id = "submittedBy"
             type = @entity.user
             required = true
         },
@@ -1002,12 +1006,12 @@ Each payload field SHOULD follow the same structure as an entity field.
 A `behavior` describes an operation that may change application state or cause an external effect.
 
 ```surf
-behavior expense_submit {
+behavior expenseSubmit {
     name = "Submit Expense"
 
     actor = @actor.employee
     resource = @entity.expense
-    policy = @policy.expense_submit
+    policy = @policy.expenseSubmit
 
     inputs = [
         {
@@ -1026,18 +1030,18 @@ behavior expense_submit {
     effects = [
         "Set the expense status to submitted.",
         "Record the submission timestamp.",
-        "Emit the expense_submitted event.",
+        "Emit the expenseSubmitted event.",
     ]
 
     emits = [
-        @event.expense_submitted,
+        @event.expenseSubmitted,
     ]
 
     errors = [
-        "expense_not_found",
-        "permission_denied",
-        "invalid_expense_state",
-        "validation_failed",
+        "expenseNotFound",
+        "permissionDenied",
+        "invalidExpenseState",
+        "validationFailed",
     ]
 
     idempotent = false
@@ -1075,7 +1079,7 @@ Preconditions SHOULD NOT be used as a substitute for authorization policies when
 
 Errors are symbolic names in version 0.1.
 
-Error identifiers SHOULD use lowercase `snake_case`.
+Error identifiers SHOULD use lower camel case (`camelCase`).
 
 ---
 
@@ -1084,14 +1088,14 @@ Error identifiers SHOULD use lowercase `snake_case`.
 A `query` describes an operation that retrieves information without intentionally changing application state.
 
 ```surf
-query expense_get {
+query expenseGet {
     name = "Get Expense"
 
     actor = @actor.employee
 
     inputs = [
         {
-            id = "expense_id"
+            id = "expenseId"
             type = "uuid"
             required = true
         },
@@ -1104,11 +1108,11 @@ query expense_get {
 
     requirements = [
         "Return the expense matching the supplied identifier.",
-        "Apply the expense_view policy.",
+        "Apply the expenseView policy.",
         "Return null when the expense does not exist.",
     ]
 
-    policy = @policy.expense_view
+    policy = @policy.expenseView
 }
 ```
 
@@ -1134,19 +1138,19 @@ Queries SHOULD describe observable retrieval behaviour rather than database impl
 A `policy` describes whether an actor may perform an action or access a resource.
 
 ```surf
-policy expense_approve {
+policy expenseApprove {
     name = "Approve Expense"
 
     actor = @actor.manager
     resource = @entity.expense
     action = "approve"
 
-    allow_when = [
+    allowWhen = [
         "The actor is a finance administrator.",
         "Or the actor manages the expense's team and the expense amount is at most AUD 5,000.",
     ]
 
-    deny_when = [
+    denyWhen = [
         "The expense status is not submitted.",
     ]
 }
@@ -1160,14 +1164,14 @@ description
 actor
 resource
 action
-allow_when
-deny_when
+allowWhen
+denyWhen
 requirements
 ```
 
 Policy rules are controlled natural-language statements in version 0.1.
 
-If both `allow_when` and `deny_when` are present, explicit denial SHOULD take precedence unless the specification states otherwise.
+If both `allowWhen` and `denyWhen` are present, explicit denial SHOULD take precedence unless the specification states otherwise.
 
 Formal policy evaluation is not defined in version 0.1.
 
@@ -1178,7 +1182,7 @@ Formal policy evaluation is not defined in version 0.1.
 A `workflow` describes states and transitions associated with a process or entity lifecycle.
 
 ```surf
-workflow expense_lifecycle {
+workflow expenseLifecycle {
     name = "Expense Lifecycle"
     entity = @entity.expense
 
@@ -1190,20 +1194,20 @@ workflow expense_lifecycle {
         "reimbursed",
     ]
 
-    initial_state = "draft"
+    initialState = "draft"
 
     transitions = [
         {
             id = "submit"
             from = "draft"
             to = "submitted"
-            behavior = @behavior.expense_submit
+            behavior = @behavior.expenseSubmit
         },
         {
             id = "approve"
             from = "submitted"
             to = "approved"
-            behavior = @behavior.expense_approve
+            behavior = @behavior.expenseApprove
         },
     ]
 
@@ -1219,7 +1223,7 @@ A workflow MUST contain:
 
 ```text
 states
-initial_state
+initialState
 transitions
 ```
 
@@ -1244,7 +1248,7 @@ effects
 
 Transition identifiers MUST be unique within the workflow.
 
-The `initial_state` MUST appear in the `states` list.
+The `initialState` MUST appear in the `states` list.
 
 Each `from` and `to` state MUST appear in the `states` list.
 
@@ -1255,23 +1259,23 @@ Each `from` and `to` state MUST appear in the `states` list.
 An `interface` describes how application capabilities are exposed.
 
 ```surf
-interface expense_api {
+interface expenseApi {
     name = "Expense API"
     kind = http
-    base_path = "/api"
+    basePath = "/api"
 
     operations = [
         {
-            id = "submit_expense"
+            id = "submitExpense"
             method = "POST"
-            path = "/expenses/{expense_id}/submit"
-            behavior = @behavior.expense_submit
+            path = "/expenses/{expenseId}/submit"
+            behavior = @behavior.expenseSubmit
 
             responses = {
                 success = 200
-                not_found = 404
-                permission_denied = 403
-                invalid_state = 409
+                notFound = 404
+                permissionDenied = 403
+                invalidState = 409
             }
         },
     ]
@@ -1283,7 +1287,7 @@ Recommended interface kinds are:
 ```text
 http
 event
-command_line
+commandLine
 internal
 websocket
 ```
@@ -1294,7 +1298,7 @@ Recommended attributes:
 name
 description
 kind
-base_path
+basePath
 authentication
 operations
 requirements
@@ -1313,9 +1317,9 @@ HTTP-specific semantics are descriptive in version 0.1.
 A `screen` describes a user-facing application surface.
 
 ```surf
-screen expense_details {
+screen expenseDetails {
     name = "Expense Details"
-    route = "/expenses/:expense_id"
+    route = "/expenses/:expenseId"
 
     actors = [
         @actor.employee,
@@ -1323,7 +1327,7 @@ screen expense_details {
     ]
 
     data = [
-        @query.expense_get,
+        @query.expenseGet,
     ]
 
     sections = [
@@ -1335,16 +1339,16 @@ screen expense_details {
     actions = [
         {
             label = "Submit Expense"
-            behavior = @behavior.expense_submit
-            policy = @policy.expense_submit
-            visible_when = "The expense status is draft."
+            behavior = @behavior.expenseSubmit
+            policy = @policy.expenseSubmit
+            visibleWhen = "The expense status is draft."
         },
     ]
 
     states = {
         loading = "Display a loading placeholder."
         empty = "Display an empty-state explanation."
-        not_found = "Display the not-found screen."
+        notFound = "Display the not-found screen."
         error = "Display an error message and retry action."
     }
 
@@ -1379,13 +1383,13 @@ Version 0.1 describes screen intent and observable behaviour rather than exact v
 A `component` describes a reusable user-interface concept.
 
 ```surf
-component status_badge {
+component statusBadge {
     name = "Status Badge"
 
     inputs = [
         {
             id = "status"
-            type = @enum.expense_status
+            type = @enum.expenseStatus
             required = true
         },
     ]
@@ -1417,16 +1421,16 @@ accessibility
 A `job` describes background processing.
 
 ```surf
-job send_expense_notification {
+job sendExpenseNotification {
     name = "Send Expense Notification"
-    triggered_by = @event.expense_submitted
+    triggeredBy = @event.expenseSubmitted
 
     requirements = [
         "Notify the manager responsible for the expense's team.",
         "Do not send the same notification more than once.",
     ]
 
-    maximum_attempts = 5
+    maximumAttempts = 5
     idempotent = true
 }
 ```
@@ -1436,14 +1440,14 @@ Recommended attributes:
 ```text
 name
 description
-triggered_by
+triggeredBy
 schedule
 requirements
 effects
-maximum_attempts
-timeout_seconds
+maximumAttempts
+timeoutSeconds
 idempotent
-failure_behavior
+failureBehavior
 ```
 
 Scheduling syntax is not formally defined in version 0.1.
@@ -1455,13 +1459,13 @@ Scheduling syntax is not formally defined in version 0.1.
 An `integration` describes an external service, platform, or dependency.
 
 ```surf
-integration email_service {
+integration emailService {
     name = "Email Service"
-    kind = external_service
+    kind = externalService
 
     operations = [
         {
-            id = "send_email"
+            id = "sendEmail"
 
             inputs = [
                 "recipient",
@@ -1469,13 +1473,13 @@ integration email_service {
                 "variables",
             ]
 
-            timeout_seconds = 10
-            maximum_attempts = 4
+            timeoutSeconds = 10
+            maximumAttempts = 4
             idempotent = true
         },
     ]
 
-    failure_behavior = [
+    failureBehavior = [
         "Retry temporary failures.",
         "Record permanent failures for manual review.",
     ]
@@ -1491,7 +1495,7 @@ kind
 provider
 operations
 authentication
-failure_behavior
+failureBehavior
 requirements
 ```
 
@@ -1506,12 +1510,12 @@ A specification MAY describe required secret names or secret categories.
 A `scenario` describes observable acceptance behaviour.
 
 ```surf
-scenario manager_approves_small_expense {
+scenario managerApprovesSmallExpense {
     name = "Manager approves an eligible expense"
 
-    relates_to = [
-        @behavior.expense_approve,
-        @policy.expense_approve,
+    relatesTo = [
+        @behavior.expenseApprove,
+        @policy.expenseApprove,
     ]
 
     given = [
@@ -1528,7 +1532,7 @@ scenario manager_approves_small_expense {
     then = [
         "The expense status becomes approved.",
         "The approving manager is recorded.",
-        "Exactly one expense_approved event is emitted.",
+        "Exactly one expenseApproved event is emitted.",
     ]
 }
 ```
@@ -1563,7 +1567,7 @@ Version 0.1 scenarios are descriptive and are not directly executable.
 A `decision` records an unresolved, proposed, confirmed, rejected, or superseded product decision.
 
 ```surf
-decision receipt_threshold {
+decision receiptThreshold {
     status = unresolved
 
     question = """
@@ -1579,12 +1583,12 @@ decision receipt_threshold {
 
     affects = [
         @entity.expense,
-        @behavior.expense_submit,
-        @screen.expense_details,
+        @behavior.expenseSubmit,
+        @screen.expenseDetails,
     ]
 
     blocks = [
-        "implementation_ready",
+        "implementationReady",
     ]
 }
 ```
@@ -1604,7 +1608,7 @@ superseded
 A decision with status `confirmed` SHOULD contain a `resolution` attribute.
 
 ```surf
-decision receipt_threshold {
+decision receiptThreshold {
     status = confirmed
     question = "Above what amount is a receipt required?"
     resolution = "A receipt is required for expenses above AUD 75."
@@ -1635,7 +1639,7 @@ source
 A `requirement` records a traceable product, business, user, or technical requirement.
 
 ```surf
-requirement receipt_accessibility {
+requirement receiptAccessibility {
     title = "Receipt accessibility"
 
     statement = """
@@ -1646,7 +1650,7 @@ requirement receipt_accessibility {
     priority = must
 
     affects = [
-        @screen.expense_details,
+        @screen.expenseDetails,
     ]
 
     source = "Accessibility review AR-14"
@@ -1686,7 +1690,7 @@ Requirements SHOULD describe one independently reviewable obligation.
 A `constraint` records a system-wide limitation, obligation, or boundary.
 
 ```surf
-constraint supported_browsers {
+constraint supportedBrowsers {
     category = compatibility
 
     statement = """
@@ -1707,7 +1711,7 @@ compatibility
 legal
 operational
 technical
-data_residency
+dataResidency
 ```
 
 Recommended attributes:
@@ -1750,7 +1754,7 @@ provider
 region
 requirements
 services
-data_residency
+dataResidency
 availability
 backup
 recovery
@@ -1766,13 +1770,13 @@ Version 0.1 does not define provider-specific infrastructure semantics.
 An `extension` describes behaviour or capability implemented outside the Surface specification.
 
 ```surf
-extension fraud_detection {
+extension fraudDetection {
     name = "Fraud Detection"
     purpose = "Calculate the fraud risk of an expense."
 
     interface = {
         input = @entity.expense
-        output = "risk_score"
+        output = "riskScore"
     }
 
     requirements = [
@@ -1792,8 +1796,8 @@ interface
 requirements
 effects
 dependencies
-implementation_constraints
-failure_behavior
+implementationConstraints
+failureBehavior
 ```
 
 An extension SHOULD define a clear contract even when its implementation is external or custom.
@@ -1807,13 +1811,13 @@ Surface Language 0.1 allows controlled natural-language statements in attributes
 * `requirements`;
 * `preconditions`;
 * `effects`;
-* `allow_when`;
-* `deny_when`;
+* `allowWhen`;
+* `denyWhen`;
 * `given`;
 * `when`;
 * `then`;
 * `constraints`;
-* `failure_behavior`.
+* `failureBehavior`.
 
 These statements SHOULD:
 
@@ -1858,7 +1862,7 @@ Better:
 effects = [
     "Set the expense status to submitted.",
     "Record the submission timestamp.",
-    "Emit the expense_submitted event.",
+    "Emit the expenseSubmitted event.",
 ]
 ```
 
@@ -1892,7 +1896,7 @@ Unresolved information SHOULD be recorded using a `decision` declaration.
 Example:
 
 ```surf
-decision failed_payment_behavior {
+decision failedPaymentBehavior {
     status = unresolved
 
     question = "What should happen after a payment fails?"
@@ -1905,7 +1909,7 @@ decision failed_payment_behavior {
 
     affects = [
         @workflow.checkout,
-        @screen.payment_failure,
+        @screen.paymentFailure,
     ]
 }
 ```
@@ -1921,7 +1925,7 @@ Surface Language 0.1 does not define a dedicated `assumption` declaration.
 Temporary assumptions MAY be represented as decisions with status `proposed`.
 
 ```surf
-decision temporary_receipt_threshold {
+decision temporaryReceiptThreshold {
     status = proposed
     question = "What receipt threshold should be used for the prototype?"
     proposal = "Use AUD 75 until the finance team confirms the threshold."
@@ -1934,24 +1938,25 @@ Tools SHOULD clearly distinguish proposed decisions from confirmed decisions.
 
 # 50. Unknown Attributes
 
-Standard declarations MAY contain custom attributes beginning with `x_`.
+Standard declarations MAY contain custom attributes beginning with `x` followed
+by an uppercase ASCII letter.
 
 ```surf
 entity expense {
     fields = []
 
-    x_database_table = "business_expenses"
-    x_owner_team = "finance_platform"
+    xDatabaseTable = "business_expenses"
+    xOwnerTeam = "finance_platform"
 }
 ```
 
 Custom attributes:
 
-* MUST begin with `x_`;
+* MUST begin with `x` followed by an uppercase ASCII letter;
 * MUST be preserved by formatters and editors;
 * MUST NOT be assigned standard meaning by generic Surface tools.
 
-Unknown attributes without the `x_` prefix SHOULD produce a warning.
+Unknown attributes without this prefix SHOULD produce a warning.
 
 They SHOULD NOT produce a parsing error.
 
@@ -1959,10 +1964,11 @@ They SHOULD NOT produce a parsing error.
 
 # 51. Custom Declarations
 
-A project MAY define custom declaration types beginning with `x_`.
+A project MAY define custom declaration types beginning with `x` followed by an
+uppercase ASCII letter.
 
 ```surf
-x_metric monthly_active_users {
+xMetric monthlyActiveUsers {
     description = "Unique active users during a calendar month."
 }
 ```
@@ -1987,8 +1993,8 @@ Example:
 
 ```text
 entity.expense
-behavior.expense_submit
-screen.expense_details
+behavior.expenseSubmit
+screen.expenseDetails
 ```
 
 Declaration identifiers MUST be unique within each declaration type.
@@ -2073,7 +2079,7 @@ A canonical Surface formatter SHOULD use:
 * double-quoted strings;
 * triple-quoted multiline strings;
 * trailing commas in multiline lists;
-* lowercase `snake_case` identifiers;
+* lower camel case (`camelCase`) identifiers;
 * original declaration order;
 * original attribute order;
 * a final newline at the end of each file.
@@ -2120,8 +2126,8 @@ A Surface 0.1 validator MUST check:
 16. Workflow transition identifiers are unique.
 17. Scenario declarations contain `given`, `when`, and `then`.
 18. Decision statuses are recognised.
-19. Custom declaration types begin with `x_`.
-20. Custom attributes begin with `x_`.
+19. Custom declaration types begin with `x` followed by an uppercase ASCII letter.
+20. Custom attributes begin with `x` followed by an uppercase ASCII letter.
 
 A validator SHOULD warn about:
 
@@ -2163,16 +2169,16 @@ Example:
 ```text
 Error SURF-REF-001
 
-Unknown reference @event.expense_approved.
+Unknown reference @event.expenseApproved.
 
 File:
 behavior/approvals.surf
 
 Declaration:
-behavior.expense_approve
+behavior.expenseApprove
 
 Suggested correction:
-Declare event expense_approved or update the reference.
+Declare event expenseApproved or update the reference.
 ```
 
 Tools MAY also produce structured diagnostics.
@@ -2181,11 +2187,11 @@ Tools MAY also produce structured diagnostics.
 {
   "severity": "error",
   "code": "SURF-REF-001",
-  "message": "Unknown reference @event.expense_approved.",
+  "message": "Unknown reference @event.expenseApproved.",
   "file": "behavior/approvals.surf",
   "line": 24,
   "column": 9,
-  "declaration": "behavior.expense_approve"
+  "declaration": "behavior.expenseApprove"
 }
 ```
 
@@ -2197,17 +2203,17 @@ The following simplified EBNF defines the Surface Language 0.1 source grammar.
 
 ```ebnf
 document =
-    version_declaration,
-    { import_declaration },
+    versionDeclaration,
+    { importDeclaration },
     { declaration } ;
 
-version_declaration =
-    "surface-lang", whitespace, version_number ;
+versionDeclaration =
+    "surface-lang", whitespace, versionNumber ;
 
-version_number =
+versionNumber =
     digit, { digit }, ".", digit, { digit } ;
 
-import_declaration =
+importDeclaration =
     "import", whitespace, string ;
 
 declaration =
@@ -2217,8 +2223,8 @@ block =
     "{", { attribute }, "}" ;
 
 attribute =
-    identifier, optional_whitespace, "=",
-    optional_whitespace, value ;
+    identifier, optionalWhitespace, "=",
+    optionalWhitespace, value ;
 
 value =
       string
@@ -2249,7 +2255,7 @@ null =
     "null" ;
 
 identifier =
-    letter, { letter | digit | "_" } ;
+    letter, { letter | digit } ;
 
 number =
     [ "-" ],
@@ -2257,20 +2263,20 @@ number =
     [ ".", digit, { digit } ] ;
 
 string =
-      quoted_string
-    | multiline_string ;
+      quotedString
+    | multilineString ;
 
-quoted_string =
+quotedString =
     '"',
-    { string_character | escape_sequence },
+    { stringCharacter | escapeSequence },
     '"' ;
 
-multiline_string =
+multilineString =
     '"""',
-    { multiline_character },
+    { multilineCharacter },
     '"""' ;
 
-escape_sequence =
+escapeSequence =
       '\"'
     | '\\'
     | '\n'
@@ -2305,7 +2311,7 @@ This grammar is informative and may be refined when the first parser is implemen
 ```surf
 surface-lang 0.1
 
-application expense_manager {
+application expenseManager {
     name = "Expense Manager"
     version = "0.1.0"
 
@@ -2314,10 +2320,10 @@ application expense_manager {
     and managers to review eligible submissions.
     """
 
-    specification_status = structured_draft
+    specificationStatus = structuredDraft
     locale = "en-AU"
     timezone = "Australia/Sydney"
-    default_currency = "AUD"
+    defaultCurrency = "AUD"
 }
 
 actor employee {
@@ -2341,7 +2347,7 @@ actor manager {
     ]
 }
 
-actor finance_administrator {
+actor financeAdministrator {
     name = "Finance Administrator"
     kind = human
 
@@ -2352,7 +2358,7 @@ actor finance_administrator {
     ]
 }
 
-enum expense_status {
+enum expenseStatus {
     values = [
         "draft",
         "submitted",
@@ -2389,7 +2395,7 @@ entity user {
             required = true
         },
         {
-            id = "team_id"
+            id = "teamId"
             type = "uuid"
             required = false
         },
@@ -2412,7 +2418,7 @@ entity expense {
             required = true
         },
         {
-            id = "team_id"
+            id = "teamId"
             type = "uuid"
             required = true
         },
@@ -2420,7 +2426,7 @@ entity expense {
             id = "description"
             type = "string"
             required = true
-            maximum_length = 500
+            maximumLength = 500
         },
         {
             id = "amount"
@@ -2431,29 +2437,29 @@ entity expense {
         },
         {
             id = "status"
-            type = @enum.expense_status
+            type = @enum.expenseStatus
             required = true
             default = "draft"
         },
         {
-            id = "submitted_at"
+            id = "submittedAt"
             type = "timestamp"
             required = false
         },
         {
-            id = "approved_at"
+            id = "approvedAt"
             type = "timestamp"
             required = false
         },
         {
-            id = "approved_by"
+            id = "approvedBy"
             type = @entity.user
             required = false
         },
     ]
 }
 
-event expense_submitted {
+event expenseSubmitted {
     name = "Expense Submitted"
 
     payload = [
@@ -2463,14 +2469,14 @@ event expense_submitted {
             required = true
         },
         {
-            id = "submitted_by"
+            id = "submittedBy"
             type = @entity.user
             required = true
         },
     ]
 }
 
-event expense_approved {
+event expenseApproved {
     name = "Expense Approved"
 
     payload = [
@@ -2480,63 +2486,63 @@ event expense_approved {
             required = true
         },
         {
-            id = "approved_by"
+            id = "approvedBy"
             type = @entity.user
             required = true
         },
     ]
 }
 
-policy expense_view {
+policy expenseView {
     name = "View Expense"
     actor = @actor.employee
     resource = @entity.expense
     action = "view"
 
-    allow_when = [
+    allowWhen = [
         "The actor owns the expense.",
         "The actor manages the expense's team.",
         "The actor is a finance administrator.",
     ]
 }
 
-policy expense_submit {
+policy expenseSubmit {
     name = "Submit Expense"
     actor = @actor.employee
     resource = @entity.expense
     action = "submit"
 
-    allow_when = [
+    allowWhen = [
         "The actor owns the expense.",
     ]
 
-    deny_when = [
+    denyWhen = [
         "The expense status is not draft.",
     ]
 }
 
-policy expense_approve {
+policy expenseApprove {
     name = "Approve Expense"
     actor = @actor.manager
     resource = @entity.expense
     action = "approve"
 
-    allow_when = [
+    allowWhen = [
         "The actor is a finance administrator.",
         "The actor manages the expense's team and the expense amount is at most AUD 5,000.",
     ]
 
-    deny_when = [
+    denyWhen = [
         "The expense status is not submitted.",
     ]
 }
 
-behavior expense_submit {
+behavior expenseSubmit {
     name = "Submit Expense"
 
     actor = @actor.employee
     resource = @entity.expense
-    policy = @policy.expense_submit
+    policy = @policy.expenseSubmit
 
     inputs = [
         {
@@ -2553,30 +2559,30 @@ behavior expense_submit {
 
     effects = [
         "Set the expense status to submitted.",
-        "Record the current timestamp as submitted_at.",
-        "Emit the expense_submitted event.",
+        "Record the current timestamp as submittedAt.",
+        "Emit the expenseSubmitted event.",
     ]
 
     emits = [
-        @event.expense_submitted,
+        @event.expenseSubmitted,
     ]
 
     errors = [
-        "expense_not_found",
-        "permission_denied",
-        "invalid_expense_state",
-        "validation_failed",
+        "expenseNotFound",
+        "permissionDenied",
+        "invalidExpenseState",
+        "validationFailed",
     ]
 
     idempotent = false
 }
 
-behavior expense_approve {
+behavior expenseApprove {
     name = "Approve Expense"
 
     actor = @actor.manager
     resource = @entity.expense
-    policy = @policy.expense_approve
+    policy = @policy.expenseApprove
 
     inputs = [
         {
@@ -2593,31 +2599,31 @@ behavior expense_approve {
     effects = [
         "Set the expense status to approved.",
         "Record the approving actor.",
-        "Record the current timestamp as approved_at.",
-        "Emit the expense_approved event.",
+        "Record the current timestamp as approvedAt.",
+        "Emit the expenseApproved event.",
     ]
 
     emits = [
-        @event.expense_approved,
+        @event.expenseApproved,
     ]
 
     errors = [
-        "expense_not_found",
-        "permission_denied",
-        "invalid_expense_state",
+        "expenseNotFound",
+        "permissionDenied",
+        "invalidExpenseState",
     ]
 
     idempotent = false
 }
 
-query expense_get {
+query expenseGet {
     name = "Get Expense"
 
     actor = @actor.employee
 
     inputs = [
         {
-            id = "expense_id"
+            id = "expenseId"
             type = "uuid"
             required = true
         },
@@ -2630,14 +2636,14 @@ query expense_get {
 
     requirements = [
         "Return the expense matching the supplied identifier.",
-        "Apply the expense_view policy.",
+        "Apply the expenseView policy.",
         "Return null when the expense does not exist.",
     ]
 
-    policy = @policy.expense_view
+    policy = @policy.expenseView
 }
 
-workflow expense_lifecycle {
+workflow expenseLifecycle {
     name = "Expense Lifecycle"
     entity = @entity.expense
 
@@ -2649,85 +2655,85 @@ workflow expense_lifecycle {
         "reimbursed",
     ]
 
-    initial_state = "draft"
+    initialState = "draft"
 
     transitions = [
         {
             id = "submit"
             from = "draft"
             to = "submitted"
-            behavior = @behavior.expense_submit
+            behavior = @behavior.expenseSubmit
         },
         {
             id = "approve"
             from = "submitted"
             to = "approved"
-            behavior = @behavior.expense_approve
+            behavior = @behavior.expenseApprove
         },
     ]
 
     invariants = [
-        "An approved expense must have an approved_at timestamp.",
+        "An approved expense must have an approvedAt timestamp.",
         "An approved expense must identify the approving actor.",
         "A reimbursed expense must have a reimbursement reference.",
     ]
 }
 
-interface expense_api {
+interface expenseApi {
     name = "Expense API"
     kind = http
-    base_path = "/api"
+    basePath = "/api"
 
     operations = [
         {
-            id = "get_expense"
+            id = "getExpense"
             method = "GET"
-            path = "/expenses/{expense_id}"
-            query = @query.expense_get
+            path = "/expenses/{expenseId}"
+            query = @query.expenseGet
 
             responses = {
                 success = 200
-                not_found = 404
-                permission_denied = 403
+                notFound = 404
+                permissionDenied = 403
             }
         },
         {
-            id = "submit_expense"
+            id = "submitExpense"
             method = "POST"
-            path = "/expenses/{expense_id}/submit"
-            behavior = @behavior.expense_submit
+            path = "/expenses/{expenseId}/submit"
+            behavior = @behavior.expenseSubmit
 
             responses = {
                 success = 200
-                not_found = 404
-                permission_denied = 403
-                invalid_state = 409
-                validation_failed = 422
+                notFound = 404
+                permissionDenied = 403
+                invalidState = 409
+                validationFailed = 422
             }
         },
         {
-            id = "approve_expense"
+            id = "approveExpense"
             method = "POST"
-            path = "/expenses/{expense_id}/approve"
-            behavior = @behavior.expense_approve
+            path = "/expenses/{expenseId}/approve"
+            behavior = @behavior.expenseApprove
 
             responses = {
                 success = 200
-                not_found = 404
-                permission_denied = 403
-                invalid_state = 409
+                notFound = 404
+                permissionDenied = 403
+                invalidState = 409
             }
         },
     ]
 }
 
-component status_badge {
+component statusBadge {
     name = "Status Badge"
 
     inputs = [
         {
             id = "status"
-            type = @enum.expense_status
+            type = @enum.expenseStatus
             required = true
         },
     ]
@@ -2738,18 +2744,18 @@ component status_badge {
     ]
 }
 
-screen expense_details {
+screen expenseDetails {
     name = "Expense Details"
-    route = "/expenses/:expense_id"
+    route = "/expenses/:expenseId"
 
     actors = [
         @actor.employee,
         @actor.manager,
-        @actor.finance_administrator,
+        @actor.financeAdministrator,
     ]
 
     data = [
-        @query.expense_get,
+        @query.expenseGet,
     ]
 
     sections = [
@@ -2759,28 +2765,28 @@ screen expense_details {
     ]
 
     components = [
-        @component.status_badge,
+        @component.statusBadge,
     ]
 
     actions = [
         {
             label = "Submit Expense"
-            behavior = @behavior.expense_submit
-            policy = @policy.expense_submit
-            visible_when = "The expense status is draft."
+            behavior = @behavior.expenseSubmit
+            policy = @policy.expenseSubmit
+            visibleWhen = "The expense status is draft."
         },
         {
             label = "Approve Expense"
-            behavior = @behavior.expense_approve
-            policy = @policy.expense_approve
-            visible_when = "The expense status is submitted."
+            behavior = @behavior.expenseApprove
+            policy = @policy.expenseApprove
+            visibleWhen = "The expense status is submitted."
         },
     ]
 
     states = {
         loading = "Display a loading placeholder."
         empty = "Not applicable."
-        not_found = "Display the not-found screen."
+        notFound = "Display the not-found screen."
         error = "Display an error message and retry action."
     }
 
@@ -2790,26 +2796,26 @@ screen expense_details {
     ]
 }
 
-job send_submission_notification {
+job sendSubmissionNotification {
     name = "Send Submission Notification"
-    triggered_by = @event.expense_submitted
+    triggeredBy = @event.expenseSubmitted
 
     requirements = [
         "Notify the manager responsible for the expense's team.",
         "Do not send the same notification more than once.",
     ]
 
-    maximum_attempts = 5
+    maximumAttempts = 5
     idempotent = true
 }
 
-scenario employee_submits_draft_expense {
+scenario employeeSubmitsDraftExpense {
     name = "Employee submits a draft expense"
 
-    relates_to = [
-        @behavior.expense_submit,
-        @policy.expense_submit,
-        @workflow.expense_lifecycle,
+    relatesTo = [
+        @behavior.expenseSubmit,
+        @policy.expenseSubmit,
+        @workflow.expenseLifecycle,
     ]
 
     given = [
@@ -2826,17 +2832,17 @@ scenario employee_submits_draft_expense {
     then = [
         "The expense status becomes submitted.",
         "The submission timestamp is recorded.",
-        "Exactly one expense_submitted event is emitted.",
+        "Exactly one expenseSubmitted event is emitted.",
     ]
 }
 
-scenario manager_approves_small_expense {
+scenario managerApprovesSmallExpense {
     name = "Manager approves an eligible expense"
 
-    relates_to = [
-        @behavior.expense_approve,
-        @policy.expense_approve,
-        @workflow.expense_lifecycle,
+    relatesTo = [
+        @behavior.expenseApprove,
+        @policy.expenseApprove,
+        @workflow.expenseLifecycle,
     ]
 
     given = [
@@ -2854,16 +2860,16 @@ scenario manager_approves_small_expense {
         "The expense status becomes approved.",
         "The approving manager is recorded.",
         "The approval timestamp is recorded.",
-        "Exactly one expense_approved event is emitted.",
+        "Exactly one expenseApproved event is emitted.",
     ]
 }
 
-scenario manager_cannot_approve_large_expense {
+scenario managerCannotApproveLargeExpense {
     name = "Manager cannot approve an expense above the limit"
 
-    relates_to = [
-        @behavior.expense_approve,
-        @policy.expense_approve,
+    relatesTo = [
+        @behavior.expenseApprove,
+        @policy.expenseApprove,
     ]
 
     given = [
@@ -2880,11 +2886,11 @@ scenario manager_cannot_approve_large_expense {
     then = [
         "The approval is denied.",
         "The expense remains submitted.",
-        "No expense_approved event is emitted.",
+        "No expenseApproved event is emitted.",
     ]
 }
 
-requirement expense_accessibility {
+requirement expenseAccessibility {
     title = "Expense screen accessibility"
 
     statement = """
@@ -2895,15 +2901,15 @@ requirement expense_accessibility {
     priority = must
 
     affects = [
-        @screen.expense_details,
-        @component.status_badge,
+        @screen.expenseDetails,
+        @component.statusBadge,
     ]
 
     source = "Accessibility requirements"
 }
 
-constraint australian_data_residency {
-    category = data_residency
+constraint australianDataResidency {
+    category = dataResidency
 
     statement = """
     Production application data must remain within Australia.
@@ -2914,7 +2920,7 @@ constraint australian_data_residency {
     ]
 }
 
-decision receipt_threshold {
+decision receiptThreshold {
     status = unresolved
 
     question = """
@@ -2930,12 +2936,12 @@ decision receipt_threshold {
 
     affects = [
         @entity.expense,
-        @behavior.expense_submit,
-        @screen.expense_details,
+        @behavior.expenseSubmit,
+        @screen.expenseDetails,
     ]
 
     blocks = [
-        "implementation_ready",
+        "implementationReady",
     ]
 }
 
@@ -3122,7 +3128,7 @@ Surface files MAY describe:
 Example:
 
 ```surf
-constraint payment_credentials {
+constraint paymentCredentials {
     category = security
 
     statement = """
@@ -3144,7 +3150,7 @@ Example:
 entity user {
     fields = [
         {
-            id = "tax_identifier"
+            id = "taxIdentifier"
             type = "string"
             required = false
             sensitive = true
@@ -3227,7 +3233,7 @@ Surface Language 0.1 is a lightweight, structured application specification lang
 Its fundamental unit is:
 
 ```surf
-declaration_type identifier {
+declarationType identifier {
     attribute = value
 }
 ```
