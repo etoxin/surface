@@ -1,11 +1,54 @@
-import { InvalidKdlError, parse } from "@bgotink/kdl";
+import {
+  type Document,
+  InvalidKdlError,
+  type Node,
+  parse,
+  type Primitive,
+} from "@bgotink/kdl";
 
-import { createDiagnostic } from "./diagnostics.js";
+import {
+  createDiagnostic,
+  type Diagnostic,
+  type DiagnosticInput,
+} from "./diagnostics.ts";
+
+export interface SurfaceIr {
+  surfaceVersion: string;
+  application: {
+    id: string;
+    purpose: string;
+  };
+  screens: SurfaceScreenIr[];
+}
+
+export interface SurfaceScreenIr {
+  id: string;
+  route?: string;
+  sections: SurfaceSectionIr[];
+}
+
+export interface SurfaceSectionIr {
+  name: string;
+  title?: string;
+  paragraphs: string[];
+}
+
+export interface KdlParseResult {
+  document: Document | null;
+  diagnostics: Diagnostic[];
+}
+
+export interface SurfaceParseResult extends KdlParseResult {
+  ir: SurfaceIr | null;
+}
+
+type DiagnosticDraft = Omit<DiagnosticInput, "file">;
+type AddDiagnostic = (diagnostic: DiagnosticDraft) => void;
 
 const IDENTIFIER_PATTERN = /^[a-z][A-Za-z0-9]*$/;
 const TOP_LEVEL_NODES = new Set(["surface", "application", "screen"]);
 
-export function parseKdl(source, file = "surface.kdl") {
+export function parseKdl(source: string, file = "surface.kdl"): KdlParseResult {
   try {
     return {
       document: parse(source, { storeLocations: true }),
@@ -16,7 +59,7 @@ export function parseKdl(source, file = "surface.kdl") {
       throw error;
     }
 
-    const errors = typeof error.flat === "function" ? [...error.flat()] : [error];
+    const errors = [...error.flat()];
     const diagnostics = errors.map((item) =>
       createDiagnostic({
         code: "SURF-KDL-002",
@@ -32,7 +75,10 @@ export function parseKdl(source, file = "surface.kdl") {
   }
 }
 
-export function parseSurface(source, file = "surface.kdl") {
+export function parseSurface(
+  source: string,
+  file = "surface.kdl",
+): SurfaceParseResult {
   const parsed = parseKdl(source, file);
   if (!parsed.document) {
     return { ...parsed, ir: null };
@@ -46,9 +92,13 @@ export function parseSurface(source, file = "surface.kdl") {
   return { document: parsed.document, diagnostics, ir };
 }
 
-export function validateDocument(document, source, file = "surface.kdl") {
-  const diagnostics = [];
-  const add = (diagnostic) =>
+export function validateDocument(
+  document: Document,
+  source: string,
+  file = "surface.kdl",
+): Diagnostic[] {
+  const diagnostics: Diagnostic[] = [];
+  const add: AddDiagnostic = (diagnostic) =>
     diagnostics.push(createDiagnostic({ file, ...diagnostic }));
 
   validateKdlMarker(source, add);
@@ -118,7 +168,7 @@ export function validateDocument(document, source, file = "surface.kdl") {
     });
   }
 
-  const identities = new Set();
+  const identities = new Set<string>();
   for (const application of applications) {
     validateApplication(application, add);
     validateIdentity(application, identities, add);
@@ -132,7 +182,7 @@ export function validateDocument(document, source, file = "surface.kdl") {
   return diagnostics;
 }
 
-function validateKdlMarker(source, add) {
+function validateKdlMarker(source: string, add: AddDiagnostic): void {
   const normalized = source.replace(/^\uFEFF/, "").replace(/\r\n/g, "\n");
   const firstLine = normalized.split("\n", 1)[0].trimEnd();
   if (firstLine !== "/- kdl-version 2") {
@@ -146,7 +196,7 @@ function validateKdlMarker(source, add) {
   }
 }
 
-function validateSurfaceNode(node, add) {
+function validateSurfaceNode(node: Node, add: AddDiagnostic): void {
   validateArguments(node, 1, "surface", add);
   validateProperties(node, [], "surface", add);
   validateOnlyContextChildren(node, "surface", add);
@@ -169,7 +219,7 @@ function validateSurfaceNode(node, add) {
   }
 }
 
-function validateApplication(node, add) {
+function validateApplication(node: Node, add: AddDiagnostic): void {
   const declaration = declarationName(node);
   validateArguments(node, 1, declaration, add, true);
   validateProperties(node, [], declaration, add);
@@ -208,7 +258,7 @@ function validateApplication(node, add) {
   }
 }
 
-function validateScreen(node, add) {
+function validateScreen(node: Node, add: AddDiagnostic): void {
   const declaration = declarationName(node);
   validateArguments(node, 1, declaration, add, true);
   validateProperties(node, ["route"], declaration, add);
@@ -247,7 +297,11 @@ function validateScreen(node, add) {
   }
 }
 
-function validateSection(node, declaration, add) {
+function validateSection(
+  node: Node,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
   const name = node.getArgument(0);
   const subject = typeof name === "string"
     ? `${declaration}.section.${name}`
@@ -318,12 +372,12 @@ function validateSection(node, declaration, add) {
 }
 
 function validateLeafStringNode(
-  node,
-  name,
-  declaration,
-  add,
+  node: Node,
+  name: string,
+  declaration: string,
+  add: AddDiagnostic,
   allowContext = true,
-) {
+): void {
   validateNoTag(node, add, declaration);
   validateArguments(node, 1, `${declaration}.${name}`, add);
   validateProperties(node, [], `${declaration}.${name}`, add);
@@ -345,11 +399,19 @@ function validateLeafStringNode(
   }
 }
 
-function validateContextNode(node, declaration, add) {
+function validateContextNode(
+  node: Node,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
   validateLeafStringNode(node, "context", declaration, add, false);
 }
 
-function validateOnlyContextChildren(node, subject, add) {
+function validateOnlyContextChildren(
+  node: Node,
+  subject: string,
+  add: AddDiagnostic,
+): void {
   for (const child of node.children?.nodes ?? []) {
     if (child.getName() === "context") {
       validateContextNode(child, subject, add);
@@ -366,7 +428,13 @@ function validateOnlyContextChildren(node, subject, add) {
   }
 }
 
-function validateArguments(node, count, subject, add, identifier = false) {
+function validateArguments(
+  node: Node,
+  count: number,
+  subject: string,
+  add: AddDiagnostic,
+  identifier = false,
+): void {
   const arguments_ = node.getArguments();
   if (arguments_.length !== count) {
     add({
@@ -403,12 +471,21 @@ function validateArguments(node, count, subject, add, identifier = false) {
   }
 }
 
-function validateProperties(node, allowed, subject, add, required = []) {
+function validateProperties(
+  node: Node,
+  allowed: readonly string[],
+  subject: string,
+  add: AddDiagnostic,
+  required: readonly string[] = [],
+): void {
   const allowedNames = new Set(allowed);
-  const propertyCounts = new Map();
+  const propertyCounts = new Map<string, number>();
 
   for (const entry of node.getPropertyEntries()) {
     const name = entry.getName();
+    if (name === null) {
+      throw new Error("KDL property entry is missing its name.");
+    }
     propertyCounts.set(name, (propertyCounts.get(name) ?? 0) + 1);
 
     if (!allowedNames.has(name)) {
@@ -468,7 +545,11 @@ function validateProperties(node, allowed, subject, add, required = []) {
   }
 }
 
-function validateNoChildren(node, subject, add) {
+function validateNoChildren(
+  node: Node,
+  subject: string,
+  add: AddDiagnostic,
+): void {
   if (node.children !== null) {
     add({
       code: "SURF-CHILD-004",
@@ -480,7 +561,11 @@ function validateNoChildren(node, subject, add) {
   }
 }
 
-function validateNoTag(node, add, declaration) {
+function validateNoTag(
+  node: Node,
+  add: AddDiagnostic,
+  declaration?: string,
+): void {
   if (node.getTag() !== null) {
     add({
       code: "SURF-TAG-001",
@@ -504,7 +589,11 @@ function validateNoTag(node, add, declaration) {
   }
 }
 
-function validateIdentity(node, identities, add) {
+function validateIdentity(
+  node: Node,
+  identities: Set<string>,
+  add: AddDiagnostic,
+): void {
   const id = node.getArgument(0);
   if (typeof id !== "string" || !IDENTIFIER_PATTERN.test(id)) {
     return;
@@ -523,41 +612,86 @@ function validateIdentity(node, identities, add) {
   identities.add(identity);
 }
 
-function declarationName(node) {
+function declarationName(node: Node): string {
   const id = node.getArgument(0);
   return typeof id === "string" ? `${node.getName()}.${id}` : node.getName();
 }
 
-function buildIr(document) {
-  const version = document.findNodeByName("surface");
-  const application = document.findNodeByName("application");
+function buildIr(document: Document): SurfaceIr {
+  const version = expectNode(document.findNodeByName("surface"), "surface");
+  const application = expectNode(
+    document.findNodeByName("application"),
+    "application",
+  );
+  const applicationChildren = expectChildren(application, "application");
+  const purpose = expectNode(
+    applicationChildren.findNodeByName("purpose"),
+    "application purpose",
+  );
   const screens = document.nodes.filter((node) => node.getName() === "screen");
 
   return {
-    surfaceVersion: version.getArgument(0),
+    surfaceVersion: expectString(version.getArgument(0), "Surface version"),
     application: {
-      id: application.getArgument(0),
-      purpose: application.children.findNodeByName("purpose").getArgument(0),
+      id: expectString(application.getArgument(0), "application identifier"),
+      purpose: expectString(purpose.getArgument(0), "application purpose"),
     },
     screens: screens.map((screen) => {
-      const route = screen.getProperty("route");
+      const route = optionalString(screen.getProperty("route"), "screen route");
+      const screenChildren = expectChildren(screen, "screen");
       return {
-        id: screen.getArgument(0),
+        id: expectString(screen.getArgument(0), "screen identifier"),
         ...(route === undefined ? {} : { route }),
-        sections: screen.children
+        sections: screenChildren
           .findNodesByName("section")
           .map((section) => {
-            const title = section.children.findNodeByName("title")
-              ?.getArgument(0);
+            const sectionChildren = expectChildren(section, "section");
+            const titleNode = sectionChildren.findNodeByName("title");
+            const title = titleNode === undefined
+              ? undefined
+              : expectString(titleNode.getArgument(0), "section title");
             return {
-              name: section.getArgument(0),
+              name: expectString(section.getArgument(0), "section name"),
               ...(title === undefined ? {} : { title }),
-              paragraphs: section.children
+              paragraphs: sectionChildren
                 .findNodesByName("paragraph")
-                .map((paragraph) => paragraph.getArgument(0)),
+                .map((paragraph) =>
+                  expectString(paragraph.getArgument(0), "paragraph text")
+                ),
             };
           }),
       };
     }),
   };
+}
+
+function expectNode(node: Node | undefined, subject: string): Node {
+  if (node === undefined) {
+    throw new Error(`Validated Surface document is missing ${subject}.`);
+  }
+  return node;
+}
+
+function expectChildren(node: Node, subject: string): Document {
+  if (node.children === null) {
+    throw new Error(`Validated ${subject} is missing its child block.`);
+  }
+  return node.children;
+}
+
+function expectString(
+  value: Primitive | undefined,
+  subject: string,
+): string {
+  if (typeof value !== "string") {
+    throw new Error(`Validated ${subject} is not a string.`);
+  }
+  return value;
+}
+
+function optionalString(
+  value: Primitive | undefined,
+  subject: string,
+): string | undefined {
+  return value === undefined ? undefined : expectString(value, subject);
 }

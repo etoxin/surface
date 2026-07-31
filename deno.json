@@ -2,7 +2,9 @@
   "tasks": {
     "surf": "deno run --allow-read --allow-write src/cli.ts",
     "test": "deno test --allow-read --allow-write --allow-run",
-    "check": "deno fmt --check && deno lint && deno check src/cli.ts test/surface_test.ts && deno task test"
+    "typecheck": "deno check src/cli.ts src/diagnostics.ts src/formatter.ts src/surface.ts test/surface_test.ts",
+    "verify": "deno fmt --check && deno lint && deno task typecheck && deno task test",
+    "check": "deno task verify"
   },
   "imports": {
     "@bgotink/kdl": "npm:@bgotink/kdl@0.4.0"
@@ -11,7 +13,8 @@
     "include": [
       "src/",
       "test/",
-      "deno.json"
+      "deno.json",
+      "mise.toml"
     ],
     "exclude": [
       "test/skill-evaluations.json"

@@ -1,6 +1,15 @@
-import { parseKdl } from "./surface.js";
+import type { Diagnostic } from "./diagnostics.ts";
+import { parseKdl } from "./surface.ts";
 
-export function formatSurface(source, file = "surface.kdl") {
+export interface FormatResult {
+  output: string | null;
+  diagnostics: Diagnostic[];
+}
+
+export function formatSurface(
+  source: string,
+  file = "surface.kdl",
+): FormatResult {
   const parsed = parseKdl(source, file);
   if (parsed.diagnostics.length > 0) {
     return { output: null, diagnostics: parsed.diagnostics };
@@ -14,7 +23,7 @@ export function formatSurface(source, file = "surface.kdl") {
 
   let depth = 0;
   let inBlockComment = false;
-  const output = [];
+  const output: string[] = [];
 
   for (const originalLine of lines) {
     const line = originalLine.replace(/[ \t]+$/g, "");
@@ -37,7 +46,10 @@ export function formatSurface(source, file = "surface.kdl") {
   return { output: `${output.join("\n")}\n`, diagnostics: [] };
 }
 
-function scanBraces(line, initialBlockComment) {
+function scanBraces(
+  line: string,
+  initialBlockComment: boolean,
+): { open: number; close: number; inBlockComment: boolean } {
   let open = 0;
   let close = 0;
   let inBlockComment = initialBlockComment;

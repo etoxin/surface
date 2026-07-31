@@ -18,18 +18,22 @@ description = "Lint source and test files"
 run = "deno lint"
 
 [tasks.typecheck]
-description = "Type-check the CLI and test suite"
+description = "Type-check the complete TypeScript graph"
 depends = ["deps"]
-run = "deno check src/cli.ts test/surface_test.ts"
+run = "deno task typecheck"
 
 [tasks.test]
 description = "Run the test suite"
 depends = ["deps"]
 run = "deno test --allow-read --allow-write --allow-run"
 
-[tasks.check]
-description = "Run every validation check"
+[tasks.verify]
+description = "Verify the entire repository"
 depends = ["format-check", "lint", "typecheck", "test"]
+
+[tasks.check]
+description = "Compatibility alias for verify"
+depends = ["verify"]
 
 [tasks.surf]
 description = "Run the Surface CLI"

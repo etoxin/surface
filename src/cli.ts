@@ -2,20 +2,9 @@
 
 import { resolve } from "node:path";
 
-import { formatDiagnostic } from "./diagnostics.js";
-import { formatSurface } from "./formatter.js";
-import { parseKdl, parseSurface } from "./surface.js";
-
-interface Diagnostic {
-  severity: string;
-  code: string;
-  message: string;
-  file: string;
-  line: number;
-  column: number;
-  declaration?: string;
-  suggestion?: string;
-}
+import { type Diagnostic, formatDiagnostic } from "./diagnostics.ts";
+import { formatSurface } from "./formatter.ts";
+import { parseKdl, parseSurface } from "./surface.ts";
 
 export async function main(args: string[]): Promise<number> {
   const [command, ...arguments_] = args;

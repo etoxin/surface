@@ -6,8 +6,8 @@ import {
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { formatSurface } from "../src/formatter.js";
-import { parseKdl, parseSurface } from "../src/surface.js";
+import { formatSurface } from "../src/formatter.ts";
+import { parseKdl, parseSurface } from "../src/surface.ts";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const exampleRoot = join(repositoryRoot, "examples", "01-hello-world");
@@ -31,6 +31,13 @@ Deno.test("all invalid fixtures include their expected diagnostic", async () => 
   const expected = JSON.parse(
     await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
   );
+  const fixtures = [];
+  for await (const entry of Deno.readDir(invalidRoot)) {
+    if (entry.isFile && entry.name.endsWith(".kdl")) {
+      fixtures.push(entry.name);
+    }
+  }
+  assertEquals(Object.keys(expected).sort(), fixtures.sort());
 
   for (const [file, code] of Object.entries(expected)) {
     const source = await Deno.readTextFile(join(invalidRoot, file));
@@ -265,6 +272,25 @@ Deno.test("the skill defines all three required forward evaluations", async () =
       ({ acceptance }: { acceptance: string[] }) => acceptance.length > 0,
     ),
   );
+
+  const skill = await Deno.readTextFile(
+    join(repositoryRoot, "skills", "surface", "SKILL.md"),
+  );
+  const metadata = await Deno.readTextFile(
+    join(repositoryRoot, "skills", "surface", "agents", "openai.yaml"),
+  );
+  assertMatch(skill, /^---\nname: surface\ndescription: .+\n---/);
+  assertMatch(skill, /surface "0\.1"/);
+  assertMatch(metadata, /default_prompt: "Use \$surface /);
+});
+
+Deno.test("the repository contains no JavaScript source files", async () => {
+  const files = await collectFiles(repositoryRoot);
+  const javascript = files
+    .filter((file) => file.endsWith(".js"))
+    .map((file) => file.slice(repositoryRoot.length + 1));
+
+  assertEquals(javascript, []);
 });
 
 function runCli(arguments_: string[]): Deno.CommandOutput {
@@ -280,4 +306,21 @@ function runCli(arguments_: string[]): Deno.CommandOutput {
     stdout: "piped",
     stderr: "piped",
   }).outputSync();
+}
+
+async function collectFiles(directory: string): Promise<string[]> {
+  const files: string[] = [];
+  for await (const entry of Deno.readDir(directory)) {
+    if (entry.name === ".git" || entry.name === "node_modules") {
+      continue;
+    }
+
+    const path = join(directory, entry.name);
+    if (entry.isDirectory) {
+      files.push(...await collectFiles(path));
+    } else if (entry.isFile) {
+      files.push(path);
+    }
+  }
+  return files.sort();
 }

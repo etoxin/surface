@@ -72,21 +72,24 @@ project tasks:
 
 ```sh
 mise install
-mise run check
+mise run verify
 ```
 
 Useful commands:
 
 ```sh
 mise run format
+mise run typecheck
 mise run test
 mise run surf check examples/01-hello-world/surface.kdl
 mise run surf export examples/01-hello-world/surface.kdl --format json
 ```
 
-Run `mise tasks` to see every task. The equivalent direct Deno entry points are
-`deno task check` and `deno task surf`. Deno resolves the dependencies pinned in
-`deno.json` and `deno.lock`; no separate package-manager install is needed.
+Run `mise tasks` to see every task. `mise run verify` checks formatting, linting,
+types, tests, fixtures, skill metadata, and repository consistency. The
+equivalent direct Deno entry points are `deno task verify` and `deno task surf`.
+Deno resolves the dependencies pinned in `deno.json` and `deno.lock`; no
+separate package-manager install is needed.
 
 The CLI supports:
 

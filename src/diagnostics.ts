@@ -1,5 +1,28 @@
 import { getLocation } from "@bgotink/kdl";
 
+export interface Diagnostic {
+  severity: string;
+  code: string;
+  message: string;
+  file: string;
+  line: number;
+  column: number;
+  declaration?: string;
+  suggestion?: string;
+}
+
+export interface DiagnosticInput {
+  severity?: string;
+  code: string;
+  message: string;
+  file: string;
+  element?: Parameters<typeof getLocation>[0];
+  line?: number;
+  column?: number;
+  declaration?: string;
+  suggestion?: string;
+}
+
 export function createDiagnostic({
   severity = "error",
   code,
@@ -10,7 +33,7 @@ export function createDiagnostic({
   column,
   declaration,
   suggestion,
-}) {
+}: DiagnosticInput): Diagnostic {
   const location = element ? getLocation(element)?.start : undefined;
 
   return {
@@ -25,7 +48,7 @@ export function createDiagnostic({
   };
 }
 
-export function formatDiagnostic(diagnostic) {
+export function formatDiagnostic(diagnostic: Diagnostic): string {
   const title = `${capitalize(diagnostic.severity)} ${diagnostic.code}`;
   const details = [
     title,
@@ -47,6 +70,6 @@ export function formatDiagnostic(diagnostic) {
   return details.join("\n");
 }
 
-function capitalize(value) {
+function capitalize(value: string): string {
   return value.charAt(0).toUpperCase() + value.slice(1);
 }
