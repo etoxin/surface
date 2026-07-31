@@ -7,10 +7,15 @@
   "screens": [
     {
       "id": "home",
-      "title": "Home",
       "route": "/",
       "sections": [
-        "Hello, world!"
+        {
+          "name": "Home",
+          "title": "My app",
+          "paragraphs": [
+            "Hello, world!"
+          ]
+        }
       ]
     }
   ]

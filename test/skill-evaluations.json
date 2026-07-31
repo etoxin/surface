@@ -9,15 +9,15 @@
         "The result is valid Surface 0.1 KDL.",
         "The result contains exactly one application and at least one screen.",
         "The application has no version property.",
-        "The screen route is / and a section displays Welcome to Acme.",
+        "The screen route is / and a section paragraph displays Welcome to Acme.",
         "The result does not introduce syntax from a later rung."
       ]
     },
     {
       "id": "modify",
-      "prompt": "Add a second section saying Built with Surface to a valid rung-1 specification that contains a comment.",
+      "prompt": "Add a second paragraph saying Built with Surface to a valid rung-1 specification that contains a comment.",
       "acceptance": [
-        "The result adds exactly one ordered section.",
+        "The result adds exactly one ordered paragraph.",
         "The existing comment and unrelated content are preserved.",
         "The result remains valid Surface 0.1 KDL."
       ]

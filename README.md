@@ -20,13 +20,16 @@ application "helloWorld" {
     purpose "Display a greeting."
 }
 
-screen "home" title="Home" route="/" {
-    section "Hello, world!"
+screen "home" route="/" {
+    section "Home" {
+        title "My app"
+        paragraph "Hello, world!"
+    }
 }
 ```
 
-This describes one application with one screen at `/` and one section showing
-`Hello, world!`.
+This describes one application with one screen at `/`. Its `Home` section has a
+title and one paragraph.
 
 ## Surface 0.1
 
@@ -35,8 +38,10 @@ This describes one application with one screen at `/` and one section showing
 | `surface "0.1"` | First semantic node; exactly one |
 | `application "<id>"` | Exactly one; contains one `purpose` |
 | `purpose "<text>"` | Child of `application`; exactly one string |
-| `screen "<id>" [title="<title>"] [route="<route>"]` | At least one; optional title and route, with one or more `section` nodes |
-| `section "<text>"` | Child of `screen`; order is preserved |
+| `screen "<id>" [route="<route>"]` | At least one; optional route and one or more `section` nodes |
+| `section "<name>"` | Child of `screen`; contains an optional `title` and one or more `paragraph` nodes |
+| `title "<text>"` | Optional child of `section`; at most one |
+| `paragraph "<text>"` | Child of `section`; one or more, in presentation order |
 
 Additional rules:
 
@@ -44,8 +49,8 @@ Additional rules:
 - Identifiers match `[a-z][A-Za-z0-9]*`, are case-sensitive, and should use
   lower camel case.
 - Application and screen identifiers are unique within their declaration type.
-- Screen titles and routes are optional strings. Routes are currently opaque;
-  section text is always a string.
+- Routes are optional strings and currently opaque. Section names, titles, and
+  paragraph text are strings.
 - Unknown nodes, properties, duplicate properties, and unsupported type
   annotations are rejected.
 - Comments are supported and preserved by the formatter.

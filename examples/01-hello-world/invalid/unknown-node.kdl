@@ -8,6 +8,9 @@ application "helloWorld" {
 
 component "greeting"
 
-screen "home" title="Home" route="/" {
-    section "Hello, world!"
+screen "home" route="/" {
+    section "Home" {
+        title "My app"
+        paragraph "Hello, world!"
+    }
 }

@@ -53,8 +53,11 @@ application "helloWorld" {
 purpose "Display a greeting."
 }
 
-screen "home" title="Home" route="/" {
-section "Hello, world!"
+screen "home" route="/" {
+section "Home" {
+title "My app"
+paragraph "Hello, world!"
+}
 }
 `;
 
@@ -64,6 +67,8 @@ section "Hello, world!"
   assertMatch(first.output, /\/\/ Keep this comment\./);
   assertMatch(first.output, /^[ ]{4}purpose/m);
   assertMatch(first.output, /^[ ]{4}section/m);
+  assertMatch(first.output, /^[ ]{8}title/m);
+  assertMatch(first.output, /^[ ]{8}paragraph/m);
 
   const second = formatSurface(first.output, "surface.kdl");
   assertEquals(second.output, first.output);
@@ -83,11 +88,17 @@ Deno.test("screen and section order is retained in the IR", () => {
 
 surface "0.1"
 application "ordered" { purpose "Check ordering." }
-screen "first" title="First" route="/first" {
-    section "A"
-    section "B"
+screen "first" route="/first" {
+    section "A" {
+        title "First"
+        paragraph "A1"
+        paragraph "A2"
+    }
+    section "B" { paragraph "B1" }
 }
-screen "second" title="Second" route="/second" { section "C" }
+screen "second" route="/second" {
+    section "C" { paragraph "C1" }
+}
 `;
 
   const result = parseSurface(source, "ordered.kdl");
@@ -97,15 +108,25 @@ screen "second" title="Second" route="/second" { section "C" }
     result.ir.screens.map(({ id }: { id: string }) => id),
     ["first", "second"],
   );
-  assertEquals(result.ir.screens[0].sections, ["A", "B"]);
+  assertEquals(
+    result.ir.screens[0].sections.map(({ name }: { name: string }) => name),
+    ["A", "B"],
+  );
+  assertEquals(result.ir.screens[0].sections[0], {
+    name: "A",
+    title: "First",
+    paragraphs: ["A1", "A2"],
+  });
 });
 
-Deno.test("screen title and route are optional and omitted from the IR", () => {
+Deno.test("section title and screen route are optional and omitted from the IR", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
 application "nativeApp" { purpose "Run without a website." }
-screen "home" { section "Hello, world!" }
+screen "home" {
+    section "Home" { paragraph "Hello, world!" }
+}
 `;
 
   const result = parseSurface(source, "native.kdl");
@@ -113,7 +134,10 @@ screen "home" { section "Hello, world!" }
   assert(result.ir !== null);
   assertEquals(result.ir.screens[0], {
     id: "home",
-    sections: ["Hello, world!"],
+    sections: [{
+      name: "Home",
+      paragraphs: ["Hello, world!"],
+    }],
   });
 });
 
@@ -157,8 +181,11 @@ surface "0.1"
 application "helloWorld" {
 purpose "Display a greeting."
 }
-screen "home" title="Home" route="/" {
-section "Hello, world!"
+screen "home" route="/" {
+section "Home" {
+title "My app"
+paragraph "Hello, world!"
+}
 }
 `;
 
@@ -171,6 +198,8 @@ section "Hello, world!"
     assertMatch(output, /\/\/ Retain me\./);
     assertMatch(output, /^[ ]{4}purpose/m);
     assertMatch(output, /^[ ]{4}section/m);
+    assertMatch(output, /^[ ]{8}title/m);
+    assertMatch(output, /^[ ]{8}paragraph/m);
   } finally {
     await Deno.remove(temporaryDirectory, { recursive: true });
   }
@@ -178,7 +207,8 @@ section "Hello, world!"
 
 Deno.test("the implemented page matches the Surface section", async () => {
   const html = await Deno.readTextFile(join(exampleRoot, "app", "index.html"));
-  assertMatch(html, /<h1>Hello, world!<\/h1>/);
+  assertMatch(html, /<h1>My app<\/h1>/);
+  assertMatch(html, /<p>Hello, world!<\/p>/);
 });
 
 Deno.test("the skill defines all three required forward evaluations", async () => {

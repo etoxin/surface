@@ -43,8 +43,11 @@ application "helloWorld" {
 Declare at least one screen:
 
 ```kdl
-screen "home" title="Home" route="/" {
-    section "Hello, world!"
+screen "home" route="/" {
+    section "Home" {
+        title "My app"
+        paragraph "Hello, world!"
+    }
 }
 ```
 
@@ -57,12 +60,18 @@ An application has exactly:
 A screen has:
 
 - one quoted identifier argument;
-- zero or one quoted `title` property;
 - zero or one quoted `route` property;
-- one or more ordered `section` children, each containing one quoted string.
+- one or more ordered `section` children.
 
-Use `title` when a screen has a user-facing name. Use `route` for addressable
-screens such as web pages. Omit either property when it does not apply.
+Use `route` for addressable screens such as web pages. Omit it when the screen
+does not have a URL or equivalent address.
+
+A section has:
+
+- one quoted string name;
+- no properties;
+- zero or one `title` child containing one quoted string;
+- one or more ordered `paragraph` children, each containing one quoted string.
 
 Identifiers must match `[a-z][A-Za-z0-9]*` and should use lower camel case.
 

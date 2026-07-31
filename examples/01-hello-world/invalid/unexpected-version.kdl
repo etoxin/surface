@@ -6,6 +6,9 @@ application "helloWorld" version="0.1.0" {
     purpose "Display a greeting."
 }
 
-screen "home" title="Home" route="/" {
-    section "Hello, world!"
+screen "home" route="/" {
+    section "Home" {
+        title "My app"
+        paragraph "Hello, world!"
+    }
 }

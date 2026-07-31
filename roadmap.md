@@ -100,6 +100,9 @@ Introduces:
 - the Surface version marker;
 - `application` declarations;
 - `screen` declarations;
+- named `section` blocks;
+- optional section titles and ordered paragraphs;
+- nested child blocks;
 - declaration identifiers;
 - strings and scalar properties;
 - comments;
@@ -122,10 +125,9 @@ Build a page containing several questions and answers.
 
 Introduces:
 
-- repeated child nodes;
-- nested child blocks;
+- repeated question and answer groups;
 - multiline natural-language content;
-- declaration and child ordering;
+- ordering across repeated content groups;
 - comment preservation;
 - canonical formatting of nested content.
 

@@ -206,7 +206,7 @@ function validateApplication(node, add) {
 function validateScreen(node, add) {
   const declaration = declarationName(node);
   validateArguments(node, 1, declaration, add, true);
-  validateProperties(node, ["title", "route"], declaration, add);
+  validateProperties(node, ["route"], declaration, add);
 
   const children = node.children?.nodes ?? [];
   const sections = children.filter((child) => child.getName() === "section");
@@ -228,12 +228,77 @@ function validateScreen(node, add) {
       message: `${declaration} must contain at least one section child node.`,
       element: node,
       declaration,
-      suggestion: 'Add a section such as section "Hello, world!".',
+      suggestion: 'Add a section such as section "Home" { paragraph "Hello, world!" }.',
     });
   }
 
   for (const section of sections) {
-    validateLeafStringNode(section, "section", declaration, add);
+    validateSection(section, declaration, add);
+  }
+}
+
+function validateSection(node, declaration, add) {
+  const name = node.getArgument(0);
+  const subject = typeof name === "string"
+    ? `${declaration}.section.${name}`
+    : `${declaration}.section`;
+
+  validateNoTag(node, add, declaration);
+  validateArguments(node, 1, subject, add);
+  validateProperties(node, [], subject, add);
+
+  if (name !== undefined && typeof name !== "string") {
+    add({
+      code: "SURF-ARG-002",
+      message: "Section must contain one string name.",
+      element: node.getArgumentEntry(0),
+      declaration,
+      suggestion: 'Write section followed by one quoted name, such as "Home".',
+    });
+  }
+
+  const children = node.children?.nodes ?? [];
+  const titles = children.filter((child) => child.getName() === "title");
+  const paragraphs = children.filter((child) => child.getName() === "paragraph");
+
+  for (const child of children) {
+    if (child.getName() !== "title" && child.getName() !== "paragraph") {
+      add({
+        code: "SURF-CHILD-002",
+        message: `Unknown child node ${child.getName()} in ${subject}.`,
+        element: child,
+        declaration,
+        suggestion: "Use only title and paragraph child nodes in a section.",
+      });
+    }
+  }
+
+  if (titles.length > 1) {
+    add({
+      code: "SURF-CHILD-005",
+      message: `${subject} may contain at most one title child node.`,
+      element: titles[1],
+      declaration,
+      suggestion: "Keep no more than one title child node.",
+    });
+  }
+
+  if (paragraphs.length === 0) {
+    add({
+      code: "SURF-CHILD-003",
+      message: `${subject} must contain at least one paragraph child node.`,
+      element: node,
+      declaration,
+      suggestion: 'Add a paragraph such as paragraph "Hello, world!".',
+    });
+  }
+
+  for (const title of titles) {
+    validateLeafStringNode(title, "title", subject, add);
+  }
+
+  for (const paragraph of paragraphs) {
+    validateLeafStringNode(paragraph, "paragraph", subject, add);
   }
 }
 
@@ -429,15 +494,23 @@ function buildIr(document) {
       purpose: application.children.findNodeByName("purpose").getArgument(0),
     },
     screens: screens.map((screen) => {
-      const title = screen.getProperty("title");
       const route = screen.getProperty("route");
       return {
         id: screen.getArgument(0),
-        ...(title === undefined ? {} : { title }),
         ...(route === undefined ? {} : { route }),
         sections: screen.children
           .findNodesByName("section")
-          .map((section) => section.getArgument(0)),
+          .map((section) => {
+            const title = section.children.findNodeByName("title")
+              ?.getArgument(0);
+            return {
+              name: section.getArgument(0),
+              ...(title === undefined ? {} : { title }),
+              paragraphs: section.children
+                .findNodesByName("paragraph")
+                .map((paragraph) => paragraph.getArgument(0)),
+            };
+          }),
       };
     }),
   };
