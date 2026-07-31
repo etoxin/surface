@@ -37,9 +37,21 @@ screen "home" {
 }
 ```
 
+Use the optional `query` property when a screen displays data:
+
+```kdl
+screen "contact" route="/contacts" query="contactById" {
+    // Sections and states go here.
+}
+```
+
+The value refers to a query declared in the same file. For web screens, URL
+query parameters with the same names as the query inputs provide their values.
+
 A screen can contain:
 
 - one or more `section` nodes;
+- `empty` and `notFound` states when the screen has a query;
 - any number of prompt-only [`context`](./node_context.md) notes.
 
 Sections stay in the order in which you write them.
@@ -62,10 +74,13 @@ the lower-camel-case ID rule.
 A section can contain:
 
 - one optional `title`;
-- one or more `text` nodes;
+- any number of `text` nodes;
+- field references when its screen has a query;
 - any number of prompt-only [`context`](./node_context.md) notes.
 
-Sections and their text stay in the order in which you write them.
+Every section needs at least one text or field node. Sections, text, and field
+references stay in the order in which you write them. Use text or field
+references in a section, but do not mix the two content forms in one section.
 
 ## Title
 
@@ -114,6 +129,54 @@ text """
 
 Start the content on the line after the opening `"""`. Align the content and
 the closing `"""` as shown. Blank lines are kept as part of the text.
+
+## Showing Query Fields
+
+Inside a normal section of a queried screen, `field` refers to data returned
+by that query:
+
+```kdl
+section "Contact" {
+    title "Contact"
+    field "name"
+    field "email"
+    field "active"
+}
+```
+
+Surface follows the screen's query to its returned entity, then resolves each
+field name on that entity. The fields are displayed in source order. A field
+reference has no properties, but it can contain prompt-only context.
+
+A section cannot refer to fields without a query, and it cannot refer to a
+field that the returned entity does not declare.
+
+## Empty and Not-Found States
+
+Every queried screen has exactly one `empty` state and one `notFound` state:
+
+```kdl
+state "empty" {
+    section "No contact selected" {
+        title "Select a contact"
+        text "Choose a contact identifier to view its details."
+    }
+}
+
+state "notFound" {
+    section "Contact not found" {
+        title "Contact not found"
+        text "No contact exists for the selected identifier."
+    }
+}
+```
+
+The `empty` state appears when a required query input is absent. The
+`notFound` state appears when the query returns `#null`.
+
+States contain one or more ordinary sections and can contain prompt-only
+context. Their sections use static titles and text; they cannot refer to
+entity fields because no entity result is available.
 
 ## Building an FAQ
 

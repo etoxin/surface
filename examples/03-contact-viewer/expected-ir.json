@@ -1,0 +1,93 @@
+{
+  "surfaceVersion": "0.1",
+  "application": {
+    "id": "contactViewer",
+    "purpose": "Display a contact selected by identifier."
+  },
+  "entities": [
+    {
+      "id": "contact",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string",
+          "generated": true
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "email",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "active",
+          "type": "boolean"
+        }
+      ]
+    }
+  ],
+  "queries": [
+    {
+      "id": "contactById",
+      "by": "id",
+      "inputs": [
+        {
+          "name": "id",
+          "type": "string"
+        }
+      ],
+      "returns": {
+        "entity": "contact",
+        "missing": null
+      }
+    }
+  ],
+  "screens": [
+    {
+      "id": "contact",
+      "route": "/contacts",
+      "query": "contactById",
+      "sections": [
+        {
+          "name": "Contact",
+          "title": "Contact",
+          "text": [],
+          "fields": [
+            "name",
+            "email",
+            "active"
+          ]
+        }
+      ],
+      "states": [
+        {
+          "id": "empty",
+          "sections": [
+            {
+              "name": "No contact selected",
+              "title": "Select a contact",
+              "text": [
+                "Choose a contact identifier to view its details."
+              ]
+            }
+          ]
+        },
+        {
+          "id": "notFound",
+          "sections": [
+            {
+              "name": "Contact not found",
+              "title": "Contact not found",
+              "text": [
+                "No contact exists for the selected identifier."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

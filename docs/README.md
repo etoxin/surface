@@ -33,10 +33,18 @@ and Surface how to read the file.
 Surface file
 ├── application
 │   └── purpose
+├── entity
+│   └── field
+├── query
+│   ├── input
+│   └── returns
 └── screen
-    └── section
-        ├── title (optional)
-        └── text
+    ├── section
+    │   ├── title (optional)
+    │   ├── text
+    │   └── field reference
+    └── state
+        └── section
 ```
 
 You can add a prompt-only `context` note inside any of these nodes.
@@ -45,21 +53,24 @@ Continue with:
 
 - [Starting a Surface file](./node_surface.md)
 - [Describing the application](./node_application.md)
+- [Defining data](./node_entity.md)
+- [Looking up data](./node_query.md)
 - [Adding screens and text](./node_screen.md)
 - [Adding prompt context](./node_context.md)
 
 ## Naming Things
 
-Applications and screens have IDs such as `helloWorld` and `home`. Start an
-ID with a lowercase letter and use lower camel case for multiple words:
-`contactViewer`, not `ContactViewer` or `contact-viewer`.
+Applications, entities, queries, screens, fields, and inputs have IDs or names
+such as `helloWorld` and `contactById`. Start one with a lowercase letter
+and use lower camel case for multiple words: `contactViewer`, not
+`ContactViewer` or `contact-viewer`.
 
 Section names, titles, text, purposes, routes, and context are ordinary
 quoted text.
 
 ## What Surface Supports Today
 
-A file contains one application and at least one screen. Screens can contain
-ordered sections and text. Imports, data, actions, components, and other
-planned features are not available yet. The [roadmap](../roadmap.md) shows when
-those ideas will be introduced.
+A file contains one application and at least one screen. It can describe
+read-only entities and single-entity lookups. Imports, actions, components, and
+other planned features are not available yet. The [roadmap](../roadmap.md)
+shows when those ideas will be introduced.

@@ -1,5 +1,5 @@
 [tools]
-deno = "2.9.4"
+deno = "latest"
 
 [tasks.deps]
 description = "Cache dependencies from deno.json and deno.lock"
@@ -40,3 +40,8 @@ description = "Run the Surface CLI"
 depends = ["deps"]
 raw_args = true
 run = "deno run --allow-read --allow-write src/cli.ts"
+
+[tasks."contact-viewer"]
+description = "Run the rung-3 Contact Viewer example"
+depends = ["deps"]
+run = "deno task contact-viewer"

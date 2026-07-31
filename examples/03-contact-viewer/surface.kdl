@@ -1,0 +1,45 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "contactViewer" {
+    purpose "Display a contact selected by identifier."
+}
+
+entity "contact" {
+    field "id" type="string" generated=#true
+    field "name" type="string"
+    field "email" type="string" optional=#true
+    field "active" type="boolean"
+}
+
+query "contactById" by="id" {
+    context "Find the contact whose id equals the id input."
+    input "id" type="string"
+    returns "contact" missing=#null
+}
+
+screen "contact" route="/contacts" query="contactById" {
+    context "Read the id input from the URL query parameter named id."
+
+    section "Contact" {
+        title "Contact"
+        field "name"
+        field "email"
+        field "active"
+    }
+
+    state "empty" {
+        section "No contact selected" {
+            title "Select a contact"
+            text "Choose a contact identifier to view its details."
+        }
+    }
+
+    state "notFound" {
+        section "Contact not found" {
+            title "Contact not found"
+            text "No contact exists for the selected identifier."
+        }
+    }
+}

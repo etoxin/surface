@@ -173,6 +173,8 @@ Delivered in:
 
 ### 3. Contact Viewer
 
+**Status:** Complete
+
 Build a read-only page that displays a contact selected by identifier.
 
 Introduces:
@@ -187,6 +189,20 @@ Introduces:
 - not-found and empty screen states.
 
 This stage should establish field syntax and contextual reference resolution.
+Rung 3 supports only `string` and `boolean` primitive types; numeric values
+remain part of rung 4.
+
+Delivered in:
+
+- [`examples/03-contact-viewer/surface.kdl`](./examples/03-contact-viewer/surface.kdl);
+- [`examples/03-contact-viewer/expected-ir.json`](./examples/03-contact-viewer/expected-ir.json);
+- [`examples/03-contact-viewer/invalid/`](./examples/03-contact-viewer/invalid/);
+- [`examples/03-contact-viewer/app/server.ts`](./examples/03-contact-viewer/app/server.ts);
+- [Rung 3 decisions and acceptance scenarios](./examples/03-contact-viewer/decisions.md);
+- [Entity guide](./docs/node_entity.md);
+- [Query guide](./docs/node_query.md);
+- [Screen data and state guide](./docs/node_screen.md#showing-query-fields);
+- [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
 
 ### 4. Click Counter
 

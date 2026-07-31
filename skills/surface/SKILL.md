@@ -1,6 +1,6 @@
 ---
 name: surface
-description: Create, edit, review, format, and validate Surface application specifications written as KDL 2 files. Use for files containing a surface node, requests to author a Surface specification, or work on the Surface repository and its released Hello World and Static FAQ applications.
+description: Create, edit, review, format, and validate Surface application specifications written as KDL 2 files. Use for files containing a surface node, requests to author a Surface specification, or work on the Surface repository and its released Hello World, Static FAQ, and Contact Viewer applications.
 ---
 
 # Surface
@@ -40,21 +40,19 @@ application "helloWorld" {
 }
 ```
 
-Declare at least one screen:
+Declare read-only data and a single-entity lookup when needed:
 
 ```kdl
-screen "faq" route="/faq" {
-    section "What is Surface?" {
-        context "Present the section name as a question."
-        text """
-            Surface is a format for describing an application.
+entity "contact" {
+    field "id" type="string" generated=#true
+    field "name" type="string"
+    field "email" type="string" optional=#true
+    field "active" type="boolean"
+}
 
-            It does not choose an implementation framework.
-            """
-    }
-    section "Does every screen need a route?" {
-        text "No. Omit route when the screen is not addressable."
-    }
+query "contactById" by="id" {
+    input "id" type="string"
+    returns "contact" missing=#null
 }
 ```
 
@@ -64,21 +62,74 @@ An application has exactly:
 - no properties;
 - one `purpose` child containing one quoted string.
 
+An entity has one quoted identifier, no properties, and one or more `field`
+children. Give every field:
+
+- one quoted lower-camel-case name unique within the entity;
+- required `type="string"` or `type="boolean"`;
+- optional Boolean `generated=#true` or `generated=#false`;
+- optional Boolean `optional=#true` or `optional=#false`.
+
+A query is a single-entity lookup. Give it:
+
+- one quoted identifier;
+- required quoted `by` property;
+- one or more `input` children with a quoted name and required primitive
+  `type`;
+- exactly one `returns "<entity>" missing=#null` child.
+
+Resolve `by` to both an input on the query and a field on the returned entity.
+Require those types to match.
+
+Declare at least one screen. A queried screen looks like:
+
+```kdl
+screen "contact" route="/contacts" query="contactById" {
+    section "Contact" {
+        title "Contact"
+        field "name"
+        field "email"
+        field "active"
+    }
+    state "empty" {
+        section "No contact selected" {
+            text "Choose a contact identifier."
+        }
+    }
+    state "notFound" {
+        section "Contact not found" {
+            text "No contact exists for that identifier."
+        }
+    }
+}
+```
+
 A screen has:
 
 - one quoted identifier argument;
 - zero or one quoted `route` property;
+- zero or one quoted `query` reference;
 - one or more ordered `section` children.
 
 Use `route` for addressable screens such as web pages. Omit it when the screen
 does not have a URL or equivalent address.
+
+For web screens, populate query inputs from URL query parameters with matching
+names. Require queried screens to contain exactly one `empty` and one
+`notFound` state. Put one or more static sections inside each state. Do not
+put field references in state sections.
 
 A section has:
 
 - one quoted string name;
 - no properties;
 - zero or one `title` child containing one quoted string;
-- one or more ordered `text` children, each containing one quoted string.
+- one or more ordered `text` or `field` children.
+
+Use `field "<name>"` in a normal section to project a field from the entity
+returned by the screen query. Require that reference to resolve. Continue to
+use `field "<name>" type="..."` only inside an entity declaration.
+Do not mix `text` and field references in the same section.
 
 Build a static FAQ with repeated sections: use each section name as the
 question and its text as the answer. Do not invent `question` or `answer`
@@ -91,8 +142,9 @@ dedents it correctly.
 ## Prompt Context
 
 Add zero or more `context` children to any Surface node except another
-`context`. This includes `text`. Each context contains exactly one quoted
-prompt string and has no properties or children.
+`context`. This includes entities, fields, queries, inputs, returns, states,
+and text. Each context contains exactly one quoted prompt string and has no
+properties or children.
 
 Use context as guidance for interpreting or implementing its parent. Preserve
 it when editing and formatting, but do not treat it as application behavior or
@@ -111,7 +163,15 @@ Check all of the following:
 - At least one screen exists.
 - Declaration identifiers are valid and unique within their type.
 - Required arguments, properties, and children are present exactly as defined.
-- Every section contains at least one text node.
+- Entity fields and query inputs have valid unique names and supported types.
+- Boolean and null properties use `#true`, `#false`, and `#null`, not
+  quoted strings.
+- Query return entities, lookup fields/inputs, screen queries, and projected
+  fields resolve.
+- Lookup input and entity-field types match.
+- Every queried screen contains exactly one `empty` and one `notFound`
+  state.
+- Every section contains at least one text or field node.
 - Properties are not duplicated.
 - No unsupported top-level nodes, child nodes, properties, or type annotations
   appear.
@@ -122,8 +182,9 @@ specific valid correction.
 ## Formatting
 
 Use four spaces, no tabs, quoted strings, one node per line, one blank line
-between top-level declarations, and a final newline. Preserve comments and the
-original application, screen, and section order.
+between top-level declarations, and a final newline. Preserve comments and all
+declaration, field, input, screen, state, section, text, and field-reference
+order.
 
 ## Tool Commands
 
@@ -136,6 +197,7 @@ surf export surface.kdl --format json
 
 ## Current Limits
 
-Do not add actors, entities, fields, queries, behaviors, events, policies,
-workflows, interfaces, components, scenarios, imports, executable logic, or
-code generation. These features are not part of the released syntax.
+Do not add actors, numeric types or values, behaviors, events, policies,
+workflows, interfaces, components, scenarios, imports, executable logic, list
+queries, filtering, sorting, or code generation. These features are not part
+of the released syntax.

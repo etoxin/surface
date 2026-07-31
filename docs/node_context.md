@@ -21,8 +21,15 @@ You can put context inside:
 - `surface`;
 - `application`;
 - `purpose`;
+- `entity`;
+- entity `field` declarations;
+- `query`;
+- `input`;
+- `returns`;
 - `screen`;
 - `section`;
+- section `field` references;
+- `state`;
 - `title`;
 - `text`.
 

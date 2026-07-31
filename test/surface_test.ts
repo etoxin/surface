@@ -6,12 +6,18 @@ import {
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { renderContactPage } from "../examples/03-contact-viewer/app/server.ts";
 import { formatSurface } from "../src/formatter.ts";
 import { parseKdl, parseSurface } from "../src/surface.ts";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const exampleRoot = join(repositoryRoot, "examples", "01-hello-world");
 const faqExampleRoot = join(repositoryRoot, "examples", "02-static-faq");
+const contactExampleRoot = join(
+  repositoryRoot,
+  "examples",
+  "03-contact-viewer",
+);
 const cli = join(repositoryRoot, "src", "cli.ts");
 const decoder = new TextDecoder();
 
@@ -31,6 +37,18 @@ Deno.test("the Static FAQ specification exports the reviewed IR", async () => {
   const source = await Deno.readTextFile(join(faqExampleRoot, "surface.kdl"));
   const expected = JSON.parse(
     await Deno.readTextFile(join(faqExampleRoot, "expected-ir.json")),
+  );
+
+  const result = parseSurface(source, "surface.kdl");
+
+  assertEquals(result.diagnostics, []);
+  assertEquals(result.ir, expected);
+});
+
+Deno.test("the Contact Viewer specification exports the reviewed IR", async () => {
+  const source = await Deno.readTextFile(join(contactExampleRoot, "surface.kdl"));
+  const expected = JSON.parse(
+    await Deno.readTextFile(join(contactExampleRoot, "expected-ir.json")),
   );
 
   const result = parseSurface(source, "surface.kdl");
@@ -67,6 +85,33 @@ Deno.test(
   "the Static FAQ invalid fixtures report their expected diagnostics",
   async () => {
     const invalidRoot = join(faqExampleRoot, "invalid");
+    const expected = JSON.parse(
+      await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
+    );
+    const fixtures = [];
+    for await (const entry of Deno.readDir(invalidRoot)) {
+      if (entry.isFile && entry.name.endsWith(".kdl")) {
+        fixtures.push(entry.name);
+      }
+    }
+    assertEquals(Object.keys(expected).sort(), fixtures.sort());
+
+    for (const [file, code] of Object.entries(expected)) {
+      const source = await Deno.readTextFile(join(invalidRoot, file));
+      const result = parseSurface(source, file);
+      assert(
+        result.diagnostics.some((diagnostic) => diagnostic.code === code),
+        `${file} should report ${code}`,
+      );
+      assertEquals(result.ir, null);
+    }
+  },
+);
+
+Deno.test(
+  "the Contact Viewer invalid fixtures report their expected diagnostics",
+  async () => {
+    const invalidRoot = join(contactExampleRoot, "invalid");
     const expected = JSON.parse(
       await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
     );
@@ -262,6 +307,49 @@ screen "home" {
   });
 });
 
+Deno.test("context is valid on rung-3 nodes and omitted from the IR", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1"
+application "contextual" { purpose "Exercise rung-3 context." }
+entity "contact" {
+    context "Entity guidance."
+    field "id" type="string" generated=#true {
+        context "Field guidance."
+    }
+}
+query "contactById" by="id" {
+    context "Query guidance."
+    input "id" type="string" {
+        context "Input guidance."
+    }
+    returns "contact" missing=#null {
+        context "Return guidance."
+    }
+}
+screen "contact" query="contactById" {
+    section "Contact" {
+        field "id" {
+            context "Field reference guidance."
+        }
+    }
+    state "empty" {
+        context "Empty state guidance."
+        section "Empty" { text "Select a contact." }
+    }
+    state "notFound" {
+        context "Not-found state guidance."
+        section "Missing" { text "Contact not found." }
+    }
+}
+`;
+
+  const result = parseSurface(source, "context-rung-3.kdl");
+  assertEquals(result.diagnostics, []);
+  assert(result.ir !== null);
+  assert(!JSON.stringify(result.ir).includes("guidance"));
+});
+
 Deno.test("CLI check and export succeed for the valid example", () => {
   const specification = join(exampleRoot, "surface.kdl");
   const checked = runCli(["check", specification]);
@@ -356,12 +444,32 @@ Deno.test("the implemented FAQ page contains every ordered question", async () =
   assertMatch(html, /Leave it out for screens that are not addressable\./);
 });
 
+Deno.test("the Contact Viewer implements selected, empty, and not-found states", () => {
+  const empty = renderContactPage(null);
+  assertMatch(empty, /<h1>Select a contact<\/h1>/);
+  assertMatch(empty, /Choose a contact identifier/);
+
+  const ada = renderContactPage("ada");
+  assertMatch(ada, /Ada Lovelace/);
+  assertMatch(ada, /ada@example\.com/);
+  assertMatch(ada, /<dd>Yes<\/dd>/);
+
+  const grace = renderContactPage("grace");
+  assertMatch(grace, /Grace Hopper/);
+  assertMatch(grace, /<dd>Not provided<\/dd>/);
+  assertMatch(grace, /<dd>No<\/dd>/);
+
+  const missing = renderContactPage("unknown");
+  assertMatch(missing, /<h1>Contact not found<\/h1>/);
+  assertMatch(missing, /No contact exists for the selected identifier/);
+});
+
 Deno.test("the skill defines all three required forward evaluations", async () => {
   const evaluations = JSON.parse(
     await Deno.readTextFile(join(repositoryRoot, "test", "skill-evaluations.json")),
   );
 
-  assertEquals(evaluations.rung, 2);
+  assertEquals(evaluations.rung, 3);
   assertEquals(
     evaluations.cases.map(({ id }: { id: string }) => id),
     ["create", "modify", "diagnose"],
@@ -380,8 +488,9 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   );
   assertMatch(skill, /^---\nname: surface\ndescription: .+\n---/);
   assertMatch(skill, /surface "0\.1"/);
-  assertMatch(skill, /section "What is Surface\?"/);
-  assertMatch(skill, /one or more ordered `text`/);
+  assertMatch(skill, /entity "contact"/);
+  assertMatch(skill, /returns "contact" missing=#null/);
+  assertMatch(skill, /state "notFound"/);
   assertMatch(metadata, /default_prompt: "Use \$surface /);
 });
 

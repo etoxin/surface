@@ -1,0 +1,13 @@
+/- kdl-version 2
+
+surface "0.1"
+application "contactViewer" { purpose "Display a contact." }
+screen "contact" query="missingQuery" {
+    section "Contact" { text "Display a contact." }
+    state "empty" {
+        section "Empty" { text "Select a contact." }
+    }
+    state "notFound" {
+        section "Missing" { text "Contact not found." }
+    }
+}

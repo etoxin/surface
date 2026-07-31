@@ -1,39 +1,41 @@
 {
   "skill": "skills/surface/SKILL.md",
-  "rung": 2,
+  "rung": 3,
   "cases": [
     {
       "id": "create",
-      "prompt": "Create a Surface application specification for an FAQ page at /faq with three ordered questions and answers. Make one answer contain two blocks of text separated by a blank line.",
+      "prompt": "Create a Surface Contact Viewer at /contacts. Define a contact with generated string id, required name, optional email, and Boolean active fields. Look it up by string id, display name, email, and active, and include empty and not-found states.",
       "acceptance": [
         "The result is valid Surface 0.1 KDL.",
         "The result contains exactly one application and at least one screen.",
         "The application has no version property.",
-        "The screen route is /faq and contains three sections in the requested order.",
-        "Each section name is a question and its text is the answer.",
-        "The two-block answer uses one valid multiline text node.",
-        "The result does not use question or answer nodes.",
+        "The contact entity uses only string and boolean field types.",
+        "Generated and optional properties use unquoted KDL 2 Boolean literals.",
+        "The lookup input and id field are both strings.",
+        "The query return references contact and uses missing=#null.",
+        "The screen query and all projected fields resolve.",
+        "The screen contains exactly one empty and one notFound state.",
         "The result does not introduce syntax from a later rung."
       ]
     },
     {
       "id": "modify",
-      "prompt": "Add a question and multiline answer to the end of a valid Static FAQ screen that contains two section-based entries, a comment, and a context node.",
+      "prompt": "Add an optional string phone field to a valid Contact Viewer entity and display it after email. Preserve its comments, context, query, states, and unrelated content.",
       "acceptance": [
-        "The result adds exactly one section after the existing sections.",
-        "The new section name is the question and its multiline text is the answer.",
-        "The multiline text remains semantically unchanged after formatting.",
+        "The entity adds exactly one field named phone with type string and optional=#true.",
+        "The normal screen section adds field phone immediately after field email.",
+        "The lookup query and both screen states remain unchanged.",
         "The existing comment, context node, and unrelated content are preserved.",
         "The result remains valid Surface 0.1 KDL."
       ]
     },
     {
       "id": "diagnose",
-      "prompt": "Diagnose a Static FAQ file containing an empty section, a numeric text node, an unsupported question node, and a section with two titles.",
+      "prompt": "Diagnose a Contact Viewer whose generated property is quoted, entity repeats a field name, by field has no matching input, projected phone field is undeclared, and queried screen is missing its notFound state.",
       "acceptance": [
-        "The response identifies all four validation problems.",
+        "The response identifies all five validation problems.",
         "The response distinguishes valid KDL from valid Surface.",
-        "Every suggested correction uses only released rung-1 and rung-2 syntax."
+        "Every suggested correction uses only released rung-1 through rung-3 syntax."
       ]
     }
   ]

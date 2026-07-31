@@ -1,0 +1,13 @@
+{
+  "missing-field-type.kdl": "SURF-PROP-001",
+  "invalid-boolean.kdl": "SURF-PROP-004",
+  "unsupported-type.kdl": "SURF-TYPE-001",
+  "invalid-null.kdl": "SURF-PROP-004",
+  "unresolved-entity.kdl": "SURF-REF-001",
+  "mismatched-lookup-type.kdl": "SURF-REF-002",
+  "unresolved-query.kdl": "SURF-REF-001",
+  "missing-state.kdl": "SURF-STATE-001",
+  "unresolved-field.kdl": "SURF-REF-001",
+  "duplicate-field.kdl": "SURF-ID-002",
+  "mixed-section-content.kdl": "SURF-CHILD-006"
+}

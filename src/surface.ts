@@ -18,19 +18,56 @@ export interface SurfaceIr {
     id: string;
     purpose: string;
   };
+  entities?: SurfaceEntityIr[];
+  queries?: SurfaceQueryIr[];
   screens: SurfaceScreenIr[];
+}
+
+export interface SurfaceEntityIr {
+  id: string;
+  fields: SurfaceFieldIr[];
+}
+
+export interface SurfaceFieldIr {
+  name: string;
+  type: PrimitiveType;
+  generated?: boolean;
+  optional?: boolean;
+}
+
+export interface SurfaceQueryIr {
+  id: string;
+  by: string;
+  inputs: SurfaceInputIr[];
+  returns: {
+    entity: string;
+    missing: null;
+  };
+}
+
+export interface SurfaceInputIr {
+  name: string;
+  type: PrimitiveType;
 }
 
 export interface SurfaceScreenIr {
   id: string;
   route?: string;
+  query?: string;
   sections: SurfaceSectionIr[];
+  states?: SurfaceStateIr[];
 }
 
 export interface SurfaceSectionIr {
   name: string;
   title?: string;
   text: string[];
+  fields?: string[];
+}
+
+export interface SurfaceStateIr {
+  id: string;
+  sections: SurfaceSectionIr[];
 }
 
 export interface KdlParseResult {
@@ -44,9 +81,18 @@ export interface SurfaceParseResult extends KdlParseResult {
 
 type DiagnosticDraft = Omit<DiagnosticInput, "file">;
 type AddDiagnostic = (diagnostic: DiagnosticDraft) => void;
+type PrimitiveType = "string" | "boolean";
+type PropertyType = "string" | "boolean" | "null";
 
 const IDENTIFIER_PATTERN = /^[a-z][A-Za-z0-9]*$/;
-const TOP_LEVEL_NODES = new Set(["surface", "application", "screen"]);
+const PRIMITIVE_TYPES = new Set<PrimitiveType>(["string", "boolean"]);
+const TOP_LEVEL_NODES = new Set([
+  "surface",
+  "application",
+  "entity",
+  "query",
+  "screen",
+]);
 
 export function parseKdl(source: string, file = "surface.kdl"): KdlParseResult {
   try {
@@ -132,7 +178,8 @@ export function validateDocument(
         code: "SURF-NODE-001",
         message: `Unknown top-level node ${name}.`,
         element: node,
-        suggestion: "Use only surface, application, and screen nodes in Surface 0.1.",
+        suggestion:
+          "Use only surface, application, entity, query, and screen nodes in Surface 0.1.",
       });
     }
 
@@ -146,6 +193,8 @@ export function validateDocument(
   const applications = document.nodes.filter(
     (node) => node.getName() === "application",
   );
+  const entities = document.nodes.filter((node) => node.getName() === "entity");
+  const queries = document.nodes.filter((node) => node.getName() === "query");
   const screens = document.nodes.filter((node) => node.getName() === "screen");
 
   if (applications.length !== 1) {
@@ -174,10 +223,22 @@ export function validateDocument(
     validateIdentity(application, identities, add);
   }
 
+  for (const entity of entities) {
+    validateEntity(entity, add);
+    validateIdentity(entity, identities, add);
+  }
+
+  for (const query of queries) {
+    validateQuery(query, add);
+    validateIdentity(query, identities, add);
+  }
+
   for (const screen of screens) {
     validateScreen(screen, add);
     validateIdentity(screen, identities, add);
   }
+
+  validateReferences(entities, queries, screens, add);
 
   return diagnostics;
 }
@@ -258,26 +319,194 @@ function validateApplication(node: Node, add: AddDiagnostic): void {
   }
 }
 
-function validateScreen(node: Node, add: AddDiagnostic): void {
+function validateEntity(node: Node, add: AddDiagnostic): void {
   const declaration = declarationName(node);
   validateArguments(node, 1, declaration, add, true);
-  validateProperties(node, ["route"], declaration, add);
+  validateProperties(node, [], declaration, add);
 
   const children = node.children?.nodes ?? [];
-  const sections = children.filter((child) => child.getName() === "section");
+  const fields = children.filter((child) => child.getName() === "field");
   for (const child of children) {
     if (child.getName() === "context") {
       validateContextNode(child, declaration, add);
       continue;
     }
 
-    if (child.getName() !== "section") {
+    if (child.getName() !== "field") {
       add({
         code: "SURF-CHILD-002",
         message: `Unknown child node ${child.getName()} in ${declaration}.`,
         element: child,
         declaration,
-        suggestion: "Use only section and context child nodes in a screen.",
+        suggestion: "Use only field and context child nodes in an entity.",
+      });
+    }
+  }
+
+  if (fields.length === 0) {
+    add({
+      code: "SURF-CHILD-003",
+      message: `${declaration} must contain at least one field child node.`,
+      element: node,
+      declaration,
+      suggestion: 'Add a field such as field "id" type="string".',
+    });
+  }
+
+  const identities = new Set<string>();
+  for (const field of fields) {
+    validateFieldDeclaration(field, declaration, add);
+    validateIdentity(field, identities, add);
+  }
+}
+
+function validateFieldDeclaration(
+  node: Node,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const subject = `${declaration}.field`;
+  validateNoTag(node, add, declaration);
+  validateArguments(node, 1, subject, add, true);
+  validateProperties(
+    node,
+    ["type", "generated", "optional"],
+    subject,
+    add,
+    ["type"],
+    { generated: "boolean", optional: "boolean" },
+  );
+  validateOnlyContextChildren(node, subject, add);
+  validatePrimitiveType(node, subject, declaration, add);
+}
+
+function validateQuery(node: Node, add: AddDiagnostic): void {
+  const declaration = declarationName(node);
+  validateArguments(node, 1, declaration, add, true);
+  validateProperties(node, ["by"], declaration, add, ["by"]);
+
+  const children = node.children?.nodes ?? [];
+  const inputs = children.filter((child) => child.getName() === "input");
+  const returnsNodes = children.filter((child) => child.getName() === "returns");
+  for (const child of children) {
+    if (child.getName() === "context") {
+      validateContextNode(child, declaration, add);
+      continue;
+    }
+
+    if (child.getName() !== "input" && child.getName() !== "returns") {
+      add({
+        code: "SURF-CHILD-002",
+        message: `Unknown child node ${child.getName()} in ${declaration}.`,
+        element: child,
+        declaration,
+        suggestion: "Use input, returns, and context child nodes in a query.",
+      });
+    }
+  }
+
+  if (inputs.length === 0) {
+    add({
+      code: "SURF-CHILD-003",
+      message: `${declaration} must contain at least one input child node.`,
+      element: node,
+      declaration,
+      suggestion: 'Add an input such as input "id" type="string".',
+    });
+  }
+
+  if (returnsNodes.length !== 1) {
+    add({
+      code: "SURF-CHILD-001",
+      message: `${declaration} must contain exactly one returns child node.`,
+      element: returnsNodes[1] ?? node,
+      declaration,
+      suggestion: 'Add returns "entityId" missing=#null exactly once.',
+    });
+  }
+
+  const identities = new Set<string>();
+  for (const input of inputs) {
+    validateInput(input, declaration, add);
+    validateIdentity(input, identities, add);
+  }
+
+  for (const returnsNode of returnsNodes) {
+    validateReturns(returnsNode, declaration, add);
+  }
+}
+
+function validateInput(
+  node: Node,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const subject = `${declaration}.input`;
+  validateNoTag(node, add, declaration);
+  validateArguments(node, 1, subject, add, true);
+  validateProperties(node, ["type"], subject, add, ["type"]);
+  validateOnlyContextChildren(node, subject, add);
+  validatePrimitiveType(node, subject, declaration, add);
+}
+
+function validateReturns(
+  node: Node,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const subject = `${declaration}.returns`;
+  validateNoTag(node, add, declaration);
+  validateArguments(node, 1, subject, add, true);
+  validateProperties(
+    node,
+    ["missing"],
+    subject,
+    add,
+    ["missing"],
+    { missing: "null" },
+  );
+  validateOnlyContextChildren(node, subject, add);
+}
+
+function validatePrimitiveType(
+  node: Node,
+  subject: string,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const type = node.getProperty("type");
+  if (typeof type === "string" && !PRIMITIVE_TYPES.has(type as PrimitiveType)) {
+    add({
+      code: "SURF-TYPE-001",
+      message: `Unsupported primitive type ${type} on ${subject}.`,
+      element: propertyEntry(node, "type"),
+      declaration,
+      suggestion: "Use string or boolean.",
+    });
+  }
+}
+
+function validateScreen(node: Node, add: AddDiagnostic): void {
+  const declaration = declarationName(node);
+  validateArguments(node, 1, declaration, add, true);
+  validateProperties(node, ["route", "query"], declaration, add);
+
+  const children = node.children?.nodes ?? [];
+  const sections = children.filter((child) => child.getName() === "section");
+  const states = children.filter((child) => child.getName() === "state");
+  for (const child of children) {
+    if (child.getName() === "context") {
+      validateContextNode(child, declaration, add);
+      continue;
+    }
+
+    if (child.getName() !== "section" && child.getName() !== "state") {
+      add({
+        code: "SURF-CHILD-002",
+        message: `Unknown child node ${child.getName()} in ${declaration}.`,
+        element: child,
+        declaration,
+        suggestion: "Use only section, state, and context child nodes in a screen.",
       });
     }
   }
@@ -295,12 +524,106 @@ function validateScreen(node: Node, add: AddDiagnostic): void {
   for (const section of sections) {
     validateSection(section, declaration, add);
   }
+
+  const stateIdentities = new Set<string>();
+  for (const state of states) {
+    validateState(state, declaration, add);
+    validateIdentity(state, stateIdentities, add);
+  }
+
+  const query = node.getProperty("query");
+  if (typeof query === "string") {
+    for (const requiredState of ["empty", "notFound"]) {
+      const matching = states.filter(
+        (state) => state.getArgument(0) === requiredState,
+      );
+      if (matching.length !== 1) {
+        add({
+          code: "SURF-STATE-001",
+          message:
+            `${declaration} with a query must contain exactly one ${requiredState} state.`,
+          element: matching[1] ?? node,
+          declaration,
+          suggestion:
+            `Add state "${requiredState}" with at least one section, or remove the duplicate.`,
+        });
+      }
+    }
+  } else if (states.length > 0) {
+    add({
+      code: "SURF-STATE-002",
+      message: `${declaration} cannot contain states without a query.`,
+      element: states[0],
+      declaration,
+      suggestion: "Add a query property to the screen or remove its states.",
+    });
+  }
+}
+
+function validateState(
+  node: Node,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const id = node.getArgument(0);
+  const subject = typeof id === "string"
+    ? `${declaration}.state.${id}`
+    : `${declaration}.state`;
+  validateNoTag(node, add, declaration);
+  validateArguments(node, 1, subject, add, true);
+  validateProperties(node, [], subject, add);
+
+  if (
+    typeof id === "string" && id !== "empty" && id !== "notFound"
+  ) {
+    add({
+      code: "SURF-STATE-003",
+      message: `Unsupported screen state ${id}.`,
+      element: node.getArgumentEntry(0),
+      declaration,
+      suggestion: "Use only empty and notFound states in Surface 0.1.",
+    });
+  }
+
+  const children = node.children?.nodes ?? [];
+  const sections = children.filter((child) => child.getName() === "section");
+  for (const child of children) {
+    if (child.getName() === "context") {
+      validateContextNode(child, subject, add);
+      continue;
+    }
+
+    if (child.getName() !== "section") {
+      add({
+        code: "SURF-CHILD-002",
+        message: `Unknown child node ${child.getName()} in ${subject}.`,
+        element: child,
+        declaration,
+        suggestion: "Use only section and context child nodes in a state.",
+      });
+    }
+  }
+
+  if (sections.length === 0) {
+    add({
+      code: "SURF-CHILD-003",
+      message: `${subject} must contain at least one section child node.`,
+      element: node,
+      declaration,
+      suggestion: "Add a section with text describing the state.",
+    });
+  }
+
+  for (const section of sections) {
+    validateSection(section, subject, add, false);
+  }
 }
 
 function validateSection(
   node: Node,
   declaration: string,
   add: AddDiagnostic,
+  allowFields = true,
 ): void {
   const name = node.getArgument(0);
   const subject = typeof name === "string"
@@ -324,6 +647,7 @@ function validateSection(
   const children = node.children?.nodes ?? [];
   const titles = children.filter((child) => child.getName() === "title");
   const textNodes = children.filter((child) => child.getName() === "text");
+  const fields = children.filter((child) => child.getName() === "field");
 
   for (const child of children) {
     if (child.getName() === "context") {
@@ -331,13 +655,18 @@ function validateSection(
       continue;
     }
 
-    if (child.getName() !== "title" && child.getName() !== "text") {
+    if (
+      child.getName() !== "title" && child.getName() !== "text" &&
+      (child.getName() !== "field" || !allowFields)
+    ) {
       add({
         code: "SURF-CHILD-002",
         message: `Unknown child node ${child.getName()} in ${subject}.`,
         element: child,
         declaration,
-        suggestion: "Use only title, text, and context child nodes in a section.",
+        suggestion: allowFields
+          ? "Use only title, text, field, and context child nodes in a section."
+          : "Use only title, text, and context child nodes in a state section.",
       });
     }
   }
@@ -352,13 +681,27 @@ function validateSection(
     });
   }
 
-  if (textNodes.length === 0) {
+  if (allowFields && textNodes.length > 0 && fields.length > 0) {
+    add({
+      code: "SURF-CHILD-006",
+      message: `${subject} cannot mix text and field child nodes.`,
+      element: fields[0],
+      declaration,
+      suggestion: "Use either ordered text or ordered field references in one section.",
+    });
+  }
+
+  if (textNodes.length === 0 && (!allowFields || fields.length === 0)) {
     add({
       code: "SURF-CHILD-003",
-      message: `${subject} must contain at least one text child node.`,
+      message: allowFields
+        ? `${subject} must contain at least one text or field child node.`
+        : `${subject} must contain at least one text child node.`,
       element: node,
       declaration,
-      suggestion: 'Add text such as text "Hello, world!".',
+      suggestion: allowFields
+        ? 'Add text such as text "Hello, world!" or a field reference.'
+        : 'Add text such as text "Describe this state.".',
     });
   }
 
@@ -369,6 +712,24 @@ function validateSection(
   for (const text of textNodes) {
     validateLeafStringNode(text, "text", subject, add);
   }
+
+  if (allowFields) {
+    for (const field of fields) {
+      validateFieldReference(field, subject, declaration, add);
+    }
+  }
+}
+
+function validateFieldReference(
+  node: Node,
+  subject: string,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  validateNoTag(node, add, declaration);
+  validateArguments(node, 1, `${subject}.field`, add, true);
+  validateProperties(node, [], `${subject}.field`, add);
+  validateOnlyContextChildren(node, `${subject}.field`, add);
 }
 
 function validateLeafStringNode(
@@ -477,6 +838,7 @@ function validateProperties(
   subject: string,
   add: AddDiagnostic,
   required: readonly string[] = [],
+  propertyTypes: Readonly<Record<string, PropertyType>> = {},
 ): void {
   const allowedNames = new Set(allowed);
   const propertyCounts = new Map<string, number>();
@@ -500,13 +862,16 @@ function validateProperties(
       });
     }
 
-    if (typeof entry.getValue() !== "string") {
+    const expectedType = propertyTypes[name] ?? "string";
+    if (!isPropertyType(entry.getValue(), expectedType)) {
       add({
         code: "SURF-PROP-004",
-        message: `Property ${name} on ${subject} must be a string.`,
+        message: `Property ${name} on ${subject} must be ${
+          propertyTypeDescription(expectedType)
+        }.`,
         element: entry,
         declaration: subject.includes(".") ? subject : undefined,
-        suggestion: `Assign ${name} a quoted string value.`,
+        suggestion: `Use ${propertyTypeExample(name, expectedType)}.`,
       });
     }
 
@@ -539,9 +904,44 @@ function validateProperties(
         message: `${subject} is missing required property ${name}.`,
         element: node,
         declaration: subject.includes(".") ? subject : undefined,
-        suggestion: `Add ${name}="..." to the declaration.`,
+        suggestion: `Add ${
+          propertyTypeExample(name, propertyTypes[name] ?? "string")
+        } to the declaration.`,
       });
     }
+  }
+}
+
+function isPropertyType(value: Primitive, expected: PropertyType): boolean {
+  switch (expected) {
+    case "string":
+      return typeof value === "string";
+    case "boolean":
+      return typeof value === "boolean";
+    case "null":
+      return value === null;
+  }
+}
+
+function propertyTypeDescription(type: PropertyType): string {
+  switch (type) {
+    case "string":
+      return "a string";
+    case "boolean":
+      return "a Boolean";
+    case "null":
+      return "null";
+  }
+}
+
+function propertyTypeExample(name: string, type: PropertyType): string {
+  switch (type) {
+    case "string":
+      return `${name}="..."`;
+    case "boolean":
+      return `${name}=#true or ${name}=#false`;
+    case "null":
+      return `${name}=#null`;
   }
 }
 
@@ -612,6 +1012,179 @@ function validateIdentity(
   identities.add(identity);
 }
 
+function validateReferences(
+  entities: Node[],
+  queries: Node[],
+  screens: Node[],
+  add: AddDiagnostic,
+): void {
+  const entitiesById = nodesByIdentifier(entities);
+  const queriesById = nodesByIdentifier(queries);
+
+  for (const query of queries) {
+    validateQueryReferences(query, entitiesById, add);
+  }
+
+  for (const screen of screens) {
+    validateScreenReferences(screen, queriesById, entitiesById, add);
+  }
+}
+
+function validateQueryReferences(
+  query: Node,
+  entitiesById: Map<string, Node>,
+  add: AddDiagnostic,
+): void {
+  const declaration = declarationName(query);
+  const children = query.children?.nodes ?? [];
+  const returnsNode = children.find((child) => child.getName() === "returns");
+  const entityId = returnsNode?.getArgument(0);
+  const by = query.getProperty("by");
+
+  const entity = typeof entityId === "string" ? entitiesById.get(entityId) : undefined;
+  if (typeof entityId === "string" && entity === undefined) {
+    add({
+      code: "SURF-REF-001",
+      message: `Unresolved entity reference ${entityId} in ${declaration}.returns.`,
+      element: returnsNode?.getArgumentEntry(0),
+      declaration,
+      suggestion: `Declare entity "${entityId}" or change the return type.`,
+    });
+  }
+
+  if (typeof by !== "string") {
+    return;
+  }
+
+  const input = children.find(
+    (child) => child.getName() === "input" && child.getArgument(0) === by,
+  );
+  if (input === undefined) {
+    add({
+      code: "SURF-REF-001",
+      message: `${declaration} cannot resolve by="${by}" to an input.`,
+      element: propertyEntry(query, "by"),
+      declaration,
+      suggestion: `Add input "${by}" with the matching primitive type.`,
+    });
+  }
+
+  const field = entity?.children?.nodes.find(
+    (child) => child.getName() === "field" && child.getArgument(0) === by,
+  );
+  if (entity !== undefined && field === undefined) {
+    add({
+      code: "SURF-REF-001",
+      message: `${declaration} cannot resolve by="${by}" on entity.${entityId}.`,
+      element: propertyEntry(query, "by"),
+      declaration,
+      suggestion: `Add field "${by}" to entity "${entityId}" or change by.`,
+    });
+  }
+
+  const inputType = input?.getProperty("type");
+  const fieldType = field?.getProperty("type");
+  if (
+    typeof inputType === "string" && typeof fieldType === "string" &&
+    inputType !== fieldType
+  ) {
+    add({
+      code: "SURF-REF-002",
+      message:
+        `${declaration} input.${by} has type ${inputType}, but entity.${entityId}.field.${by} has type ${fieldType}.`,
+      element: propertyEntry(input!, "type"),
+      declaration,
+      suggestion: "Use the same primitive type for the input and matched field.",
+    });
+  }
+}
+
+function validateScreenReferences(
+  screen: Node,
+  queriesById: Map<string, Node>,
+  entitiesById: Map<string, Node>,
+  add: AddDiagnostic,
+): void {
+  const declaration = declarationName(screen);
+  const queryId = screen.getProperty("query");
+  const fieldReferences = (screen.children?.nodes ?? [])
+    .filter((child) => child.getName() === "section")
+    .flatMap((section) =>
+      (section.children?.nodes ?? []).filter(
+        (child) => child.getName() === "field",
+      )
+    );
+
+  if (typeof queryId !== "string") {
+    if (fieldReferences.length > 0) {
+      add({
+        code: "SURF-REF-001",
+        message: `${declaration} contains field references but has no query.`,
+        element: fieldReferences[0],
+        declaration,
+        suggestion: "Add a query property that returns the referenced entity.",
+      });
+    }
+    return;
+  }
+
+  const query = queriesById.get(queryId);
+  if (query === undefined) {
+    add({
+      code: "SURF-REF-001",
+      message: `Unresolved query reference ${queryId} on ${declaration}.`,
+      element: propertyEntry(screen, "query"),
+      declaration,
+      suggestion: `Declare query "${queryId}" or change the screen query.`,
+    });
+    return;
+  }
+
+  const returnsNode = query.children?.nodes.find(
+    (child) => child.getName() === "returns",
+  );
+  const entityId = returnsNode?.getArgument(0);
+  const entity = typeof entityId === "string" ? entitiesById.get(entityId) : undefined;
+  if (entity === undefined) {
+    return;
+  }
+
+  const fieldNames = new Set(
+    (entity.children?.nodes ?? [])
+      .filter((child) => child.getName() === "field")
+      .map((field) => field.getArgument(0))
+      .filter((name): name is string => typeof name === "string"),
+  );
+  for (const field of fieldReferences) {
+    const name = field.getArgument(0);
+    if (typeof name === "string" && !fieldNames.has(name)) {
+      add({
+        code: "SURF-REF-001",
+        message:
+          `Unresolved field reference ${name} from entity.${entityId} on ${declaration}.`,
+        element: field.getArgumentEntry(0),
+        declaration,
+        suggestion: `Use a field declared by entity "${entityId}".`,
+      });
+    }
+  }
+}
+
+function nodesByIdentifier(nodes: Node[]): Map<string, Node> {
+  const result = new Map<string, Node>();
+  for (const node of nodes) {
+    const id = node.getArgument(0);
+    if (typeof id === "string" && !result.has(id)) {
+      result.set(id, node);
+    }
+  }
+  return result;
+}
+
+function propertyEntry(node: Node, name: string) {
+  return node.getPropertyEntries().find((entry) => entry.getName() === name);
+}
+
 function declarationName(node: Node): string {
   const id = node.getArgument(0);
   return typeof id === "string" ? `${node.getName()}.${id}` : node.getName();
@@ -628,6 +1201,8 @@ function buildIr(document: Document): SurfaceIr {
     applicationChildren.findNodeByName("purpose"),
     "application purpose",
   );
+  const entities = document.nodes.filter((node) => node.getName() === "entity");
+  const queries = document.nodes.filter((node) => node.getName() === "query");
   const screens = document.nodes.filter((node) => node.getName() === "screen");
 
   return {
@@ -636,30 +1211,105 @@ function buildIr(document: Document): SurfaceIr {
       id: expectString(application.getArgument(0), "application identifier"),
       purpose: expectString(purpose.getArgument(0), "application purpose"),
     },
+    ...(entities.length === 0 ? {} : {
+      entities: entities.map((entity) => {
+        const children = expectChildren(entity, "entity");
+        return {
+          id: expectString(entity.getArgument(0), "entity identifier"),
+          fields: children.findNodesByName("field").map((field) => {
+            const generated = optionalBoolean(
+              field.getProperty("generated"),
+              "field generated",
+            );
+            const optional = optionalBoolean(
+              field.getProperty("optional"),
+              "field optional",
+            );
+            return {
+              name: expectString(field.getArgument(0), "field name"),
+              type: expectPrimitiveType(
+                field.getProperty("type"),
+                "field type",
+              ),
+              ...(generated === undefined ? {} : { generated }),
+              ...(optional === undefined ? {} : { optional }),
+            };
+          }),
+        };
+      }),
+    }),
+    ...(queries.length === 0 ? {} : {
+      queries: queries.map((query) => {
+        const children = expectChildren(query, "query");
+        const returnsNode = expectNode(
+          children.findNodeByName("returns"),
+          "query returns",
+        );
+        return {
+          id: expectString(query.getArgument(0), "query identifier"),
+          by: expectString(query.getProperty("by"), "query by"),
+          inputs: children.findNodesByName("input").map((input) => ({
+            name: expectString(input.getArgument(0), "input name"),
+            type: expectPrimitiveType(
+              input.getProperty("type"),
+              "input type",
+            ),
+          })),
+          returns: {
+            entity: expectString(
+              returnsNode.getArgument(0),
+              "return entity",
+            ),
+            missing: expectNull(
+              returnsNode.getProperty("missing"),
+              "return missing",
+            ),
+          },
+        };
+      }),
+    }),
     screens: screens.map((screen) => {
       const route = optionalString(screen.getProperty("route"), "screen route");
+      const query = optionalString(screen.getProperty("query"), "screen query");
       const screenChildren = expectChildren(screen, "screen");
+      const states = screenChildren.findNodesByName("state");
       return {
         id: expectString(screen.getArgument(0), "screen identifier"),
         ...(route === undefined ? {} : { route }),
-        sections: screenChildren
-          .findNodesByName("section")
-          .map((section) => {
-            const sectionChildren = expectChildren(section, "section");
-            const titleNode = sectionChildren.findNodeByName("title");
-            const title = titleNode === undefined
-              ? undefined
-              : expectString(titleNode.getArgument(0), "section title");
+        ...(query === undefined ? {} : { query }),
+        sections: screenChildren.findNodesByName("section").map(buildSectionIr),
+        ...(states.length === 0 ? {} : {
+          states: states.map((state) => {
+            const children = expectChildren(state, "state");
             return {
-              name: expectString(section.getArgument(0), "section name"),
-              ...(title === undefined ? {} : { title }),
-              text: sectionChildren
-                .findNodesByName("text")
-                .map((text) => expectString(text.getArgument(0), "section text")),
+              id: expectString(state.getArgument(0), "state identifier"),
+              sections: children
+                .findNodesByName("section")
+                .map(buildSectionIr),
             };
           }),
+        }),
       };
     }),
+  };
+}
+
+function buildSectionIr(section: Node): SurfaceSectionIr {
+  const children = expectChildren(section, "section");
+  const titleNode = children.findNodeByName("title");
+  const title = titleNode === undefined
+    ? undefined
+    : expectString(titleNode.getArgument(0), "section title");
+  const fields = children.findNodesByName("field").map((field) =>
+    expectString(field.getArgument(0), "field reference")
+  );
+  return {
+    name: expectString(section.getArgument(0), "section name"),
+    ...(title === undefined ? {} : { title }),
+    text: children.findNodesByName("text").map((text) =>
+      expectString(text.getArgument(0), "section text")
+    ),
+    ...(fields.length === 0 ? {} : { fields }),
   };
 }
 
@@ -687,9 +1337,43 @@ function expectString(
   return value;
 }
 
+function expectPrimitiveType(
+  value: Primitive | undefined,
+  subject: string,
+): PrimitiveType {
+  const type = expectString(value, subject);
+  if (!PRIMITIVE_TYPES.has(type as PrimitiveType)) {
+    throw new Error(`Validated ${subject} is not a primitive type.`);
+  }
+  return type as PrimitiveType;
+}
+
+function expectNull(
+  value: Primitive | undefined,
+  subject: string,
+): null {
+  if (value !== null) {
+    throw new Error(`Validated ${subject} is not null.`);
+  }
+  return null;
+}
+
 function optionalString(
   value: Primitive | undefined,
   subject: string,
 ): string | undefined {
   return value === undefined ? undefined : expectString(value, subject);
+}
+
+function optionalBoolean(
+  value: Primitive | undefined,
+  subject: string,
+): boolean | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value !== "boolean") {
+    throw new Error(`Validated ${subject} is not a Boolean.`);
+  }
+  return value;
 }
