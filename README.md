@@ -22,6 +22,7 @@ application "helloWorld" {
 
 screen "home" route="/" {
     section "Home" {
+        context "This section contains the text Hello, world!"
         title "My app"
         paragraph "Hello, world!"
     }
@@ -42,6 +43,7 @@ title and one paragraph.
 | `section "<name>"` | Child of `screen`; contains an optional `title` and one or more `paragraph` nodes |
 | `title "<text>"` | Optional child of `section`; at most one |
 | `paragraph "<text>"` | Child of `section`; one or more, in presentation order |
+| `context "<prompt>"` | Optional, repeatable child of any Surface node; prompt-only |
 
 Additional rules:
 
@@ -51,6 +53,8 @@ Additional rules:
 - Application and screen identifiers are unique within their declaration type.
 - Routes are optional strings and currently opaque. Section names, titles, and
   paragraph text are strings.
+- `context` contains one string, has no properties or children, and is omitted
+  from the semantic JSON IR.
 - Unknown nodes, properties, duplicate properties, and unsupported type
   annotations are rejected.
 - Comments are supported and preserved by the formatter.

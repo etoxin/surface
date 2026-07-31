@@ -55,6 +55,7 @@ purpose "Display a greeting."
 
 screen "home" route="/" {
 section "Home" {
+context "Keep this prompt."
 title "My app"
 paragraph "Hello, world!"
 }
@@ -65,6 +66,7 @@ paragraph "Hello, world!"
   assertEquals(first.diagnostics, []);
   assert(first.output !== null);
   assertMatch(first.output, /\/\/ Keep this comment\./);
+  assertMatch(first.output, /context "Keep this prompt\."/);
   assertMatch(first.output, /^[ ]{4}purpose/m);
   assertMatch(first.output, /^[ ]{4}section/m);
   assertMatch(first.output, /^[ ]{8}title/m);
@@ -138,6 +140,43 @@ screen "home" {
       name: "Home",
       paragraphs: ["Hello, world!"],
     }],
+  });
+});
+
+Deno.test("context is valid on every Surface node and omitted from the IR", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1" {
+    context "Document guidance."
+}
+application "contextual" {
+    context "Application guidance."
+    purpose "Exercise universal context." {
+        context "Purpose guidance."
+    }
+}
+screen "home" {
+    context "Screen guidance."
+    section "Home" {
+        context "Section guidance."
+        title "My app" {
+            context "Title guidance."
+        }
+        paragraph "Hello, world!" {
+            context "Paragraph guidance."
+        }
+    }
+}
+`;
+
+  const result = parseSurface(source, "context.kdl");
+  assertEquals(result.diagnostics, []);
+  assert(result.ir !== null);
+  assert(!JSON.stringify(result.ir).includes("guidance"));
+  assertEquals(result.ir.screens[0].sections[0], {
+    name: "Home",
+    title: "My app",
+    paragraphs: ["Hello, world!"],
   });
 });
 

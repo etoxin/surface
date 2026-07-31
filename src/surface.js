@@ -149,7 +149,7 @@ function validateKdlMarker(source, add) {
 function validateSurfaceNode(node, add) {
   validateArguments(node, 1, "surface", add);
   validateProperties(node, [], "surface", add);
-  validateNoChildren(node, "surface", add);
+  validateOnlyContextChildren(node, "surface", add);
 
   const version = node.getArgument(0);
   if (version !== undefined && typeof version !== "string") {
@@ -177,13 +177,18 @@ function validateApplication(node, add) {
   const children = node.children?.nodes ?? [];
   const purposes = children.filter((child) => child.getName() === "purpose");
   for (const child of children) {
+    if (child.getName() === "context") {
+      validateContextNode(child, declaration, add);
+      continue;
+    }
+
     if (child.getName() !== "purpose") {
       add({
         code: "SURF-CHILD-002",
         message: `Unknown child node ${child.getName()} in ${declaration}.`,
         element: child,
         declaration,
-        suggestion: "Use exactly one purpose child node.",
+        suggestion: "Use one purpose child and optional context children.",
       });
     }
   }
@@ -211,13 +216,18 @@ function validateScreen(node, add) {
   const children = node.children?.nodes ?? [];
   const sections = children.filter((child) => child.getName() === "section");
   for (const child of children) {
+    if (child.getName() === "context") {
+      validateContextNode(child, declaration, add);
+      continue;
+    }
+
     if (child.getName() !== "section") {
       add({
         code: "SURF-CHILD-002",
         message: `Unknown child node ${child.getName()} in ${declaration}.`,
         element: child,
         declaration,
-        suggestion: "Use only section child nodes in a screen.",
+        suggestion: "Use only section and context child nodes in a screen.",
       });
     }
   }
@@ -262,13 +272,18 @@ function validateSection(node, declaration, add) {
   const paragraphs = children.filter((child) => child.getName() === "paragraph");
 
   for (const child of children) {
+    if (child.getName() === "context") {
+      validateContextNode(child, subject, add);
+      continue;
+    }
+
     if (child.getName() !== "title" && child.getName() !== "paragraph") {
       add({
         code: "SURF-CHILD-002",
         message: `Unknown child node ${child.getName()} in ${subject}.`,
         element: child,
         declaration,
-        suggestion: "Use only title and paragraph child nodes in a section.",
+        suggestion: "Use only title, paragraph, and context child nodes in a section.",
       });
     }
   }
@@ -302,11 +317,21 @@ function validateSection(node, declaration, add) {
   }
 }
 
-function validateLeafStringNode(node, name, declaration, add) {
+function validateLeafStringNode(
+  node,
+  name,
+  declaration,
+  add,
+  allowContext = true,
+) {
   validateNoTag(node, add, declaration);
   validateArguments(node, 1, `${declaration}.${name}`, add);
   validateProperties(node, [], `${declaration}.${name}`, add);
-  validateNoChildren(node, `${declaration}.${name}`, add);
+  if (allowContext) {
+    validateOnlyContextChildren(node, `${declaration}.${name}`, add);
+  } else {
+    validateNoChildren(node, `${declaration}.${name}`, add);
+  }
 
   const value = node.getArgument(0);
   if (value !== undefined && typeof value !== "string") {
@@ -316,6 +341,27 @@ function validateLeafStringNode(node, name, declaration, add) {
       element: node.getArgumentEntry(0),
       declaration,
       suggestion: `Write ${name} followed by one quoted string.`,
+    });
+  }
+}
+
+function validateContextNode(node, declaration, add) {
+  validateLeafStringNode(node, "context", declaration, add, false);
+}
+
+function validateOnlyContextChildren(node, subject, add) {
+  for (const child of node.children?.nodes ?? []) {
+    if (child.getName() === "context") {
+      validateContextNode(child, subject, add);
+      continue;
+    }
+
+    add({
+      code: "SURF-CHILD-002",
+      message: `Unknown child node ${child.getName()} in ${subject}.`,
+      element: child,
+      declaration: subject.includes(".") ? subject : undefined,
+      suggestion: "Use only context child nodes here.",
     });
   }
 }

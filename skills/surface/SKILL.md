@@ -45,6 +45,7 @@ Declare at least one screen:
 ```kdl
 screen "home" route="/" {
     section "Home" {
+        context "This section contains the text Hello, world!"
         title "My app"
         paragraph "Hello, world!"
     }
@@ -72,6 +73,15 @@ A section has:
 - no properties;
 - zero or one `title` child containing one quoted string;
 - one or more ordered `paragraph` children, each containing one quoted string.
+
+## Prompt Context
+
+Add zero or more `context` children to any Surface node. Each contains exactly
+one quoted prompt string and has no properties or children.
+
+Use context as guidance for interpreting or implementing its parent. Preserve
+it when editing and formatting, but do not treat it as application behavior or
+include it in the semantic JSON IR.
 
 Identifiers must match `[a-z][A-Za-z0-9]*` and should use lower camel case.
 

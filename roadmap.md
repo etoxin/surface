@@ -102,6 +102,7 @@ Introduces:
 - `screen` declarations;
 - named `section` blocks;
 - optional section titles and ordered paragraphs;
+- prompt-only `context` annotations on any node;
 - nested child blocks;
 - declaration identifiers;
 - strings and scalar properties;
