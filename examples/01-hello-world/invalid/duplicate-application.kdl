@@ -2,11 +2,11 @@
 
 surface-lang "0.1"
 
-application "helloWorld" version="0.1.0" {
+application "helloWorld" {
     purpose "Display a greeting."
 }
 
-application "anotherHello" version="0.1.0" {
+application "anotherHello" {
     purpose "Display another greeting."
 }
 

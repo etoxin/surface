@@ -16,7 +16,7 @@ the syntax needed for the first roadmap rung: Hello World. See
 
 surface-lang "0.1"
 
-application "helloWorld" version="0.1.0" {
+application "helloWorld" {
     purpose "Display a greeting."
 }
 
@@ -33,9 +33,9 @@ This describes one application with one screen at `/` and one section showing
 | Form | Rule |
 | --- | --- |
 | `surface-lang "0.1"` | First semantic node; exactly one |
-| `application "<id>" version="<version>"` | Exactly one; contains one `purpose` |
+| `application "<id>"` | Exactly one; contains one `purpose` |
 | `purpose "<text>"` | Child of `application`; exactly one string |
-| `screen "<id>" route="<route>"` | At least one; contains one or more `section` nodes |
+| `screen "<id>" [route="<route>"]` | At least one; optional route; contains one or more `section` nodes |
 | `section "<text>"` | Child of `screen`; order is preserved |
 
 Additional rules:
@@ -44,7 +44,8 @@ Additional rules:
 - Identifiers match `[a-z][A-Za-z0-9]*`, are case-sensitive, and should use
   lower camel case.
 - Application and screen identifiers are unique within their declaration type.
-- Versions, routes, and text are strings. Routes are currently opaque.
+- Routes are optional. When present, routes and text are strings; routes are
+  currently opaque.
 - Unknown nodes, properties, duplicate properties, and unsupported type
   annotations are rejected.
 - Comments are supported and preserved by the formatter.

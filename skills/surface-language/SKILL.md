@@ -35,7 +35,7 @@ surface-lang "0.1"
 Declare exactly one application:
 
 ```kdl
-application "helloWorld" version="0.1.0" {
+application "helloWorld" {
     purpose "Display a greeting."
 }
 ```
@@ -51,14 +51,17 @@ screen "home" route="/" {
 An application has exactly:
 
 - one quoted identifier argument;
-- one quoted `version` property;
+- no properties;
 - one `purpose` child containing one quoted string.
 
 A screen has exactly:
 
 - one quoted identifier argument;
-- one quoted `route` property;
+- zero or one quoted `route` property;
 - one or more ordered `section` children, each containing one quoted string.
+
+Use `route` for addressable screens such as web pages. Omit it for screens that
+do not have a URL or equivalent address.
 
 Identifiers must match `[a-z][A-Za-z0-9]*` and should use lower camel case.
 

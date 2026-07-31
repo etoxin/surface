@@ -116,7 +116,7 @@ export function validateDocument(document, source, file = "surface.kdl") {
     add({
       code: "SURF-SCREEN-001",
       message: "The project must contain at least one screen declaration.",
-      suggestion: "Add a screen with a route and at least one section.",
+      suggestion: "Add a screen with at least one section.",
     });
   }
 
@@ -174,7 +174,7 @@ function validateVersionNode(node, add) {
 function validateApplication(node, add) {
   const declaration = declarationName(node);
   validateArguments(node, 1, declaration, add, true);
-  validateProperties(node, ["version"], declaration, add, ["version"]);
+  validateProperties(node, [], declaration, add);
 
   const children = node.children?.nodes ?? [];
   const purposes = children.filter((child) => child.getName() === "purpose");
@@ -208,7 +208,7 @@ function validateApplication(node, add) {
 function validateScreen(node, add) {
   const declaration = declarationName(node);
   validateArguments(node, 1, declaration, add, true);
-  validateProperties(node, ["route"], declaration, add, ["route"]);
+  validateProperties(node, ["route"], declaration, add);
 
   const children = node.children?.nodes ?? [];
   const sections = children.filter((child) => child.getName() === "section");
@@ -428,15 +428,17 @@ function buildIr(document) {
     surfaceVersion: version.getArgument(0),
     application: {
       id: application.getArgument(0),
-      version: application.getProperty("version"),
       purpose: application.children.findNodeByName("purpose").getArgument(0),
     },
-    screens: screens.map((screen) => ({
-      id: screen.getArgument(0),
-      route: screen.getProperty("route"),
-      sections: screen.children
-        .findNodesByName("section")
-        .map((section) => section.getArgument(0)),
-    })),
+    screens: screens.map((screen) => {
+      const route = screen.getProperty("route");
+      return {
+        id: screen.getArgument(0),
+        ...(route === undefined ? {} : { route }),
+        sections: screen.children
+          .findNodesByName("section")
+          .map((section) => section.getArgument(0)),
+      };
+    }),
   };
 }

@@ -1,7 +1,7 @@
 {
   "missing-application.kdl": "SURF-APP-001",
   "duplicate-application.kdl": "SURF-APP-001",
-  "missing-version.kdl": "SURF-PROP-001",
+  "unexpected-version.kdl": "SURF-PROP-003",
   "unknown-node.kdl": "SURF-NODE-001",
   "invalid-kdl.kdl": "SURF-KDL-002"
 }

@@ -8,6 +8,7 @@
       "acceptance": [
         "The result is valid Surface 0.1 KDL.",
         "The result contains exactly one application and at least one screen.",
+        "The application has no version property.",
         "The screen route is / and a section displays Welcome to Acme.",
         "The result does not introduce syntax from a later rung."
       ]
@@ -23,7 +24,7 @@
     },
     {
       "id": "diagnose",
-      "prompt": "Diagnose a file with no application, an unsupported component node, a screen identifier containing a space, and no route.",
+      "prompt": "Diagnose a file with no application, an unsupported component node, a screen identifier containing a space, and a numeric route.",
       "acceptance": [
         "The response identifies all four Surface validation problems.",
         "The response distinguishes valid KDL from valid Surface.",

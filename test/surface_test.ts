@@ -49,7 +49,7 @@ Deno.test("the formatter is idempotent and preserves comments", () => {
 surface-lang "0.1"
 
 // Keep this comment.
-application "helloWorld" version="0.1.0" {
+application "helloWorld" {
 purpose "Display a greeting."
 }
 
@@ -82,7 +82,7 @@ Deno.test("screen and section order is retained in the IR", () => {
   const source = `/- kdl-version 2
 
 surface-lang "0.1"
-application "ordered" version="1" { purpose "Check ordering." }
+application "ordered" { purpose "Check ordering." }
 screen "first" route="/first" {
     section "A"
     section "B"
@@ -98,6 +98,23 @@ screen "second" route="/second" { section "C" }
     ["first", "second"],
   );
   assertEquals(result.ir.screens[0].sections, ["A", "B"]);
+});
+
+Deno.test("a screen route is optional and omitted from the IR", () => {
+  const source = `/- kdl-version 2
+
+surface-lang "0.1"
+application "nativeApp" { purpose "Run without a website." }
+screen "home" { section "Hello, world!" }
+`;
+
+  const result = parseSurface(source, "native.kdl");
+  assertEquals(result.diagnostics, []);
+  assert(result.ir !== null);
+  assertEquals(result.ir.screens[0], {
+    id: "home",
+    sections: ["Hello, world!"],
+  });
 });
 
 Deno.test("CLI check and export succeed for the valid example", () => {
@@ -137,7 +154,7 @@ Deno.test("CLI format updates a file in place without losing comments", async ()
 
 surface-lang "0.1"
 // Retain me.
-application "helloWorld" version="0.1.0" {
+application "helloWorld" {
 purpose "Display a greeting."
 }
 screen "home" route="/" {
