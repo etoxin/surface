@@ -1,0 +1,672 @@
+surface-lang 0.1
+
+// This application exercises every standard Surface 0.1 declaration type.
+
+application teamTasks {
+    name = "Team Tasks"
+    version = "0.1.0"
+
+    purpose = "Help small teams create, assign, and complete shared tasks."
+
+    specificationStatus = structuredDraft
+    locale = "en-GB"
+    timezone = "Europe/London"
+    xOwnerTeam = "productEngineering"
+}
+
+actor member {
+    name = "Member"
+    kind = human
+    description = "A person who creates and completes team tasks."
+
+    responsibilities = [
+        "Create tasks.",
+        "Complete assigned tasks.",
+    ]
+}
+
+actor administrator {
+    name = "Administrator"
+    kind = human
+    description = "A person who manages every task in the application."
+
+    responsibilities = [
+        "View every task.",
+        "Resolve task ownership problems.",
+    ]
+}
+
+actor notificationWorker {
+    name = "Notification Worker"
+    kind = service
+    description = "The background service that sends task notifications."
+}
+
+value taskTitle {
+    name = "Task Title"
+    base = "string"
+
+    constraints = [
+        "The title must contain between 1 and 120 characters.",
+        "The title must not contain only whitespace.",
+    ]
+
+    examples = [
+        "Prepare the weekly project update",
+    ]
+}
+
+enum taskStatus {
+    values = [
+        "open",
+        "completed",
+        "archived",
+    ]
+}
+
+entity user {
+    name = "User"
+    description = "A person with access to Team Tasks."
+
+    fields = [
+        {
+            id = "id"
+            type = "uuid"
+            required = true
+            generated = true
+        },
+        {
+            id = "displayName"
+            type = "string"
+            required = true
+            maximumLength = 100
+        },
+        {
+            id = "email"
+            type = "email"
+            required = true
+            unique = true
+            sensitive = true
+        },
+    ]
+}
+
+entity task {
+    name = "Task"
+    description = "A unit of work owned by a team member."
+
+    fields = [
+        {
+            id = "id"
+            type = "uuid"
+            required = true
+            generated = true
+        },
+        {
+            id = "title"
+            type = @value.taskTitle
+            required = true
+        },
+        {
+            id = "owner"
+            type = @entity.user
+            required = true
+        },
+        {
+            id = "status"
+            type = @enum.taskStatus
+            required = true
+            default = "open"
+        },
+        {
+            id = "createdAt"
+            type = "timestamp"
+            required = true
+            generated = true
+        },
+        {
+            id = "completedAt"
+            type = "timestamp"
+            required = false
+        },
+    ]
+}
+
+event taskCreated {
+    name = "Task Created"
+    source = @behavior.taskCreate
+
+    payload = [
+        {
+            id = "task"
+            type = @entity.task
+            required = true
+        },
+        {
+            id = "createdBy"
+            type = @entity.user
+            required = true
+        },
+    ]
+}
+
+event taskCompleted {
+    name = "Task Completed"
+    source = @behavior.taskComplete
+
+    consumers = [
+        @actor.notificationWorker,
+        @job.sendTaskCompletionNotification,
+    ]
+
+    payload = [
+        {
+            id = "task"
+            type = @entity.task
+            required = true
+        },
+        {
+            id = "completedBy"
+            type = @entity.user
+            required = true
+        },
+    ]
+}
+
+policy taskView {
+    name = "View Task"
+    actor = @actor.member
+    resource = @entity.task
+    action = "view"
+
+    allowWhen = [
+        "The actor owns the task.",
+        "The actor is an administrator.",
+    ]
+}
+
+policy taskCreate {
+    name = "Create Task"
+    actor = @actor.member
+    resource = @entity.task
+    action = "create"
+
+    allowWhen = [
+        "The actor is an active member.",
+    ]
+}
+
+policy taskComplete {
+    name = "Complete Task"
+    actor = @actor.member
+    resource = @entity.task
+    action = "complete"
+
+    allowWhen = [
+        "The actor owns the task.",
+        "The actor is an administrator.",
+    ]
+
+    denyWhen = [
+        "The task status is not open.",
+    ]
+}
+
+behavior taskCreate {
+    name = "Create Task"
+    actor = @actor.member
+    resource = @entity.task
+    policy = @policy.taskCreate
+
+    inputs = [
+        {
+            id = "title"
+            type = @value.taskTitle
+            required = true
+        },
+        {
+            id = "owner"
+            type = @entity.user
+            required = true
+        },
+    ]
+
+    preconditions = [
+        "The selected owner is an active member.",
+    ]
+
+    effects = [
+        "Create a task with open status.",
+        "Emit the taskCreated event.",
+    ]
+
+    emits = [
+        @event.taskCreated,
+    ]
+
+    errors = [
+        "permissionDenied",
+        "invalidOwner",
+        "validationFailed",
+    ]
+
+    idempotent = false
+}
+
+behavior taskComplete {
+    name = "Complete Task"
+    actor = @actor.member
+    resource = @entity.task
+    policy = @policy.taskComplete
+
+    inputs = [
+        {
+            id = "task"
+            type = @entity.task
+            required = true
+        },
+    ]
+
+    preconditions = [
+        "The task status is open.",
+    ]
+
+    effects = [
+        "Set the task status to completed.",
+        "Record the current timestamp as completedAt.",
+        "Emit the taskCompleted event.",
+    ]
+
+    emits = [
+        @event.taskCompleted,
+    ]
+
+    errors = [
+        "taskNotFound",
+        "permissionDenied",
+        "invalidTaskState",
+    ]
+
+    idempotent = false
+}
+
+query taskGet {
+    name = "Get Task"
+    actor = @actor.member
+    policy = @policy.taskView
+
+    inputs = [
+        {
+            id = "taskId"
+            type = "uuid"
+            required = true
+        },
+    ]
+
+    returns = {
+        type = @entity.task
+        nullable = true
+    }
+
+    requirements = [
+        "Return the task matching taskId.",
+        "Apply the taskView policy.",
+        "Return null when the task does not exist.",
+    ]
+}
+
+workflow taskLifecycle {
+    name = "Task Lifecycle"
+    entity = @entity.task
+
+    states = [
+        "open",
+        "completed",
+        "archived",
+    ]
+
+    initialState = "open"
+
+    transitions = [
+        {
+            id = "complete"
+            from = "open"
+            to = "completed"
+            behavior = @behavior.taskComplete
+            policy = @policy.taskComplete
+        },
+        {
+            id = "archive"
+            from = "completed"
+            to = "archived"
+            conditions = [
+                "The task satisfies the confirmed retention period.",
+            ]
+        },
+    ]
+
+    invariants = [
+        "A completed task must have a completedAt timestamp.",
+    ]
+}
+
+integration emailService {
+    name = "Email Service"
+    kind = externalService
+    provider = "Example Mail"
+
+    operations = [
+        {
+            id = "sendEmail"
+            inputs = [
+                "recipient",
+                "subject",
+                "message",
+            ]
+            timeoutSeconds = 10
+            maximumAttempts = 3
+            idempotent = true
+        },
+    ]
+
+    authentication = "Use the EMAIL_SERVICE_API_KEY secret."
+
+    failureBehavior = [
+        "Retry temporary failures.",
+        "Record permanent failures for operational review.",
+    ]
+}
+
+job sendTaskCompletionNotification {
+    name = "Send Task Completion Notification"
+    description = "Notify the task owner when a task is completed."
+    triggeredBy = @event.taskCompleted
+
+    requirements = [
+        "Use the sendEmail operation from the emailService integration.",
+        "Do not send more than one completion notification for the same event.",
+    ]
+
+    maximumAttempts = 3
+    timeoutSeconds = 30
+    idempotent = true
+
+    failureBehavior = [
+        "Record a permanent failure after all attempts are exhausted.",
+    ]
+}
+
+interface taskApi {
+    name = "Task API"
+    kind = http
+    basePath = "/api"
+    authentication = "Require an authenticated user."
+
+    operations = [
+        {
+            id = "getTask"
+            method = "GET"
+            path = "/tasks/{taskId}"
+            query = @query.taskGet
+            responses = {
+                success = 200
+                notFound = 404
+                permissionDenied = 403
+            }
+        },
+        {
+            id = "createTask"
+            method = "POST"
+            path = "/tasks"
+            behavior = @behavior.taskCreate
+            responses = {
+                success = 201
+                permissionDenied = 403
+                validationFailed = 422
+            }
+        },
+        {
+            id = "completeTask"
+            method = "POST"
+            path = "/tasks/{taskId}/complete"
+            behavior = @behavior.taskComplete
+            responses = {
+                success = 200
+                notFound = 404
+                permissionDenied = 403
+                invalidTaskState = 409
+            }
+        },
+    ]
+}
+
+component taskStatusBadge {
+    name = "Task Status Badge"
+
+    inputs = [
+        {
+            id = "status"
+            type = @enum.taskStatus
+            required = true
+        },
+    ]
+
+    states = [
+        "open",
+        "completed",
+        "archived",
+    ]
+
+    requirements = [
+        "Display the task status as text.",
+        "Do not communicate the task status using colour alone.",
+    ]
+
+    accessibility = [
+        "Expose the status text to assistive technology.",
+    ]
+}
+
+screen taskDetails {
+    name = "Task Details"
+    route = "/tasks/:taskId"
+
+    actors = [
+        @actor.member,
+        @actor.administrator,
+    ]
+
+    data = [
+        @query.taskGet,
+    ]
+
+    sections = [
+        "Task summary",
+        "Ownership",
+        "Activity",
+    ]
+
+    components = [
+        @component.taskStatusBadge,
+    ]
+
+    actions = [
+        {
+            label = "Complete Task"
+            behavior = @behavior.taskComplete
+            policy = @policy.taskComplete
+            visibleWhen = "The task status is open."
+        },
+    ]
+
+    states = {
+        loading = "Display a loading placeholder."
+        empty = "Not applicable."
+        notFound = "Display a task-not-found message."
+        error = "Display an error message and a retry action."
+    }
+
+    requirements = [
+        "A keyboard user must be able to reach every action.",
+        "The screen must retain its reading order at widths of 320 pixels or greater.",
+    ]
+}
+
+scenario memberCompletesOpenTask {
+    name = "Member completes an open task"
+
+    relatesTo = [
+        @behavior.taskComplete,
+        @policy.taskComplete,
+        @workflow.taskLifecycle,
+    ]
+
+    given = [
+        "The actor owns the task.",
+        "The task status is open.",
+    ]
+
+    when = [
+        "The actor completes the task.",
+    ]
+
+    then = [
+        "The task status becomes completed.",
+        "The completion timestamp is recorded.",
+        "Exactly one taskCompleted event is emitted.",
+    ]
+}
+
+scenario memberCannotCompleteArchivedTask {
+    name = "Member cannot complete an archived task"
+
+    relatesTo = [
+        @behavior.taskComplete,
+        @policy.taskComplete,
+    ]
+
+    given = [
+        "The actor owns the task.",
+        "The task status is archived.",
+    ]
+
+    when = [
+        "The actor attempts to complete the task.",
+    ]
+
+    then = [
+        "The operation fails with invalidTaskState.",
+        "The task remains archived.",
+        "No taskCompleted event is emitted.",
+    ]
+}
+
+requirement taskDetailsAccessibility {
+    title = "Task details accessibility"
+
+    statement = "The task details screen must satisfy WCAG 2.2 Level AA."
+
+    priority = must
+    source = "Product accessibility standard"
+
+    affects = [
+        @screen.taskDetails,
+        @component.taskStatusBadge,
+    ]
+
+    acceptance = [
+        "Automated accessibility checks report no serious violations.",
+        "A keyboard-only user can complete an open task.",
+    ]
+}
+
+constraint taskDataProtection {
+    category = privacy
+
+    statement = "Task and user data must be encrypted in transit and at rest."
+
+    affects = [
+        @entity.task,
+        @entity.user,
+        @deployment.production,
+    ]
+
+    verification = "Review transport security and storage encryption settings before release."
+}
+
+decision taskRetentionPeriod {
+    status = unresolved
+    question = "How long should completed tasks remain available before archival?"
+
+    options = [
+        "30 days",
+        "90 days",
+        "One year",
+        "Archive tasks only when a user requests it.",
+    ]
+
+    affects = [
+        @entity.task,
+        @workflow.taskLifecycle,
+        @deployment.production,
+    ]
+
+    blocks = [
+        "implementationReady",
+    ]
+}
+
+deployment production {
+    name = "Production"
+    environment = production
+    provider = "Example Cloud"
+    region = "eu-west"
+    dataResidency = "European Union"
+
+    requirements = [
+        "Run at least two application instances.",
+        "Back up application data every day.",
+        "Retain operational logs for 30 days.",
+    ]
+
+    availability = "Target 99.9% monthly availability."
+    backup = "Create an encrypted backup every 24 hours."
+    recovery = "Restore the service within four hours of a regional failure."
+    observability = "Record request metrics, structured logs, and error traces."
+}
+
+extension taskRiskAssessment {
+    name = "Task Risk Assessment"
+    purpose = "Estimate whether a task is at risk of remaining incomplete."
+
+    interface = {
+        input = @entity.task
+        output = "riskScore"
+    }
+
+    dependencies = [
+        @integration.emailService,
+    ]
+
+    requirements = [
+        "Return an integer risk score between 0 and 100.",
+        "Complete within 500 milliseconds.",
+        "Do not modify the task.",
+    ]
+
+    effects = []
+
+    implementationConstraints = [
+        "Do not transmit task data outside the deployment region.",
+    ]
+
+    failureBehavior = [
+        "Return an unavailable result when the assessment cannot be completed.",
+    ]
+}
+
+xMetric weeklyCompletedTasks {
+    name = "Weekly Completed Tasks"
+    description = "The number of tasks completed during a calendar week."
+    source = @event.taskCompleted
+}

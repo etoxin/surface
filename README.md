@@ -77,6 +77,8 @@ Surface Language 0.1 has the following primary goals.
 
 A person should be able to understand the purpose and behaviour of a Surface declaration without specialist language training.
 
+A human should be able to learn the full syntax quickly and easily.
+
 ## 3.2 LLM Readability
 
 An LLM should be able to:
