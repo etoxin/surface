@@ -29,6 +29,8 @@ node distinguishes a Surface document from other KDL documents.
    relationships.
 9. Update the Surface LLM skill in the same rung as the Surface feature it
    teaches.
+10. Add or update human-facing node documentation in `docs/` in the same rung
+    as the syntax it describes.
 
 ## Completion Gate
 
@@ -41,6 +43,8 @@ Each application is complete when:
 - all references resolve;
 - its required validation rules pass;
 - invalid fixtures produce clear diagnostics;
+- human-facing documentation covers every node introduced or changed by the
+  rung;
 - the application can be implemented from the specification;
 - implementation assumptions are recorded as decisions;
 - the application has at least one observable acceptance scenario when behavior
@@ -50,6 +54,24 @@ Each application is complete when:
 - the skill passes its structural validation;
 - the skill is forward-tested on creating, modifying, and reviewing the rung's
   application.
+
+## Node Documentation Deliverable
+
+Each rung MUST add or update the human-facing documentation for every node it
+introduces or changes. Write these docs for someone authoring a Surface file,
+not as a mirror of the parser implementation. They should explain:
+
+- what the node describes and when to use it;
+- where it belongs in the file;
+- what values the author supplies;
+- which nested nodes are required or optional;
+- practical examples and common mistakes.
+
+Keep parser, diagnostic, and IR details in the source and tests unless an
+author needs them to write a correct file.
+
+Keep these references in `docs/` and link them from the relevant rung's
+**Delivered in** list, directly or through a node-reference index.
 
 ## LLM Skill Deliverable
 
@@ -118,6 +140,7 @@ Delivered in:
 - [`examples/01-hello-world/expected-ir.json`](./examples/01-hello-world/expected-ir.json);
 - [`examples/01-hello-world/invalid/`](./examples/01-hello-world/invalid/);
 - [`examples/01-hello-world/app/index.html`](./examples/01-hello-world/app/index.html);
+- [Rung 1 writing guide](./docs/README.md);
 - [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
 
 ### 2. Static FAQ

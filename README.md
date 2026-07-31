@@ -7,7 +7,8 @@ an application without choosing its implementation framework.
 
 The format grows one example application at a time. Surface 0.1 contains only
 the syntax needed for the first roadmap rung: Hello World. See
-[roadmap.md](./roadmap.md) for what comes next.
+[roadmap.md](./roadmap.md) for what comes next and the
+[writing guide](./docs/README.md) for the complete released syntax.
 
 ## Example
 
@@ -102,6 +103,7 @@ surf export <file.kdl> --format json
 
 ## Rung 1
 
+- [Writing guide](./docs/README.md)
 - [Surface example](./examples/01-hello-world/surface.kdl)
 - [Expected JSON representation](./examples/01-hello-world/expected-ir.json)
 - [Invalid examples](./examples/01-hello-world/invalid/)
