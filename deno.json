@@ -1,0 +1,30 @@
+{
+  "tasks": {
+    "surf": "deno run --allow-read --allow-write src/cli.ts",
+    "test": "deno test --allow-read --allow-write --allow-run",
+    "check": "deno fmt --check && deno lint && deno check src/cli.ts test/surface_test.ts && deno task test"
+  },
+  "imports": {
+    "@bgotink/kdl": "npm:@bgotink/kdl@0.4.0"
+  },
+  "fmt": {
+    "include": [
+      "src/",
+      "test/",
+      "deno.json"
+    ],
+    "exclude": [
+      "test/skill-evaluations.json"
+    ],
+    "indentWidth": 2,
+    "lineWidth": 88,
+    "semiColons": true,
+    "singleQuote": false
+  },
+  "lint": {
+    "include": [
+      "src/",
+      "test/"
+    ]
+  }
+}

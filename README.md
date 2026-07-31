@@ -279,6 +279,14 @@ comments alongside or within their internal representation.
 
 ## Tooling
 
+The project uses mise to install the pinned Deno version and run its common
+tasks. Install the toolchain and run every validation check with:
+
+```text
+mise install
+mise run check
+```
+
 The rung-1 toolchain implements:
 
 ```text
@@ -288,19 +296,23 @@ surf format surface.kdl
 surf export surface.kdl --format json
 ```
 
-Install dependencies and run the test suite:
+The available mise tasks are `deps`, `format`, `format-check`, `lint`,
+`typecheck`, `test`, `check`, and `surf`. Run the CLI through mise with:
 
 ```text
-npm install
-npm test
+mise run surf check examples/01-hello-world/surface.kdl
+mise run surf export examples/01-hello-world/surface.kdl --format json
 ```
 
-Run the CLI directly from the repository:
+The equivalent direct Deno commands remain available:
 
 ```text
-node src/cli.js check examples/01-hello-world/surface.kdl
-node src/cli.js export examples/01-hello-world/surface.kdl --format json
+deno task check
+deno task surf check examples/01-hello-world/surface.kdl
 ```
+
+No separate package-manager installation step is required; Deno resolves the
+pinned imports declared in `deno.json`.
 
 The commands intentionally support only the syntax defined in this document.
 

@@ -25,7 +25,7 @@ export function parseKdl(source, file = "surface.kdl") {
         line: item.start?.line,
         column: item.start?.column,
         suggestion: "Correct the KDL syntax and try again.",
-      }),
+      })
     );
 
     return { document: null, diagnostics };
@@ -60,7 +60,8 @@ export function validateDocument(document, source, file = "surface.kdl") {
   if (versionNodes.length !== 1) {
     add({
       code: "SURF-VERSION-002",
-      message: `Expected exactly one surface-lang node but found ${versionNodes.length}.`,
+      message:
+        `Expected exactly one surface-lang node but found ${versionNodes.length}.`,
       element: versionNodes[1] ?? versionNodes[0],
       suggestion: 'Add exactly one surface-lang "0.1" node.',
     });
@@ -82,7 +83,8 @@ export function validateDocument(document, source, file = "surface.kdl") {
         code: "SURF-NODE-001",
         message: `Unknown top-level node ${name}.`,
         element: node,
-        suggestion: "Use only surface-lang, application, and screen nodes in Surface 0.1.",
+        suggestion:
+          "Use only surface-lang, application, and screen nodes in Surface 0.1.",
       });
     }
 
@@ -101,12 +103,12 @@ export function validateDocument(document, source, file = "surface.kdl") {
   if (applications.length !== 1) {
     add({
       code: "SURF-APP-001",
-      message: `Expected exactly one application declaration but found ${applications.length}.`,
+      message:
+        `Expected exactly one application declaration but found ${applications.length}.`,
       element: applications[1] ?? applications[0],
-      suggestion:
-        applications.length === 0
-          ? "Add one application declaration."
-          : "Remove the additional application declarations.",
+      suggestion: applications.length === 0
+        ? "Add one application declaration."
+        : "Remove the additional application declarations.",
     });
   }
 
@@ -260,10 +262,14 @@ function validateArguments(node, count, subject, add, identifier = false) {
   if (arguments_.length !== count) {
     add({
       code: "SURF-ARG-001",
-      message: `${subject} must contain exactly ${count} argument${count === 1 ? "" : "s"}.`,
+      message: `${subject} must contain exactly ${count} argument${
+        count === 1 ? "" : "s"
+      }.`,
       element: node,
       declaration: subject.includes(".") ? subject : undefined,
-      suggestion: `Provide exactly ${count} quoted string argument${count === 1 ? "" : "s"}.`,
+      suggestion: `Provide exactly ${count} quoted string argument${
+        count === 1 ? "" : "s"
+      }.`,
     });
   }
 
@@ -302,10 +308,9 @@ function validateProperties(node, allowed, subject, add, required = []) {
         message: `Unknown property ${name} on ${subject}.`,
         element: entry,
         declaration: subject.includes(".") ? subject : undefined,
-        suggestion:
-          allowed.length === 0
-            ? "Remove the property."
-            : `Use only these properties: ${allowed.join(", ")}.`,
+        suggestion: allowed.length === 0
+          ? "Remove the property."
+          : `Use only these properties: ${allowed.join(", ")}.`,
       });
     }
 

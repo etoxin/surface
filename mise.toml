@@ -1,0 +1,38 @@
+[tools]
+deno = "2.9.4"
+
+[tasks.deps]
+description = "Cache dependencies from deno.json and deno.lock"
+run = "deno cache src/cli.ts test/surface_test.ts"
+
+[tasks.format]
+description = "Format source and test files"
+run = "deno fmt"
+
+[tasks."format-check"]
+description = "Check source and test formatting"
+run = "deno fmt --check"
+
+[tasks.lint]
+description = "Lint source and test files"
+run = "deno lint"
+
+[tasks.typecheck]
+description = "Type-check the CLI and test suite"
+depends = ["deps"]
+run = "deno check src/cli.ts test/surface_test.ts"
+
+[tasks.test]
+description = "Run the test suite"
+depends = ["deps"]
+run = "deno test --allow-read --allow-write --allow-run"
+
+[tasks.check]
+description = "Run every validation check"
+depends = ["format-check", "lint", "typecheck", "test"]
+
+[tasks.surf]
+description = "Run the Surface CLI"
+depends = ["deps"]
+raw_args = true
+run = "deno run --allow-read --allow-write src/cli.ts"
