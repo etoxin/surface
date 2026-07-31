@@ -27,7 +27,7 @@ purpose "Display a greeting."
 ```
 
 Write a short sentence explaining what the application is for. The purpose is
-not a title or a paragraph displayed on a screen.
+not a title or text displayed on a screen.
 
 If the purpose needs extra guidance, attach
 [context](./node_context.md) directly to it:
@@ -53,9 +53,9 @@ application "helloWorld" {
 
 screen "home" {
     section "Home" {
-        paragraph "Hello, world!"
+        text "Hello, world!"
     }
 }
 ```
 
-Continue with [adding screens and content](./node_screen.md).
+Continue with [adding screens and text](./node_screen.md).

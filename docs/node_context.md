@@ -6,12 +6,12 @@ explains how to interpret the node that contains it.
 ```kdl
 section "Home" {
     context "Keep this section welcoming and concise."
-    paragraph "Hello, world!"
+    text "Hello, world!"
 }
 ```
 
 Context is guidance only. It does not add visible text, behavior, or data to
-the application. If users should see some text, use a `title` or `paragraph`
+the application. If users should see some text, use a `title` or `text`
 instead.
 
 ## Where Context Can Go
@@ -24,7 +24,7 @@ You can put context inside:
 - `screen`;
 - `section`;
 - `title`;
-- `paragraph`.
+- `text`.
 
 Place it as close as possible to the thing it describes:
 
@@ -39,7 +39,7 @@ screen "home" {
         title "My app" {
             context "Use this as the main heading."
         }
-        paragraph "Hello, world!"
+        text "Hello, world!"
     }
 }
 ```

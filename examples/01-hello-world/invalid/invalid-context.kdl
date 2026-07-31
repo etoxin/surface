@@ -9,6 +9,6 @@ application "helloWorld" {
 screen "home" route="/" {
     section "Home" {
         context 42
-        paragraph "Hello, world!"
+        text "Hello, world!"
     }
 }

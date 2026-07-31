@@ -13,6 +13,6 @@ application "anotherHello" {
 screen "home" route="/" {
     section "Home" {
         title "My app"
-        paragraph "Hello, world!"
+        text "Hello, world!"
     }
 }

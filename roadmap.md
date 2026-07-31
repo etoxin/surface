@@ -123,7 +123,7 @@ Introduces:
 - `application` declarations;
 - `screen` declarations;
 - named `section` blocks;
-- optional section titles and ordered paragraphs;
+- optional section titles and ordered text;
 - prompt-only `context` annotations on any node;
 - nested child blocks;
 - declaration identifiers;
@@ -145,17 +145,31 @@ Delivered in:
 
 ### 2. Static FAQ
 
+**Status:** Complete
+
 Build a page containing several questions and answers.
 
 Introduces:
 
-- repeated question and answer groups;
+- repeated FAQ entries composed from generic sections and text;
 - multiline natural-language content;
 - ordering across repeated content groups;
 - comment preservation;
 - canonical formatting of nested content.
 
 This stage should settle how repeated KDL nodes map into ordered IR collections.
+It MUST NOT add FAQ-specific `question` or `answer` nodes: a section name holds
+the question and its text holds the answer.
+
+Delivered in:
+
+- [`examples/02-static-faq/surface.kdl`](./examples/02-static-faq/surface.kdl);
+- [`examples/02-static-faq/expected-ir.json`](./examples/02-static-faq/expected-ir.json);
+- [`examples/02-static-faq/invalid/`](./examples/02-static-faq/invalid/);
+- [`examples/02-static-faq/app/index.html`](./examples/02-static-faq/app/index.html);
+- [Rung 2 decisions and acceptance scenario](./examples/02-static-faq/decisions.md);
+- [FAQ writing guide](./docs/node_screen.md#building-an-faq);
+- [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
 
 ### 3. Contact Viewer
 

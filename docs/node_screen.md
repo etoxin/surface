@@ -1,4 +1,4 @@
-# Adding Screens and Content
+# Adding Screens and Text
 
 A screen describes one view in the application. Every Surface file needs at
 least one.
@@ -7,7 +7,7 @@ least one.
 screen "home" route="/" {
     section "Home" {
         title "My app"
-        paragraph "Hello, world!"
+        text "Hello, world!"
     }
 }
 ```
@@ -22,7 +22,7 @@ letter and should use lower camel case. Each screen needs a different ID.
 ```kdl
 screen "home" route="/" {
     section "Home" {
-        paragraph "Hello, world!"
+        text "Hello, world!"
     }
 }
 ```
@@ -32,7 +32,7 @@ Leave it out for a screen that is not addressable:
 ```kdl
 screen "home" {
     section "Home" {
-        paragraph "Hello, world!"
+        text "Hello, world!"
     }
 }
 ```
@@ -51,8 +51,8 @@ A section groups related content on a screen:
 ```kdl
 section "Welcome" {
     title "My app"
-    paragraph "Hello, world!"
-    paragraph "Welcome to Surface."
+    text "Hello, world!"
+    text "Welcome to Surface."
 }
 ```
 
@@ -62,11 +62,10 @@ the lower-camel-case ID rule.
 A section can contain:
 
 - one optional `title`;
-- one or more `paragraph` nodes;
+- one or more `text` nodes;
 - any number of prompt-only [`context`](./node_context.md) notes.
 
-Every section needs at least one paragraph, even when it has a title.
-Paragraphs stay in the order in which you write them.
+Sections and their text stay in the order in which you write them.
 
 ## Title
 
@@ -85,23 +84,61 @@ title "My app" {
 }
 ```
 
-## Paragraph
+## Text
 
-Each `paragraph` adds one block of text:
+Each `text` node adds one ordered block of content:
 
 ```kdl
-paragraph "Hello, world!"
-paragraph "Welcome to Surface."
+text "Hello, world!"
+text "Welcome to Surface."
 ```
 
-A paragraph accepts one quoted piece of text and no properties. It can contain
+A text node accepts one quoted string and no properties. It can contain
 prompt-only context:
 
 ```kdl
-paragraph "Hello, world!" {
+text "Hello, world!" {
     context "Keep this text visually prominent."
 }
 ```
+
+For longer content, use KDL's triple-quoted multiline text:
+
+```kdl
+text """
+    Surface is a small format for describing an application.
+
+    It does not choose an implementation framework.
+    """
+```
+
+Start the content on the line after the opening `"""`. Align the content and
+the closing `"""` as shown. Blank lines are kept as part of the text.
+
+## Building an FAQ
+
+Generic sections already provide everything a static FAQ needs. Use each
+section name as a question and its text as the answer:
+
+```kdl
+screen "faq" route="/faq" {
+    section "What is Surface?" {
+        text """
+            Surface is a format for describing applications.
+
+            It is designed to be read by people and LLMs.
+            """
+    }
+
+    section "Does every screen need a route?" {
+        text "No. Leave out route when the screen is not addressable."
+    }
+}
+```
+
+Do not introduce `question` or `answer` nodes. Those concepts are specific
+to an FAQ, while sections and text remain useful across many kinds of
+applications.
 
 ## Several Screens
 
@@ -110,13 +147,13 @@ Add another top-level `screen` node for another view:
 ```kdl
 screen "home" route="/" {
     section "Home" {
-        paragraph "Hello, world!"
+        text "Hello, world!"
     }
 }
 
 screen "about" route="/about" {
     section "About" {
-        paragraph "This application demonstrates Surface."
+        text "This application demonstrates Surface."
     }
 }
 ```

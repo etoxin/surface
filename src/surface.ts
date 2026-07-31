@@ -30,7 +30,7 @@ export interface SurfaceScreenIr {
 export interface SurfaceSectionIr {
   name: string;
   title?: string;
-  paragraphs: string[];
+  text: string[];
 }
 
 export interface KdlParseResult {
@@ -288,7 +288,7 @@ function validateScreen(node: Node, add: AddDiagnostic): void {
       message: `${declaration} must contain at least one section child node.`,
       element: node,
       declaration,
-      suggestion: 'Add a section such as section "Home" { paragraph "Hello, world!" }.',
+      suggestion: 'Add a section such as section "Home" { text "Hello, world!" }.',
     });
   }
 
@@ -323,7 +323,7 @@ function validateSection(
 
   const children = node.children?.nodes ?? [];
   const titles = children.filter((child) => child.getName() === "title");
-  const paragraphs = children.filter((child) => child.getName() === "paragraph");
+  const textNodes = children.filter((child) => child.getName() === "text");
 
   for (const child of children) {
     if (child.getName() === "context") {
@@ -331,13 +331,13 @@ function validateSection(
       continue;
     }
 
-    if (child.getName() !== "title" && child.getName() !== "paragraph") {
+    if (child.getName() !== "title" && child.getName() !== "text") {
       add({
         code: "SURF-CHILD-002",
         message: `Unknown child node ${child.getName()} in ${subject}.`,
         element: child,
         declaration,
-        suggestion: "Use only title, paragraph, and context child nodes in a section.",
+        suggestion: "Use only title, text, and context child nodes in a section.",
       });
     }
   }
@@ -352,13 +352,13 @@ function validateSection(
     });
   }
 
-  if (paragraphs.length === 0) {
+  if (textNodes.length === 0) {
     add({
       code: "SURF-CHILD-003",
-      message: `${subject} must contain at least one paragraph child node.`,
+      message: `${subject} must contain at least one text child node.`,
       element: node,
       declaration,
-      suggestion: 'Add a paragraph such as paragraph "Hello, world!".',
+      suggestion: 'Add text such as text "Hello, world!".',
     });
   }
 
@@ -366,8 +366,8 @@ function validateSection(
     validateLeafStringNode(title, "title", subject, add);
   }
 
-  for (const paragraph of paragraphs) {
-    validateLeafStringNode(paragraph, "paragraph", subject, add);
+  for (const text of textNodes) {
+    validateLeafStringNode(text, "text", subject, add);
   }
 }
 
@@ -653,11 +653,9 @@ function buildIr(document: Document): SurfaceIr {
             return {
               name: expectString(section.getArgument(0), "section name"),
               ...(title === undefined ? {} : { title }),
-              paragraphs: sectionChildren
-                .findNodesByName("paragraph")
-                .map((paragraph) =>
-                  expectString(paragraph.getArgument(0), "paragraph text")
-                ),
+              text: sectionChildren
+                .findNodesByName("text")
+                .map((text) => expectString(text.getArgument(0), "section text")),
             };
           }),
       };

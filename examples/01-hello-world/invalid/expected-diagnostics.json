@@ -3,7 +3,7 @@
   "duplicate-application.kdl": "SURF-APP-001",
   "unexpected-version.kdl": "SURF-PROP-003",
   "legacy-marker.kdl": "SURF-VERSION-002",
-  "missing-paragraph.kdl": "SURF-CHILD-003",
+  "missing-text.kdl": "SURF-CHILD-003",
   "invalid-context.kdl": "SURF-ARG-002",
   "unknown-node.kdl": "SURF-NODE-001",
   "invalid-kdl.kdl": "SURF-KDL-002"

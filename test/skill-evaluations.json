@@ -1,34 +1,39 @@
 {
   "skill": "skills/surface/SKILL.md",
-  "rung": 1,
+  "rung": 2,
   "cases": [
     {
       "id": "create",
-      "prompt": "Create a Surface application specification for a Welcome page at / that displays Welcome to Acme.",
+      "prompt": "Create a Surface application specification for an FAQ page at /faq with three ordered questions and answers. Make one answer contain two blocks of text separated by a blank line.",
       "acceptance": [
         "The result is valid Surface 0.1 KDL.",
         "The result contains exactly one application and at least one screen.",
         "The application has no version property.",
-        "The screen route is / and a section paragraph displays Welcome to Acme.",
+        "The screen route is /faq and contains three sections in the requested order.",
+        "Each section name is a question and its text is the answer.",
+        "The two-block answer uses one valid multiline text node.",
+        "The result does not use question or answer nodes.",
         "The result does not introduce syntax from a later rung."
       ]
     },
     {
       "id": "modify",
-      "prompt": "Add a second paragraph saying Built with Surface to a valid rung-1 specification that contains a comment and a context node.",
+      "prompt": "Add a question and multiline answer to the end of a valid Static FAQ screen that contains two section-based entries, a comment, and a context node.",
       "acceptance": [
-        "The result adds exactly one ordered paragraph.",
+        "The result adds exactly one section after the existing sections.",
+        "The new section name is the question and its multiline text is the answer.",
+        "The multiline text remains semantically unchanged after formatting.",
         "The existing comment, context node, and unrelated content are preserved.",
         "The result remains valid Surface 0.1 KDL."
       ]
     },
     {
       "id": "diagnose",
-      "prompt": "Diagnose a file with no application, an unsupported component node, a screen identifier containing a space, and a numeric route.",
+      "prompt": "Diagnose a Static FAQ file containing an empty section, a numeric text node, an unsupported question node, and a section with two titles.",
       "acceptance": [
-        "The response identifies all four Surface validation problems.",
+        "The response identifies all four validation problems.",
         "The response distinguishes valid KDL from valid Surface.",
-        "Every suggested correction uses only rung-1 syntax."
+        "Every suggested correction uses only released rung-1 and rung-2 syntax."
       ]
     }
   ]

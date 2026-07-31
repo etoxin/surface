@@ -1,6 +1,6 @@
 ---
 name: surface
-description: Create, edit, review, format, and validate Surface application specifications written as KDL 2 files. Use for files containing a surface node, requests to author a Surface specification, or work on the Surface repository and its rung-1 Hello World application.
+description: Create, edit, review, format, and validate Surface application specifications written as KDL 2 files. Use for files containing a surface node, requests to author a Surface specification, or work on the Surface repository and its released Hello World and Static FAQ applications.
 ---
 
 # Surface
@@ -22,7 +22,7 @@ constructs from future roadmap applications.
 7. Report requests outside the current Surface scope instead of inventing
    syntax.
 
-## Complete Rung-1 Syntax
+## Complete Released Syntax
 
 Write the KDL marker and Surface version first:
 
@@ -43,11 +43,17 @@ application "helloWorld" {
 Declare at least one screen:
 
 ```kdl
-screen "home" route="/" {
-    section "Home" {
-        context "This section contains the text Hello, world!"
-        title "My app"
-        paragraph "Hello, world!"
+screen "faq" route="/faq" {
+    section "What is Surface?" {
+        context "Present the section name as a question."
+        text """
+            Surface is a format for describing an application.
+
+            It does not choose an implementation framework.
+            """
+    }
+    section "Does every screen need a route?" {
+        text "No. Omit route when the screen is not addressable."
     }
 }
 ```
@@ -72,12 +78,21 @@ A section has:
 - one quoted string name;
 - no properties;
 - zero or one `title` child containing one quoted string;
-- one or more ordered `paragraph` children, each containing one quoted string.
+- one or more ordered `text` children, each containing one quoted string.
+
+Build a static FAQ with repeated sections: use each section name as the
+question and its text as the answer. Do not invent `question` or `answer`
+nodes.
+
+Use KDL triple-quoted strings for multiline text. Put the opening newline
+immediately after `"""` and align content with the closing delimiter so KDL
+dedents it correctly.
 
 ## Prompt Context
 
-Add zero or more `context` children to any Surface node. Each contains exactly
-one quoted prompt string and has no properties or children.
+Add zero or more `context` children to any Surface node except another
+`context`. This includes `text`. Each context contains exactly one quoted
+prompt string and has no properties or children.
 
 Use context as guidance for interpreting or implementing its parent. Preserve
 it when editing and formatting, but do not treat it as application behavior or
@@ -96,6 +111,7 @@ Check all of the following:
 - At least one screen exists.
 - Declaration identifiers are valid and unique within their type.
 - Required arguments, properties, and children are present exactly as defined.
+- Every section contains at least one text node.
 - Properties are not duplicated.
 - No unsupported top-level nodes, child nodes, properties, or type annotations
   appear.
@@ -121,5 +137,5 @@ surf export surface.kdl --format json
 ## Current Limits
 
 Do not add actors, entities, fields, queries, behaviors, events, policies,
-workflows, interfaces, components, scenarios, imports, executable logic, or code
-generation. These features are not part of rung 1.
+workflows, interfaces, components, scenarios, imports, executable logic, or
+code generation. These features are not part of the released syntax.

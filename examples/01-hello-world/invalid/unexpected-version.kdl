@@ -9,6 +9,6 @@ application "helloWorld" version="0.1.0" {
 screen "home" route="/" {
     section "Home" {
         title "My app"
-        paragraph "Hello, world!"
+        text "Hello, world!"
     }
 }

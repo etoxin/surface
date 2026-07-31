@@ -12,7 +12,7 @@
         {
           "name": "Home",
           "title": "My app",
-          "paragraphs": [
+          "text": [
             "Hello, world!"
           ]
         }

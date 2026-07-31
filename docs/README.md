@@ -2,7 +2,7 @@
 
 Surface files describe an application in a way that is easy to read before
 choosing how to build it. The current version is intentionally small: it can
-describe an application made of screens and text.
+describe an application made of screens and ordered text.
 
 ## A Complete Example
 
@@ -19,7 +19,7 @@ screen "home" route="/" {
     section "Home" {
         context "Keep this section welcoming and concise."
         title "My app"
-        paragraph "Hello, world!"
+        text "Hello, world!"
     }
 }
 ```
@@ -36,7 +36,7 @@ Surface file
 └── screen
     └── section
         ├── title (optional)
-        └── paragraph
+        └── text
 ```
 
 You can add a prompt-only `context` note inside any of these nodes.
@@ -45,7 +45,7 @@ Continue with:
 
 - [Starting a Surface file](./node_surface.md)
 - [Describing the application](./node_application.md)
-- [Adding screens and content](./node_screen.md)
+- [Adding screens and text](./node_screen.md)
 - [Adding prompt context](./node_context.md)
 
 ## Naming Things
@@ -54,11 +54,12 @@ Applications and screens have IDs such as `helloWorld` and `home`. Start an
 ID with a lowercase letter and use lower camel case for multiple words:
 `contactViewer`, not `ContactViewer` or `contact-viewer`.
 
-Section names, titles, paragraphs, purposes, routes, and context are ordinary
+Section names, titles, text, purposes, routes, and context are ordinary
 quoted text.
 
 ## What Surface Supports Today
 
-A file contains one application and at least one screen. Imports, data,
-actions, components, and other planned features are not available yet. The
-[roadmap](../roadmap.md) shows when those ideas will be introduced.
+A file contains one application and at least one screen. Screens can contain
+ordered sections and text. Imports, data, actions, components, and other
+planned features are not available yet. The [roadmap](../roadmap.md) shows when
+those ideas will be introduced.

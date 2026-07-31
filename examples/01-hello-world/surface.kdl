@@ -11,6 +11,6 @@ screen "home" route="/" {
     section "Home" {
         context "This section contains the text Hello, world!"
         title "My app"
-        paragraph "Hello, world!"
+        text "Hello, world!"
     }
 }

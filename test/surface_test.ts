@@ -11,6 +11,7 @@ import { parseKdl, parseSurface } from "../src/surface.ts";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const exampleRoot = join(repositoryRoot, "examples", "01-hello-world");
+const faqExampleRoot = join(repositoryRoot, "examples", "02-static-faq");
 const cli = join(repositoryRoot, "src", "cli.ts");
 const decoder = new TextDecoder();
 
@@ -18,6 +19,18 @@ Deno.test("the Hello World specification exports the reviewed IR", async () => {
   const source = await Deno.readTextFile(join(exampleRoot, "surface.kdl"));
   const expected = JSON.parse(
     await Deno.readTextFile(join(exampleRoot, "expected-ir.json")),
+  );
+
+  const result = parseSurface(source, "surface.kdl");
+
+  assertEquals(result.diagnostics, []);
+  assertEquals(result.ir, expected);
+});
+
+Deno.test("the Static FAQ specification exports the reviewed IR", async () => {
+  const source = await Deno.readTextFile(join(faqExampleRoot, "surface.kdl"));
+  const expected = JSON.parse(
+    await Deno.readTextFile(join(faqExampleRoot, "expected-ir.json")),
   );
 
   const result = parseSurface(source, "surface.kdl");
@@ -50,6 +63,33 @@ Deno.test("all invalid fixtures include their expected diagnostic", async () => 
   }
 });
 
+Deno.test(
+  "the Static FAQ invalid fixtures report their expected diagnostics",
+  async () => {
+    const invalidRoot = join(faqExampleRoot, "invalid");
+    const expected = JSON.parse(
+      await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
+    );
+    const fixtures = [];
+    for await (const entry of Deno.readDir(invalidRoot)) {
+      if (entry.isFile && entry.name.endsWith(".kdl")) {
+        fixtures.push(entry.name);
+      }
+    }
+    assertEquals(Object.keys(expected).sort(), fixtures.sort());
+
+    for (const [file, code] of Object.entries(expected)) {
+      const source = await Deno.readTextFile(join(invalidRoot, file));
+      const result = parseSurface(source, file);
+      assert(
+        result.diagnostics.some((diagnostic) => diagnostic.code === code),
+        `${file} should report ${code}`,
+      );
+      assertEquals(result.ir, null);
+    }
+  },
+);
+
 Deno.test("the formatter is idempotent and preserves comments", () => {
   const source = `/- kdl-version 2
 
@@ -64,7 +104,7 @@ screen "home" route="/" {
 section "Home" {
 context "Keep this prompt."
 title "My app"
-paragraph "Hello, world!"
+text "Hello, world!"
 }
 }
 `;
@@ -77,9 +117,44 @@ paragraph "Hello, world!"
   assertMatch(first.output, /^[ ]{4}purpose/m);
   assertMatch(first.output, /^[ ]{4}section/m);
   assertMatch(first.output, /^[ ]{8}title/m);
-  assertMatch(first.output, /^[ ]{8}paragraph/m);
+  assertMatch(first.output, /^[ ]{8}text/m);
 
   const second = formatSurface(first.output, "surface.kdl");
+  assertEquals(second.output, first.output);
+});
+
+Deno.test("the formatter preserves multiline text and its indentation", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1"
+application "faq" { purpose "Answer questions." }
+screen "faq" {
+section "What is preserved?" {
+// Keep this question.
+text """
+The answer text is preserved.
+
+So are {braces} inside the string.
+"""
+}
+}
+`;
+
+  const before = parseSurface(source, "faq.kdl");
+  assertEquals(before.diagnostics, []);
+
+  const first = formatSurface(source, "faq.kdl");
+  assertEquals(first.diagnostics, []);
+  assert(first.output !== null);
+  assertMatch(first.output, /\/\/ Keep this question\./);
+  assertMatch(first.output, /^[ ]{8}text """/m);
+  assertMatch(first.output, /^[ ]{12}The answer text is preserved\./m);
+
+  const after = parseSurface(first.output, "faq.kdl");
+  assertEquals(after.diagnostics, []);
+  assertEquals(after.ir, before.ir);
+
+  const second = formatSurface(first.output, "faq.kdl");
   assertEquals(second.output, first.output);
 });
 
@@ -100,13 +175,13 @@ application "ordered" { purpose "Check ordering." }
 screen "first" route="/first" {
     section "A" {
         title "First"
-        paragraph "A1"
-        paragraph "A2"
+        text "A1"
+        text "A2"
     }
-    section "B" { paragraph "B1" }
+    section "B" { text "B1" }
 }
 screen "second" route="/second" {
-    section "C" { paragraph "C1" }
+    section "C" { text "C1" }
 }
 `;
 
@@ -124,7 +199,7 @@ screen "second" route="/second" {
   assertEquals(result.ir.screens[0].sections[0], {
     name: "A",
     title: "First",
-    paragraphs: ["A1", "A2"],
+    text: ["A1", "A2"],
   });
 });
 
@@ -134,7 +209,7 @@ Deno.test("section title and screen route are optional and omitted from the IR",
 surface "0.1"
 application "nativeApp" { purpose "Run without a website." }
 screen "home" {
-    section "Home" { paragraph "Hello, world!" }
+    section "Home" { text "Hello, world!" }
 }
 `;
 
@@ -145,7 +220,7 @@ screen "home" {
     id: "home",
     sections: [{
       name: "Home",
-      paragraphs: ["Hello, world!"],
+      text: ["Hello, world!"],
     }],
   });
 });
@@ -169,8 +244,8 @@ screen "home" {
         title "My app" {
             context "Title guidance."
         }
-        paragraph "Hello, world!" {
-            context "Paragraph guidance."
+        text "Hello, world!" {
+            context "Text guidance."
         }
     }
 }
@@ -183,7 +258,7 @@ screen "home" {
   assertEquals(result.ir.screens[0].sections[0], {
     name: "Home",
     title: "My app",
-    paragraphs: ["Hello, world!"],
+    text: ["Hello, world!"],
   });
 });
 
@@ -230,7 +305,7 @@ purpose "Display a greeting."
 screen "home" route="/" {
 section "Home" {
 title "My app"
-paragraph "Hello, world!"
+text "Hello, world!"
 }
 }
 `;
@@ -245,7 +320,7 @@ paragraph "Hello, world!"
     assertMatch(output, /^[ ]{4}purpose/m);
     assertMatch(output, /^[ ]{4}section/m);
     assertMatch(output, /^[ ]{8}title/m);
-    assertMatch(output, /^[ ]{8}paragraph/m);
+    assertMatch(output, /^[ ]{8}text/m);
   } finally {
     await Deno.remove(temporaryDirectory, { recursive: true });
   }
@@ -257,12 +332,36 @@ Deno.test("the implemented page matches the Surface section", async () => {
   assertMatch(html, /<p>Hello, world!<\/p>/);
 });
 
+Deno.test("the implemented FAQ page contains every ordered question", async () => {
+  const html = await Deno.readTextFile(
+    join(faqExampleRoot, "app", "index.html"),
+  );
+  const questions = [
+    "What is Surface?",
+    "Is Surface a programming language?",
+    "Does every screen need a route?",
+  ];
+  const positions = questions.map((question) => html.indexOf(`<h2>${question}</h2>`));
+
+  assert(positions.every((position) => position >= 0));
+  assertEquals([...positions].sort((left, right) => left - right), positions);
+  assertMatch(
+    html,
+    /Surface is a small format for describing an application\./,
+  );
+  assertMatch(
+    html,
+    /No\. Surface is a specification format rather than an executable language\./,
+  );
+  assertMatch(html, /Leave it out for screens that are not addressable\./);
+});
+
 Deno.test("the skill defines all three required forward evaluations", async () => {
   const evaluations = JSON.parse(
     await Deno.readTextFile(join(repositoryRoot, "test", "skill-evaluations.json")),
   );
 
-  assertEquals(evaluations.rung, 1);
+  assertEquals(evaluations.rung, 2);
   assertEquals(
     evaluations.cases.map(({ id }: { id: string }) => id),
     ["create", "modify", "diagnose"],
@@ -281,6 +380,8 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   );
   assertMatch(skill, /^---\nname: surface\ndescription: .+\n---/);
   assertMatch(skill, /surface "0\.1"/);
+  assertMatch(skill, /section "What is Surface\?"/);
+  assertMatch(skill, /one or more ordered `text`/);
   assertMatch(metadata, /default_prompt: "Use \$surface /);
 });
 
