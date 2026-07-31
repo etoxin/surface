@@ -3,7 +3,7 @@ import { InvalidKdlError, parse } from "@bgotink/kdl";
 import { createDiagnostic } from "./diagnostics.js";
 
 const IDENTIFIER_PATTERN = /^[a-z][A-Za-z0-9]*$/;
-const TOP_LEVEL_NODES = new Set(["surface-lang", "application", "screen"]);
+const TOP_LEVEL_NODES = new Set(["surface", "application", "screen"]);
 
 export function parseKdl(source, file = "surface.kdl") {
   try {
@@ -54,25 +54,24 @@ export function validateDocument(document, source, file = "surface.kdl") {
   validateKdlMarker(source, add);
 
   const versionNodes = document.nodes.filter(
-    (node) => node.getName() === "surface-lang",
+    (node) => node.getName() === "surface",
   );
 
   if (versionNodes.length !== 1) {
     add({
       code: "SURF-VERSION-002",
-      message:
-        `Expected exactly one surface-lang node but found ${versionNodes.length}.`,
+      message: `Expected exactly one surface node but found ${versionNodes.length}.`,
       element: versionNodes[1] ?? versionNodes[0],
-      suggestion: 'Add exactly one surface-lang "0.1" node.',
+      suggestion: 'Add exactly one surface "0.1" node.',
     });
   }
 
-  if (document.nodes[0]?.getName() !== "surface-lang") {
+  if (document.nodes[0]?.getName() !== "surface") {
     add({
       code: "SURF-VERSION-004",
-      message: "The surface-lang node must be the first semantic node.",
+      message: "The surface node must be the first semantic node.",
       element: document.nodes[0],
-      suggestion: 'Move surface-lang "0.1" before all declarations.',
+      suggestion: 'Move surface "0.1" before all declarations.',
     });
   }
 
@@ -83,8 +82,7 @@ export function validateDocument(document, source, file = "surface.kdl") {
         code: "SURF-NODE-001",
         message: `Unknown top-level node ${name}.`,
         element: node,
-        suggestion:
-          "Use only surface-lang, application, and screen nodes in Surface 0.1.",
+        suggestion: "Use only surface, application, and screen nodes in Surface 0.1.",
       });
     }
 
@@ -92,7 +90,7 @@ export function validateDocument(document, source, file = "surface.kdl") {
   }
 
   if (versionNodes.length > 0) {
-    validateVersionNode(versionNodes[0], add);
+    validateSurfaceNode(versionNodes[0], add);
   }
 
   const applications = document.nodes.filter(
@@ -148,25 +146,25 @@ function validateKdlMarker(source, add) {
   }
 }
 
-function validateVersionNode(node, add) {
-  validateArguments(node, 1, "surface-lang", add);
-  validateProperties(node, [], "surface-lang", add);
-  validateNoChildren(node, "surface-lang", add);
+function validateSurfaceNode(node, add) {
+  validateArguments(node, 1, "surface", add);
+  validateProperties(node, [], "surface", add);
+  validateNoChildren(node, "surface", add);
 
   const version = node.getArgument(0);
   if (version !== undefined && typeof version !== "string") {
     add({
       code: "SURF-ARG-002",
-      message: "The Surface language version must be a string.",
+      message: "The Surface format version must be a string.",
       element: node.getArgumentEntry(0),
-      suggestion: 'Use surface-lang "0.1".',
+      suggestion: 'Use surface "0.1".',
     });
   } else if (typeof version === "string" && version !== "0.1") {
     add({
       code: "SURF-VERSION-003",
-      message: `Unsupported Surface language version ${version}.`,
+      message: `Unsupported Surface format version ${version}.`,
       element: node.getArgumentEntry(0),
-      suggestion: 'Use surface-lang "0.1".',
+      suggestion: 'Use surface "0.1".',
     });
   }
 }
@@ -208,7 +206,7 @@ function validateApplication(node, add) {
 function validateScreen(node, add) {
   const declaration = declarationName(node);
   validateArguments(node, 1, declaration, add, true);
-  validateProperties(node, ["route"], declaration, add);
+  validateProperties(node, ["title", "route"], declaration, add);
 
   const children = node.children?.nodes ?? [];
   const sections = children.filter((child) => child.getName() === "section");
@@ -420,7 +418,7 @@ function declarationName(node) {
 }
 
 function buildIr(document) {
-  const version = document.findNodeByName("surface-lang");
+  const version = document.findNodeByName("surface");
   const application = document.findNodeByName("application");
   const screens = document.nodes.filter((node) => node.getName() === "screen");
 
@@ -431,9 +429,11 @@ function buildIr(document) {
       purpose: application.children.findNodeByName("purpose").getArgument(0),
     },
     screens: screens.map((screen) => {
+      const title = screen.getProperty("title");
       const route = screen.getProperty("route");
       return {
         id: screen.getArgument(0),
+        ...(title === undefined ? {} : { title }),
         ...(route === undefined ? {} : { route }),
         sections: screen.children
           .findNodesByName("section")

@@ -1,6 +1,6 @@
 /- kdl-version 2
 
-surface-lang "0.1"
+surface "0.1"
 
 application "helloWorld" {
     purpose "Display a greeting."
@@ -8,6 +8,6 @@ application "helloWorld" {
 
 component "greeting"
 
-screen "home" route="/" {
+screen "home" title="Home" route="/" {
     section "Hello, world!"
 }

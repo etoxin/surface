@@ -1,19 +1,18 @@
-# Surface Language Roadmap
+# Surface Roadmap
 
 ## Development Strategy
 
-Surface Language will grow from applications rather than from speculative
-language design.
+Surface will grow from applications rather than from speculative format design.
 
 Each roadmap application should be the smallest application that creates a real
-need for the next language feature. Surface syntax and semantics should only be
+need for the next Surface feature. Surface syntax and semantics should only be
 added when the current application cannot be described clearly without them.
 
 Surface files will use a constrained KDL 2 profile as their concrete syntax.
 Surface will continue to define its own declarations, validation rules,
 references, intermediate representation, and semantics.
 
-Surface specifications use the standard `.kdl` extension. The `surface-lang`
+Surface specifications use the standard `.kdl` extension. The `surface`
 node distinguishes a Surface document from other KDL documents.
 
 ## Guiding Rules
@@ -24,11 +23,11 @@ node distinguishes a Surface document from other KDL documents.
 4. Avoid adding syntax solely for a hypothetical future application.
 5. Map every new construct deterministically into the Surface IR.
 6. Record unresolved semantics as decisions rather than silently assuming them.
-7. Keep earlier examples valid unless a deliberate language-version change is
+7. Keep earlier examples valid unless a deliberate format-version change is
    made.
 8. Prefer one authoritative representation of each fact over duplicated
    relationships.
-9. Update the Surface LLM skill in the same rung as the language feature it
+9. Update the Surface LLM skill in the same rung as the Surface feature it
    teaches.
 
 ## Completion Gate
@@ -54,9 +53,9 @@ Each application is complete when:
 
 ## LLM Skill Deliverable
 
-The Surface skill is a versioned product of the language, not secondary
-documentation. It should enable an LLM to work correctly at the current rung
-without loading the entire design history.
+The Surface skill is a versioned part of the format, not secondary documentation.
+It should enable an LLM to work correctly at the current rung without loading
+the entire design history.
 
 Each rung MUST update the skill's:
 
@@ -77,7 +76,7 @@ At minimum, forward testing should ask a fresh LLM to:
 The skill should follow the standard skill package structure:
 
 ```text
-surface-language/
+surface/
     SKILL.md
     agents/
         openai.yaml
@@ -115,7 +114,7 @@ Delivered in:
 - [`examples/01-hello-world/expected-ir.json`](./examples/01-hello-world/expected-ir.json);
 - [`examples/01-hello-world/invalid/`](./examples/01-hello-world/invalid/);
 - [`examples/01-hello-world/app/index.html`](./examples/01-hello-world/app/index.html);
-- [`skills/surface-language/SKILL.md`](./skills/surface-language/SKILL.md).
+- [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
 
 ### 2. Static FAQ
 
@@ -466,5 +465,5 @@ examples/
 ```
 
 Later applications may split their specification across multiple `.kdl` files.
-Surface tooling identifies Surface documents by their `surface-lang` node rather
+Surface tooling identifies Surface documents by their `surface` node rather
 than assuming that every KDL document belongs to Surface.

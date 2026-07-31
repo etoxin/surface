@@ -1,11 +1,11 @@
-# Surface Language
+# Surface
 
-Surface is a small, human- and LLM-readable language for describing an
-application without choosing its implementation framework.
+Surface is a small, human- and LLM-readable specification format for describing
+an application without choosing its implementation framework.
 
 **Status:** draft · **Version:** 0.1 · **Syntax:** KDL 2 · **Extension:** `.kdl`
 
-The language grows one example application at a time. Surface 0.1 contains only
+The format grows one example application at a time. Surface 0.1 contains only
 the syntax needed for the first roadmap rung: Hello World. See
 [roadmap.md](./roadmap.md) for what comes next.
 
@@ -14,13 +14,13 @@ the syntax needed for the first roadmap rung: Hello World. See
 ```kdl
 /- kdl-version 2
 
-surface-lang "0.1"
+surface "0.1"
 
 application "helloWorld" {
     purpose "Display a greeting."
 }
 
-screen "home" route="/" {
+screen "home" title="Home" route="/" {
     section "Hello, world!"
 }
 ```
@@ -32,10 +32,10 @@ This describes one application with one screen at `/` and one section showing
 
 | Form | Rule |
 | --- | --- |
-| `surface-lang "0.1"` | First semantic node; exactly one |
+| `surface "0.1"` | First semantic node; exactly one |
 | `application "<id>"` | Exactly one; contains one `purpose` |
 | `purpose "<text>"` | Child of `application`; exactly one string |
-| `screen "<id>" [route="<route>"]` | At least one; optional route; contains one or more `section` nodes |
+| `screen "<id>" [title="<title>"] [route="<route>"]` | At least one; optional title and route, with one or more `section` nodes |
 | `section "<text>"` | Child of `screen`; order is preserved |
 
 Additional rules:
@@ -44,8 +44,8 @@ Additional rules:
 - Identifiers match `[a-z][A-Za-z0-9]*`, are case-sensitive, and should use
   lower camel case.
 - Application and screen identifiers are unique within their declaration type.
-- Routes are optional. When present, routes and text are strings; routes are
-  currently opaque.
+- Screen titles and routes are optional strings. Routes are currently opaque;
+  section text is always a string.
 - Unknown nodes, properties, duplicate properties, and unsupported type
   annotations are rejected.
 - Comments are supported and preserved by the formatter.
@@ -53,7 +53,7 @@ Additional rules:
   per line, a blank line between top-level declarations, and a final newline.
 
 A project currently contains one Surface `.kdl` file. The extension identifies
-KDL, while the `surface-lang` node identifies Surface. Imports and multi-file
+KDL, while the `surface` node identifies Surface. Imports and multi-file
 projects are not yet supported.
 
 ## Tooling
@@ -94,7 +94,7 @@ surf export <file.kdl> --format json
 - [Expected JSON representation](./examples/01-hello-world/expected-ir.json)
 - [Invalid examples](./examples/01-hello-world/invalid/)
 - [Implemented page](./examples/01-hello-world/app/index.html)
-- [LLM skill](./skills/surface-language/SKILL.md)
+- [LLM skill](./skills/surface/SKILL.md)
 
 Only the syntax documented above is released. Later concepts—including data,
 behavior, components, workflows, integrations, and deployment—will be added

@@ -46,14 +46,14 @@ Deno.test("all invalid fixtures include their expected diagnostic", async () => 
 Deno.test("the formatter is idempotent and preserves comments", () => {
   const source = `/- kdl-version 2
 
-surface-lang "0.1"
+surface "0.1"
 
 // Keep this comment.
 application "helloWorld" {
 purpose "Display a greeting."
 }
 
-screen "home" route="/" {
+screen "home" title="Home" route="/" {
 section "Hello, world!"
 }
 `;
@@ -81,13 +81,13 @@ Deno.test("the parser reports KDL syntax locations", () => {
 Deno.test("screen and section order is retained in the IR", () => {
   const source = `/- kdl-version 2
 
-surface-lang "0.1"
+surface "0.1"
 application "ordered" { purpose "Check ordering." }
-screen "first" route="/first" {
+screen "first" title="First" route="/first" {
     section "A"
     section "B"
 }
-screen "second" route="/second" { section "C" }
+screen "second" title="Second" route="/second" { section "C" }
 `;
 
   const result = parseSurface(source, "ordered.kdl");
@@ -100,10 +100,10 @@ screen "second" route="/second" { section "C" }
   assertEquals(result.ir.screens[0].sections, ["A", "B"]);
 });
 
-Deno.test("a screen route is optional and omitted from the IR", () => {
+Deno.test("screen title and route are optional and omitted from the IR", () => {
   const source = `/- kdl-version 2
 
-surface-lang "0.1"
+surface "0.1"
 application "nativeApp" { purpose "Run without a website." }
 screen "home" { section "Hello, world!" }
 `;
@@ -152,12 +152,12 @@ Deno.test("CLI format updates a file in place without losing comments", async ()
   const temporaryFile = join(temporaryDirectory, "surface.kdl");
   const source = `/- kdl-version 2
 
-surface-lang "0.1"
+surface "0.1"
 // Retain me.
 application "helloWorld" {
 purpose "Display a greeting."
 }
-screen "home" route="/" {
+screen "home" title="Home" route="/" {
 section "Hello, world!"
 }
 `;

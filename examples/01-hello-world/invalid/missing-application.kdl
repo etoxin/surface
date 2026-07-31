@@ -1,7 +1,7 @@
 /- kdl-version 2
 
-surface-lang "0.1"
+surface "0.1"
 
-screen "home" route="/" {
+screen "home" title="Home" route="/" {
     section "Hello, world!"
 }
