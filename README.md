@@ -33,6 +33,21 @@ screen "home" route="/" {
 This describes one application with one screen at `/`. Its `Home` section has a
 title and one paragraph.
 
+## Documentation
+
+Read the guides in this order:
+
+1. [Writing Surface](./docs/README.md) — a complete example and how the pieces
+   fit together
+2. [Starting a Surface file](./docs/node_surface.md) — the KDL marker and
+   `surface` declaration
+3. [Describing the application](./docs/node_application.md) — application IDs
+   and purpose
+4. [Adding screens and content](./docs/node_screen.md) — screens, routes,
+   sections, titles, and paragraphs
+5. [Adding prompt context](./docs/node_context.md) — guidance for an LLM or
+   implementer
+
 ## Surface 0.1
 
 | Form | Rule |
