@@ -1,0 +1,4 @@
+interface:
+  display_name: "Surface"
+  short_description: "Create and validate Surface specifications"
+  default_prompt: "Use $surface to create or review a Surface application specification."
