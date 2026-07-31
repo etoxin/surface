@@ -1,0 +1,13 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "surfaceFaq" {
+    purpose "Answer common questions about Surface."
+}
+
+screen "faq" route="/faq" {
+    section "What is Surface?" {
+        text 42
+    }
+}

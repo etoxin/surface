@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Surface FAQ</title>
+    <style>
+      :root {
+        color-scheme: light;
+        font-family: system-ui, sans-serif;
+        background: #f4f1ea;
+        color: #22211f;
+      }
+
+      body {
+        margin: 0;
+      }
+
+      main {
+        width: min(42rem, calc(100% - 2rem));
+        margin: 4rem auto;
+      }
+
+      h1 {
+        margin-bottom: 2rem;
+        font-size: clamp(2rem, 7vw, 3.5rem);
+      }
+
+      section + section {
+        margin-top: 1.5rem;
+      }
+
+      h2 {
+        margin-bottom: 0;
+        font-weight: 700;
+        font-size: 1.15rem;
+      }
+
+      p {
+        margin: 0.5rem 0 0;
+        line-height: 1.6;
+        white-space: pre-line;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Surface FAQ</h1>
+
+      <section>
+        <h2>What is Surface?</h2>
+        <p>Surface is a small format for describing an application.
+
+It records what the application should contain without choosing an implementation framework.</p>
+      </section>
+
+      <section>
+        <h2>Is Surface a programming language?</h2>
+        <p>No. Surface is a specification format rather than an executable language.</p>
+      </section>
+
+      <section>
+        <h2>Does every screen need a route?</h2>
+        <p>No. Add a route when a screen has a URL or similar address.
+
+Leave it out for screens that are not addressable.</p>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,31 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "surfaceFaq" {
+    purpose "Answer common questions about Surface."
+}
+
+screen "faq" route="/faq" {
+    // Begin with the broadest question.
+    section "What is Surface?" {
+        context "Present the section name as a question followed by its text."
+        text """
+            Surface is a small format for describing an application.
+
+            It records what the application should contain without choosing an implementation framework.
+            """
+    }
+
+    section "Is Surface a programming language?" {
+        text "No. Surface is a specification format rather than an executable language."
+    }
+
+    section "Does every screen need a route?" {
+        text """
+            No. Add a route when a screen has a URL or similar address.
+
+            Leave it out for screens that are not addressable.
+            """
+    }
+}

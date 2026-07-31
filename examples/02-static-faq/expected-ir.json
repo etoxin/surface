@@ -1,0 +1,33 @@
+{
+  "surfaceVersion": "0.1",
+  "application": {
+    "id": "surfaceFaq",
+    "purpose": "Answer common questions about Surface."
+  },
+  "screens": [
+    {
+      "id": "faq",
+      "route": "/faq",
+      "sections": [
+        {
+          "name": "What is Surface?",
+          "text": [
+            "Surface is a small format for describing an application.\n\nIt records what the application should contain without choosing an implementation framework."
+          ]
+        },
+        {
+          "name": "Is Surface a programming language?",
+          "text": [
+            "No. Surface is a specification format rather than an executable language."
+          ]
+        },
+        {
+          "name": "Does every screen need a route?",
+          "text": [
+            "No. Add a route when a screen has a URL or similar address.\n\nLeave it out for screens that are not addressable."
+          ]
+        }
+      ]
+    }
+  ]
+}

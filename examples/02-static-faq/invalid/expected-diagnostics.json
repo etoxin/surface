@@ -1,0 +1,6 @@
+{
+  "missing-text.kdl": "SURF-CHILD-003",
+  "invalid-text.kdl": "SURF-ARG-002",
+  "unsupported-question-node.kdl": "SURF-CHILD-002",
+  "invalid-multiline.kdl": "SURF-KDL-002"
+}
