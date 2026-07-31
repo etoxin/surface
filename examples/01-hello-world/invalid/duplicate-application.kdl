@@ -1,0 +1,15 @@
+/- kdl-version 2
+
+surface-lang "0.1"
+
+application "helloWorld" version="0.1.0" {
+    purpose "Display a greeting."
+}
+
+application "anotherHello" version="0.1.0" {
+    purpose "Display another greeting."
+}
+
+screen "home" route="/" {
+    section "Hello, world!"
+}

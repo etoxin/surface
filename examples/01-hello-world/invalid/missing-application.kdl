@@ -1,0 +1,7 @@
+/- kdl-version 2
+
+surface-lang "0.1"
+
+screen "home" route="/" {
+    section "Hello, world!"
+}

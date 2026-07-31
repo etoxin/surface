@@ -1,0 +1,4 @@
+interface:
+  display_name: "Surface Language"
+  short_description: "Create and validate Surface KDL specifications"
+  default_prompt: "Use $surface-language to create or review a Surface application specification."

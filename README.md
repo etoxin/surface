@@ -277,9 +277,9 @@ equivalent to:
 Tools SHOULD preserve source locations, declaration order, section order, and
 comments alongside or within their internal representation.
 
-## Initial Tooling Target
+## Tooling
 
-The first Surface toolchain should provide:
+The rung-1 toolchain implements:
 
 ```text
 surf parse surface.kdl
@@ -288,7 +288,33 @@ surf format surface.kdl
 surf export surface.kdl --format json
 ```
 
-These commands only need to support the syntax defined in this document.
+Install dependencies and run the test suite:
+
+```text
+npm install
+npm test
+```
+
+Run the CLI directly from the repository:
+
+```text
+node src/cli.js check examples/01-hello-world/surface.kdl
+node src/cli.js export examples/01-hello-world/surface.kdl --format json
+```
+
+The commands intentionally support only the syntax defined in this document.
+
+## Rung-1 Artifacts
+
+The completed rung includes:
+
+- [`surface.kdl`](./examples/01-hello-world/surface.kdl), the valid example;
+- [`expected-ir.json`](./examples/01-hello-world/expected-ir.json), its reviewed
+  intermediate representation;
+- [`invalid/`](./examples/01-hello-world/invalid/), focused diagnostic fixtures;
+- [`index.html`](./examples/01-hello-world/app/index.html), the implemented page;
+- [`SKILL.md`](./skills/surface-language/SKILL.md), the LLM authoring and review
+  skill.
 
 ## LLM Skill Target
 

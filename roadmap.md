@@ -91,6 +91,8 @@ and keep the main instructions concise.
 
 ### 1. Hello World Page
 
+**Status:** Complete
+
 Build a single page that displays a greeting.
 
 Introduces:
@@ -106,6 +108,14 @@ Introduces:
 
 This stage should validate that a Surface project contains exactly one
 application declaration.
+
+Delivered in:
+
+- [`examples/01-hello-world/surface.kdl`](./examples/01-hello-world/surface.kdl);
+- [`examples/01-hello-world/expected-ir.json`](./examples/01-hello-world/expected-ir.json);
+- [`examples/01-hello-world/invalid/`](./examples/01-hello-world/invalid/);
+- [`examples/01-hello-world/app/index.html`](./examples/01-hello-world/app/index.html);
+- [`skills/surface-language/SKILL.md`](./skills/surface-language/SKILL.md).
 
 ### 2. Static FAQ
 

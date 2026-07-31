@@ -1,0 +1,12 @@
+/- kdl-version 2
+
+surface-lang "0.1"
+
+// The first Surface application.
+application "helloWorld" version="0.1.0" {
+    purpose "Display a greeting."
+}
+
+screen "home" route="/" {
+    section "Hello, world!"
+}
