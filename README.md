@@ -6,7 +6,7 @@
 
 **Host syntax:** KDL 2
 
-**File extension:** `.surf`
+**File extension:** `.kdl`
 
 **Character encoding:** UTF-8
 
@@ -192,13 +192,17 @@ SHOULD preserve them.
 
 ## Project Structure
 
-A Surface 0.1 project contains exactly one `.surf` file.
+A Surface 0.1 project contains exactly one `.kdl` file.
 
 ```text
-surface.surf
+surface.kdl
 ```
 
 Imports and multi-file projects are not supported at the current roadmap stage.
+
+The `.kdl` extension identifies the host syntax, not Surface by itself. A tool
+MUST treat a KDL document as Surface only when it contains the supported
+`surface-lang` node or when the file is explicitly passed to a Surface command.
 
 ## Validation
 
@@ -226,7 +230,7 @@ Error SURF-APP-001
 
 The project does not contain an application declaration.
 
-File: surface.surf
+File: surface.kdl
 Suggested correction: Add one application declaration.
 ```
 
@@ -278,13 +282,32 @@ comments alongside or within their internal representation.
 The first Surface toolchain should provide:
 
 ```text
-surf parse surface.surf
-surf check surface.surf
-surf format surface.surf
-surf export surface.surf --format json
+surf parse surface.kdl
+surf check surface.kdl
+surf format surface.kdl
+surf export surface.kdl --format json
 ```
 
 These commands only need to support the syntax defined in this document.
+
+## LLM Skill Target
+
+Every roadmap rung MUST update the version-controlled Surface skill used by
+LLMs to create, edit, review, and validate Surface files.
+
+For the current rung, the skill should teach an LLM to:
+
+- recognize Surface from the `surface-lang` node rather than from `.kdl` alone;
+- write the complete Hello World specification;
+- use only `application`, `screen`, `purpose`, and `section` nodes;
+- preserve quoted strings, comments, and declaration order;
+- apply the validation rules in this document;
+- avoid inventing features from later roadmap applications;
+- report when a requested concept is outside the current language scope.
+
+The skill MUST remain concise and MUST describe only released Surface syntax.
+Language changes and their corresponding skill changes SHOULD be reviewed and
+committed together.
 
 ## Current Non-Goals
 
@@ -320,3 +343,5 @@ The first roadmap stage is complete when:
 4. A formatter is idempotent and preserves comments.
 5. The Hello World application can be implemented from the specification
    without additional product decisions.
+6. The Surface skill can guide an LLM to create, modify, and review the example
+   without introducing unsupported syntax.

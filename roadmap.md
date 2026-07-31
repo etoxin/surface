@@ -13,6 +13,9 @@ Surface files will use a constrained KDL 2 profile as their concrete syntax.
 Surface will continue to define its own declarations, validation rules,
 references, intermediate representation, and semantics.
 
+Surface specifications use the standard `.kdl` extension. The `surface-lang`
+node distinguishes a Surface document from other KDL documents.
+
 ## Guiding Rules
 
 1. Begin with observable application behavior.
@@ -25,6 +28,8 @@ references, intermediate representation, and semantics.
    made.
 8. Prefer one authoritative representation of each fact over duplicated
    relationships.
+9. Update the Surface LLM skill in the same rung as the language feature it
+   teaches.
 
 ## Completion Gate
 
@@ -40,7 +45,47 @@ Each application is complete when:
 - the application can be implemented from the specification;
 - implementation assumptions are recorded as decisions;
 - the application has at least one observable acceptance scenario when behavior
-  is present.
+  is present;
+- the Surface LLM skill documents the newly supported syntax;
+- the skill does not expose syntax from future rungs;
+- the skill passes its structural validation;
+- the skill is forward-tested on creating, modifying, and reviewing the rung's
+  application.
+
+## LLM Skill Deliverable
+
+The Surface skill is a versioned product of the language, not secondary
+documentation. It should enable an LLM to work correctly at the current rung
+without loading the entire design history.
+
+Each rung MUST update the skill's:
+
+- trigger description when its supported tasks change;
+- concise authoring workflow;
+- supported declaration and child-node reference;
+- validation checklist;
+- canonical example;
+- explicit current limitations;
+- forward-test prompts and expected acceptance conditions.
+
+At minimum, forward testing should ask a fresh LLM to:
+
+1. create the rung's application from a short product request;
+2. modify an existing valid Surface file without changing unrelated content;
+3. diagnose an invalid Surface file and suggest a valid correction.
+
+The skill should follow the standard skill package structure:
+
+```text
+surface-language/
+    SKILL.md
+    agents/
+        openai.yaml
+```
+
+Add `references/`, `scripts/`, or `assets/` only when they remove repeated work
+or keep essential detail out of `SKILL.md`. Validate the skill after every rung
+and keep the main instructions concise.
 
 ## Application Ramp
 
@@ -395,21 +440,21 @@ Each roadmap application should live in its own numbered directory:
 ```text
 examples/
     01-hello-world/
-        surface.surf
+        surface.kdl
         expected-ir.json
         invalid/
-            missing-application.surf
-            duplicate-application.surf
+            missing-application.kdl
+            duplicate-application.kdl
     02-static-faq/
-        surface.surf
+        surface.kdl
         expected-ir.json
         invalid/
     03-contact-viewer/
-        surface.surf
+        surface.kdl
         expected-ir.json
         invalid/
 ```
 
-Later applications may split their specification across multiple `.surf` files.
-The underlying syntax remains KDL even when the Surface-specific `.surf` file
-extension is used.
+Later applications may split their specification across multiple `.kdl` files.
+Surface tooling identifies Surface documents by their `surface-lang` node rather
+than assuming that every KDL document belongs to Surface.
