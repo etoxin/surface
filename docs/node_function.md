@@ -1,8 +1,8 @@
 # Defining Functions
 
-A `function` describes a named computation or capability. It can represent a
-database lookup, HTTP request, file read, calculation, or other implementation.
-The Contact Viewer uses one to look up a contact by its ID:
+A `function` describes a named computation or capability. It can represent a database
+lookup, HTTP request, file read, calculation, or other implementation. This function
+looks up a contact by its ID:
 
 ```kdl
 function "contactById" {
@@ -31,9 +31,8 @@ collection references. An optional [`logic`](./node_logic.md) node gives an
 ordered, normative description of how the function produces its output, while
 [`context`](./node_context.md) supplies non-normative guidance.
 
-Rung 3 supports only an optional collection input and exactly one collection
-output. Later applications will extend that shape only when they need other
-kinds of computation.
+Surface 0.1 supports only an optional collection input and exactly one collection
+output. A need for a different function shape is evidence for a later format version.
 
 ## Private Collections
 

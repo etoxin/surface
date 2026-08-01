@@ -6,11 +6,11 @@ description = "Cache dependencies from deno.json and deno.lock"
 run = "deno cache src/cli.ts test/surface_test.ts"
 
 [tasks.format]
-description = "Format source and test files"
+description = "Format source, tests, and documentation"
 run = "deno fmt"
 
 [tasks."format-check"]
-description = "Check source and test formatting"
+description = "Check repository formatting"
 run = "deno fmt --check"
 
 [tasks.lint]
@@ -25,7 +25,7 @@ run = "deno task typecheck"
 [tasks.test]
 description = "Run the test suite"
 depends = ["deps"]
-run = "deno test --allow-read --allow-write --allow-run"
+run = "deno task test"
 
 [tasks.verify]
 description = "Verify the entire repository"
@@ -39,104 +39,59 @@ depends = ["verify"]
 description = "Run the Surface CLI"
 depends = ["deps"]
 raw_args = true
-run = "deno run --allow-read --allow-write src/cli.ts"
-
-[tasks."contact-viewer"]
-description = "Run the rung-3 Contact Viewer example"
-depends = ["deps"]
-run = "deno task contact-viewer"
-
-[tasks."static-faq"]
-description = "Run the rung-2 Static FAQ example"
-depends = ["deps"]
-run = "deno task static-faq"
-
-[tasks."click-counter"]
-description = "Run the rung-4 Click Counter example"
-depends = ["deps"]
-run = "deno task click-counter"
+run = "deno task surf"
 
 [tasks."todo-list"]
-description = "Serve the rung-5 HTML Todo List example"
+description = "Serve example 2, Todo List, on port 8003"
 depends = ["deps"]
 run = "deno task todo-list"
 
-[tasks."signup-determinism"]
-description = "Compare the three rung-6 signup builds"
-depends = ["deps"]
-run = "deno task signup-determinism"
-
-[tasks."signup-build-1"]
-description = "Run the functional signup build on port 8010"
-depends = ["deps"]
-run = "deno task signup-build-1"
-
-[tasks."signup-build-2"]
-description = "Run the object-oriented signup build on port 8011"
-depends = ["deps"]
-run = "deno task signup-build-2"
-
-[tasks."signup-build-3"]
-description = "Run the pipeline signup build on port 8012"
-depends = ["deps"]
-run = "deno task signup-build-3"
-
 [tasks."design-consistency"]
-description = "Check the three rung-7 design builds"
+description = "Check the coordinated builds for example 3"
 depends = ["deps"]
 run = "deno task design-consistency"
 
 [tasks."design-independent"]
-description = "Measure the three independently generated rung-7 builds"
+description = "Measure the independently generated builds for example 3"
 depends = ["deps"]
 run = "deno task design-independent"
 
 [tasks."design-browser-install"]
-description = "Install the pinned Chromium browser for the rung-7 visual benchmark"
+description = "Install the pinned Chromium browser for visual benchmarks"
 depends = ["deps"]
 run = "deno task design-browser-install"
 
 [tasks."design-visual"]
-description = "Capture and compare the rung-7 browser screenshots"
+description = "Capture and compare the coordinated example-3 screenshots"
 depends = ["design-browser-install"]
 run = "deno task design-visual"
 
 [tasks."design-independent-visual"]
-description = "Capture and compare the independent rung-7 browser screenshots"
+description = "Capture and compare the independent example-3 screenshots"
 depends = ["design-browser-install", "design-independent"]
 run = "deno task design-independent-visual"
 
 [tasks."design-build-1"]
-description = "Run the render-functions design build on port 8020"
+description = "Run coordinated design build 1 on port 8020"
 depends = ["deps"]
 run = "deno task design-build-1"
 
 [tasks."design-build-2"]
-description = "Run the template-clones design build on port 8021"
+description = "Run coordinated design build 2 on port 8021"
 depends = ["deps"]
 run = "deno task design-build-2"
 
 [tasks."design-build-3"]
-description = "Run the controller design build on port 8022"
+description = "Run coordinated design build 3 on port 8022"
 depends = ["deps"]
 run = "deno task design-build-3"
 
-[tasks."url-shortener"]
-description = "Run the rung-8 URL Shortener API example"
-depends = ["deps"]
-run = "deno task url-shortener"
-
-[tasks."file-converter"]
-description = "Run the rung-11 File Converter example"
-depends = ["deps"]
-run = "deno task file-converter"
-
 [tasks."online-checkout"]
-description = "Run the rung-15 Online Checkout example"
+description = "Run example 4, Online Checkout, on port 8006"
 depends = ["deps"]
 run = "deno task online-checkout"
 
 [tasks."multi-tenant-project-tracker"]
-description = "Run the rung-16 Multi-tenant Project Tracker example"
+description = "Run example 5, Multi-tenant Project Tracker, on port 8007"
 depends = ["deps"]
 run = "deno task multi-tenant-project-tracker"

@@ -6,48 +6,24 @@ import {
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import {
-  handleContactRequest,
-  renderContactPage,
-} from "../examples/03-contact-viewer/app/server.ts";
-import { handleFaqRequest } from "../examples/02-static-faq/app/server.ts";
-import {
-  handleCounterRequest,
-  parseCounterValue,
-  renderCounterPage,
-} from "../examples/04-click-counter/app/server.ts";
 import { formatSurface } from "../src/formatter.ts";
 import { parseKdl, parseSurface } from "../src/surface.ts";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const exampleRoot = join(repositoryRoot, "examples", "01-hello-world");
-const faqExampleRoot = join(repositoryRoot, "examples", "02-static-faq");
-const contactExampleRoot = join(
-  repositoryRoot,
-  "examples",
-  "03-contact-viewer",
-);
-const counterExampleRoot = join(
-  repositoryRoot,
-  "examples",
-  "04-click-counter",
-);
 const todoExampleRoot = join(
   repositoryRoot,
   "examples",
-  "05-todo-list",
+  "02-todo-list",
 );
 const designExampleRoot = join(
   repositoryRoot,
   "examples",
-  "07-design-consistency",
+  "03-design-consistency",
 );
 const candidateExampleDirectories = [
-  "06-signup-determinism",
-  "08-url-shortener-api",
-  "11-file-converter",
-  "15-online-checkout",
-  "16-multi-tenant-project-tracker",
+  "04-online-checkout",
+  "05-multi-tenant-project-tracker",
 ];
 const cli = join(repositoryRoot, "src", "cli.ts");
 const decoder = new TextDecoder();
@@ -62,43 +38,6 @@ Deno.test("the Hello World specification exports the reviewed IR", async () => {
 
   assertEquals(result.diagnostics, []);
   assertEquals(result.ir, expected);
-});
-
-Deno.test("the Static FAQ specification exports the reviewed IR", async () => {
-  const source = await Deno.readTextFile(join(faqExampleRoot, "surface.kdl"));
-  const expected = JSON.parse(
-    await Deno.readTextFile(join(faqExampleRoot, "expected-ir.json")),
-  );
-
-  const result = parseSurface(source, "surface.kdl");
-
-  assertEquals(result.diagnostics, []);
-  assertEquals(result.ir, expected);
-});
-
-Deno.test("the Contact Viewer specification exports the reviewed IR", async () => {
-  const source = await Deno.readTextFile(join(contactExampleRoot, "surface.kdl"));
-  const expected = JSON.parse(
-    await Deno.readTextFile(join(contactExampleRoot, "expected-ir.json")),
-  );
-
-  const result = parseSurface(source, "surface.kdl");
-
-  assertEquals(result.diagnostics, []);
-  assertEquals(result.ir, expected);
-});
-
-Deno.test("the Click Counter specification exports the reviewed IR", async () => {
-  const source = await Deno.readTextFile(join(counterExampleRoot, "surface.kdl"));
-  const expected = JSON.parse(
-    await Deno.readTextFile(join(counterExampleRoot, "expected-ir.json")),
-  );
-
-  const result = parseSurface(source, "surface.kdl");
-
-  assertEquals(result.diagnostics, []);
-  assertEquals(result.ir, expected);
-  assertEquals(formatSurface(source, "surface.kdl").output, source);
 });
 
 Deno.test("the Todo List specification exports the reviewed IR", async () => {
@@ -205,93 +144,6 @@ Deno.test("all invalid fixtures include their expected diagnostic", async () => 
     assertEquals(result.ir, null);
   }
 });
-
-Deno.test(
-  "the Static FAQ invalid fixtures report their expected diagnostics",
-  async () => {
-    const invalidRoot = join(faqExampleRoot, "invalid");
-    const expected = JSON.parse(
-      await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
-    );
-    const fixtures = [];
-    for await (const entry of Deno.readDir(invalidRoot)) {
-      if (entry.isFile && entry.name.endsWith(".kdl")) {
-        fixtures.push(entry.name);
-      }
-    }
-    assertEquals(Object.keys(expected).sort(), fixtures.sort());
-
-    for (const [file, code] of Object.entries(expected)) {
-      const source = await Deno.readTextFile(join(invalidRoot, file));
-      const result = parseSurface(source, file);
-      assert(
-        result.diagnostics.some((diagnostic) => diagnostic.code === code),
-        `${file} should report ${code}`,
-      );
-      assertEquals(result.ir, null);
-    }
-  },
-);
-
-Deno.test(
-  "the Contact Viewer invalid fixtures report their expected diagnostics",
-  async () => {
-    const invalidRoot = join(contactExampleRoot, "invalid");
-    const expected = JSON.parse(
-      await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
-    );
-    const fixtures = [];
-    for await (const entry of Deno.readDir(invalidRoot)) {
-      if (entry.isFile && entry.name.endsWith(".kdl")) {
-        fixtures.push(entry.name);
-      }
-    }
-    assertEquals(Object.keys(expected).sort(), fixtures.sort());
-
-    for (const [file, code] of Object.entries(expected)) {
-      const source = await Deno.readTextFile(join(invalidRoot, file));
-      const result = parseSurface(source, file);
-      assert(
-        result.diagnostics.some((diagnostic) => diagnostic.code === code),
-        `${file} should report ${code}`,
-      );
-      if (file === "wrong-reference-type.kdl") {
-        assertEquals(
-          result.diagnostics.map((diagnostic) => diagnostic.code),
-          ["SURF-REF-003"],
-        );
-      }
-      assertEquals(result.ir, null);
-    }
-  },
-);
-
-Deno.test(
-  "the Click Counter invalid fixtures report their expected diagnostics",
-  async () => {
-    const invalidRoot = join(counterExampleRoot, "invalid");
-    const expected = JSON.parse(
-      await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
-    );
-    const fixtures = [];
-    for await (const entry of Deno.readDir(invalidRoot)) {
-      if (entry.isFile && entry.name.endsWith(".kdl")) {
-        fixtures.push(entry.name);
-      }
-    }
-    assertEquals(Object.keys(expected).sort(), fixtures.sort());
-
-    for (const [file, code] of Object.entries(expected)) {
-      const source = await Deno.readTextFile(join(invalidRoot, file));
-      const result = parseSurface(source, file);
-      assert(
-        result.diagnostics.some((diagnostic) => diagnostic.code === code),
-        `${file} should report ${code}`,
-      );
-      assertEquals(result.ir, null);
-    }
-  },
-);
 
 Deno.test(
   "the Todo List invalid fixtures report their expected diagnostics",
@@ -818,11 +670,11 @@ screen "home" {
   assertEquals(result.ir.screens, [{ id: "home", interface: "home" }]);
 });
 
-Deno.test("context is valid on rung-3 nodes and omitted from the IR", () => {
+Deno.test("context is valid on data and function nodes and omitted from the IR", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
-application "contextual" { purpose "Exercise rung-3 context." }
+application "contextual" { purpose "Exercise data and function context." }
 collection "contact" {
     context "Collection guidance."
     (string)"id" {
@@ -855,7 +707,7 @@ screen "contact" {
 }
 `;
 
-  const result = parseSurface(source, "context-rung-3.kdl");
+  const result = parseSurface(source, "context-data-function.kdl");
   assertEquals(result.diagnostics, []);
   assert(result.ir !== null);
   assert(!JSON.stringify(result.ir).includes("guidance"));
@@ -1014,22 +866,18 @@ Deno.test("CLI check and export succeed for the valid example", () => {
 });
 
 Deno.test("CLI reference lists and resolves canonical checked references", () => {
-  const specification = join(contactExampleRoot, "surface.kdl");
+  const specification = join(todoExampleRoot, "surface.kdl");
   const listed = runCli(["reference", specification, "--list"]);
   assertEquals(listed.code, 0, decoder.decode(listed.stderr));
   const references = JSON.parse(decoder.decode(listed.stdout));
   assert(
     references.some(
       ({ selector, reference }: { selector: string; reference: string }) =>
-        selector === "screen.contact" && reference === '(screen)"contact"',
+        selector === "screen.home" && reference === '(screen)"home"',
     ),
   );
-
-  const todoSpecification = join(todoExampleRoot, "surface.kdl");
-  const todoListed = runCli(["reference", todoSpecification, "--list"]);
-  assertEquals(todoListed.code, 0, decoder.decode(todoListed.stderr));
   assert(
-    JSON.parse(decoder.decode(todoListed.stdout)).some(
+    references.some(
       ({ selector, reference }: { selector: string; reference: string }) =>
         selector === "value.todoStatus" &&
         reference === '(value)"todoStatus"',
@@ -1037,7 +885,7 @@ Deno.test("CLI reference lists and resolves canonical checked references", () =>
   );
   const selectedValue = runCli([
     "reference",
-    todoSpecification,
+    specification,
     "value.todoStatus",
   ]);
   assertEquals(selectedValue.code, 0, decoder.decode(selectedValue.stderr));
@@ -1048,22 +896,22 @@ Deno.test("CLI reference lists and resolves canonical checked references", () =>
   assert(
     references.some(
       ({ selector, reference }: { selector: string; reference: string }) =>
-        selector === "interface.contactViewer" &&
-        reference === '(interface)"contactViewer"',
+        selector === "interface.todoList" &&
+        reference === '(interface)"todoList"',
     ),
   );
   assert(
     references.some(
       ({ selector, reference }: { selector: string; reference: string }) =>
-        selector === "collection.contact" &&
-        reference === '(collection)"contact"',
+        selector === "collection.todo" &&
+        reference === '(collection)"todo"',
     ),
   );
   assert(
     references.some(
       ({ selector, reference }: { selector: string; reference: string }) =>
-        selector === "function.contactById" &&
-        reference === '(function)"contactById"',
+        selector === "function.createTodo" &&
+        reference === '(function)"createTodo"',
     ),
   );
   assert(
@@ -1075,36 +923,36 @@ Deno.test("CLI reference lists and resolves canonical checked references", () =>
           scope?: string;
         },
       ) =>
-        selector === "function.contactById.collection.contactLookup" &&
-        reference === '(collection)"contactLookup"' &&
-        scope === "function.contactById",
+        selector === "function.createTodo.collection.todoInput" &&
+        reference === '(collection)"todoInput"' &&
+        scope === "function.createTodo",
     ),
   );
 
-  const selected = runCli(["reference", specification, "screen.contact"]);
+  const selected = runCli(["reference", specification, "screen.home"]);
   assertEquals(selected.code, 0, decoder.decode(selected.stderr));
-  assertEquals(decoder.decode(selected.stdout).trim(), '(screen)"contact"');
+  assertEquals(decoder.decode(selected.stdout).trim(), '(screen)"home"');
 
   const selectedFunction = runCli([
     "reference",
     specification,
-    "function.contactById",
+    "function.createTodo",
   ]);
   assertEquals(selectedFunction.code, 0, decoder.decode(selectedFunction.stderr));
   assertEquals(
     decoder.decode(selectedFunction.stdout).trim(),
-    '(function)"contactById"',
+    '(function)"createTodo"',
   );
 
   const privateCollection = runCli([
     "reference",
     specification,
-    "function.contactById.collection.contactLookup",
+    "function.createTodo.collection.todoInput",
   ]);
   assertEquals(privateCollection.code, 0, decoder.decode(privateCollection.stderr));
   assertEquals(
     decoder.decode(privateCollection.stdout).trim(),
-    '(collection)"contactLookup"',
+    '(collection)"todoInput"',
   );
 
   const unknown = runCli(["reference", specification, "screen.missing"]);
@@ -1167,112 +1015,6 @@ Deno.test("the implemented page matches the Surface interface intent", async () 
   assertMatch(html, /<p>Hello, world!<\/p>/);
 });
 
-Deno.test("the implemented FAQ page contains every ordered question", async () => {
-  const html = await Deno.readTextFile(
-    join(faqExampleRoot, "app", "index.html"),
-  );
-  const questions = [
-    "What is Surface?",
-    "Is Surface a programming language?",
-    "How does a screen get a URL?",
-  ];
-  const positions = questions.map((question) => html.indexOf(`<h2>${question}</h2>`));
-
-  assert(positions.every((position) => position >= 0));
-  assertEquals([...positions].sort((left, right) => left - right), positions);
-  assertMatch(
-    html,
-    /Surface is a small format for describing an application\./,
-  );
-  assertMatch(
-    html,
-    /No\. Surface is a specification format rather than an executable language\./,
-  );
-  assertMatch(html, /Describe the URL path in the screen's logic\./);
-  assertMatch(html, /class="skip-link"/);
-  assertMatch(html, /aria-labelledby="faq-title"/);
-  assertEquals([...html.matchAll(/class="faq-card"/g)].length, 3);
-
-  const faq = handleFaqRequest(
-    new Request("http://localhost:8002/faq"),
-    html,
-  );
-  assertEquals(faq.status, 200);
-  assertMatch(await faq.text(), /<h1 id="faq-title">Frequently asked questions<\/h1>/);
-
-  const unknown = handleFaqRequest(
-    new Request("http://localhost:8002/unknown"),
-    html,
-  );
-  assertEquals(unknown.status, 404);
-});
-
-Deno.test("the Contact Viewer implements selected, empty, and not-found states", () => {
-  const empty = renderContactPage(null);
-  assertMatch(empty, /<h1>Select a contact<\/h1>/);
-  assertMatch(empty, /Choose a contact identifier/);
-
-  const ada = renderContactPage("ada");
-  assertMatch(ada, /Ada Lovelace/);
-  assertMatch(ada, /ada@example\.com/);
-  assertMatch(ada, /<dd>Yes<\/dd>/);
-
-  const grace = renderContactPage("grace");
-  assertMatch(grace, /Grace Hopper/);
-  assertMatch(grace, /<dd>Not provided<\/dd>/);
-  assertMatch(grace, /<dd>No<\/dd>/);
-
-  const missing = renderContactPage("unknown");
-  assertMatch(missing, /<h1>Contact not found<\/h1>/);
-  assertMatch(missing, /No contact exists for the selected identifier/);
-});
-
-Deno.test("the Contact Viewer follows its screen navigation logic", async () => {
-  const root = handleContactRequest(new Request("http://localhost:8000/"));
-  assertEquals(root.status, 302);
-  assertEquals(root.headers.get("location"), "http://localhost:8000/contacts");
-
-  const contacts = handleContactRequest(
-    new Request("http://localhost:8000/contacts?id=ada"),
-  );
-  assertEquals(contacts.status, 200);
-  assertMatch(await contacts.text(), /Ada Lovelace/);
-
-  const unknown = handleContactRequest(
-    new Request("http://localhost:8000/unknown"),
-  );
-  assertEquals(unknown.status, 404);
-});
-
-Deno.test("the Click Counter implements its initial, increment, and reset states", async () => {
-  assertEquals(parseCounterValue(null), 0);
-  assertEquals(parseCounterValue("4"), 4);
-  assertEquals(parseCounterValue("-1"), 0);
-  assertEquals(parseCounterValue("4x"), 0);
-  assertEquals(parseCounterValue("9007199254740992"), 0);
-
-  const initial = renderCounterPage(0);
-  assertMatch(initial, /aria-label="Current count">0<\/output>/);
-  assertMatch(initial, /name="count" value="1">Increment<\/button>/);
-  assertMatch(initial, /name="count" value="0">Reset<\/button>/);
-
-  const incremented = await handleCounterRequest(
-    new Request("http://localhost:8001/?count=4"),
-  ).text();
-  assertMatch(incremented, /aria-label="Current count">4<\/output>/);
-  assertMatch(incremented, /name="count" value="5">Increment<\/button>/);
-
-  const reset = await handleCounterRequest(
-    new Request("http://localhost:8001/?count=0"),
-  ).text();
-  assertMatch(reset, /aria-label="Current count">0<\/output>/);
-
-  const unknown = handleCounterRequest(
-    new Request("http://localhost:8001/unknown"),
-  );
-  assertEquals(unknown.status, 404);
-});
-
 Deno.test("the Todo List is a self-contained interactive HTML app", async () => {
   const html = await Deno.readTextFile(
     join(todoExampleRoot, "app", "index.html"),
@@ -1302,7 +1044,7 @@ Deno.test("the skill defines all three required forward evaluations", async () =
     await Deno.readTextFile(join(repositoryRoot, "test", "skill-evaluations.json")),
   );
 
-  assertEquals(evaluations.rung, 7);
+  assertEquals(evaluations.surfaceVersion, "0.1");
   assertEquals(
     evaluations.cases.map(({ id }: { id: string }) => id),
     ["create", "modify", "diagnose"],

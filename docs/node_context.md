@@ -46,8 +46,8 @@ and type.
 Use the CLI to discover exact references:
 
 ```sh
-surf reference surface.kdl --list
-surf reference surface.kdl interface.contactViewer
+mise run surf reference surface.kdl --list
+mise run surf reference surface.kdl interface.contactViewer
 ```
 
 The last argument is exactly one unannotated prompt string. Any earlier

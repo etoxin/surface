@@ -1,27 +1,18 @@
 # Writing Surface
 
-Surface is a small KDL vocabulary for describing an application, including optional
-technology choices, without prescribing detailed UI syntax.
+Surface is a checked product specification written in KDL 2. The `.kdl` source records
+what an application is for, the information it uses, its capabilities, what people
+experience, and any intentional technology constraints. A person or LLM chooses the
+implementation details.
 
-```kdl
-/- kdl-version 2
+Start with these guides:
 
-surface "0.1"
+1. [Getting started](./getting_started.md)
+2. [Generating applications](./generating_applications.md)
+3. [Testing and reporting](./testing.md)
+4. [Surface 0.1 grammar](./grammar.md)
 
-application "helloWorld" {
-    purpose "Display a greeting."
-}
-
-interface "helloWorld" {
-    context "Render a user interface with the title My app and the exact text: Hello, world!"
-}
-
-screen "home" {
-    use (interface)"helloWorld"
-}
-```
-
-The main declarations are:
+The language is deliberately small:
 
 ```text
 Surface file
@@ -31,9 +22,7 @@ Surface file
 │       ├── target
 │       └── technology
 ├── value
-│   └── enum options (for enum values)
 ├── collection
-│   └── typed fields
 ├── function
 │   ├── private collection (optional)
 │   ├── input (optional)
@@ -43,32 +32,28 @@ Surface file
 │   ├── context
 │   └── logic (optional)
 └── screen
-    ├── use (optional interface reference)
+    ├── use (optional)
     ├── context
     └── logic (optional)
 ```
 
-Read the guides in order:
+## Node Guides
 
-1. [Starting a Surface file](./node_surface.md)
-2. [Describing the application](./node_application.md)
-3. [Surface 0.1 grammar](./grammar.md)
-4. [Choosing the technology stack](./node_stack.md)
-5. [Portable types](./primitives.md)
-6. [Defining values and enums](./node_value.md)
-7. [Defining data](./node_collection.md)
-8. [Defining functions](./node_function.md)
-9. [Describing an interface](./node_interface.md)
-10. [Adding screens](./node_screen.md)
-11. [Adding prompt context](./node_context.md)
-12. [Adding ordered logic](./node_logic.md)
+- [Surface document](./node_surface.md)
+- [Application and purpose](./node_application.md)
+- [Technology stacks](./node_stack.md)
+- [Portable types](./primitives.md)
+- [Values and enums](./node_value.md)
+- [Collections](./node_collection.md)
+- [Functions](./node_function.md)
+- [Interfaces](./node_interface.md)
+- [Screens](./node_screen.md)
+- [Context](./node_context.md)
+- [Logic](./node_logic.md)
 
-Declaration IDs and field names start with a lowercase letter and use lower camel case,
-such as `contactViewer`. Purpose, context prompts, and logic instructions are ordinary
-quoted strings.
+Declaration IDs and field names use lower camel case, such as `todoList`. Context is
+prompt guidance. Logic is ordered, normative application behavior. Typed strings such as
+`(function)"createTodo"` are checked references to declarations.
 
-Surface currently supports applications with explicit technology stacks, typed values,
-read-only collections, single-collection functions, intent-driven interfaces, screens,
-and ordered logic for computations and interactions. The [roadmap](../roadmap.md) tests
-this frozen language through applications. Missing capabilities are evidence for a later
-version rather than additions to 0.1.
+Surface 0.1 is frozen. If an application cannot be described clearly with the released
+grammar, record the blocker instead of inventing syntax.

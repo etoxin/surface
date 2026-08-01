@@ -1,6 +1,6 @@
 {
   "skill": "skills/surface/SKILL.md",
-  "rung": 7,
+  "surfaceVersion": "0.1",
   "cases": [
     {
       "id": "create",
@@ -19,7 +19,7 @@
     },
     {
       "id": "modify",
-      "prompt": "Starting from examples/07-design-consistency/surface.kdl, change the pinned design system to NHS.UK Frontend 10.2.0 and require official NHS components without custom CSS. Preserve the application behavior, data contracts, copy, screen, and unrelated content.",
+      "prompt": "Starting from examples/03-design-consistency/surface.kdl, change the pinned design system to NHS.UK Frontend 10.2.0 and require official NHS components without custom CSS. Preserve the application behavior, data contracts, copy, screen, and unrelated content.",
       "acceptance": [
         "Only the existing designSystem technology name, quoted version, and directly related context are changed.",
         "The design system remains a technology in the application web stack and is not moved into a new declaration.",

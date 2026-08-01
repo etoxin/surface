@@ -1,0 +1,557 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "onlineCheckout" {
+    purpose "Sell stocked products through an authorized, idempotent checkout flow and fulfill paid orders."
+
+    context "Product decision: saved payment methods remain out of scope; accept only a one-time provider payment token."
+    context "Product decision: split shipments remain unresolved; the current release reserves and fulfills every basket item together."
+    context "Product decision: supported shipping countries remain deployment-specific; reject an address outside the configured country allowlist before reserving stock."
+
+    stack "web" {
+        target "browser"
+        technology "markup" "html"
+        technology "styling" "css"
+        technology "designSystem" "picoCss" version="2.1.1" {
+            context "Use the official Pico CSS stylesheet and its semantic HTML defaults. Add custom CSS only for application-specific layout or status states."
+        }
+        technology "language" "typescript"
+        technology "protocol" "https"
+    }
+
+    stack "service" {
+        target "server"
+        technology "language" "typescript"
+        technology "runtime" "deno"
+        technology "protocol" "https"
+        technology "storage" "postgresql"
+        technology "queue" "transactionalOutbox"
+        technology "paymentProvider" "externalPaymentApi"
+        technology "inventoryProvider" "externalInventoryApi"
+    }
+}
+
+(string)value "checkoutCurrency" "USD"
+
+(number)value "reservationLifetimeSeconds" 900
+
+(number)value "fulfillmentRetryLimit" 8
+
+(enum)value "basketStatus" {
+    "open"
+    "checkingOut"
+    "completed"
+    "abandoned"
+}
+
+(enum)value "reservationStatus" {
+    "reserved"
+    "released"
+    "consumed"
+    "expired"
+    "failed"
+}
+
+(enum)value "paymentStatus" {
+    "pending"
+    "captured"
+    "declined"
+    "failed"
+    "refunded"
+}
+
+(enum)value "orderStatus" {
+    "paid"
+    "fulfillmentPending"
+    "fulfilled"
+    "cancelled"
+    "needsAttention"
+}
+
+(enum)value "fulfillmentStatus" {
+    "queued"
+    "processing"
+    "shipped"
+    "delivered"
+    "failed"
+}
+
+(enum)value "checkoutStatus" {
+    "succeeded"
+    "pending"
+    "declined"
+    "unavailable"
+    "failed"
+}
+
+(array)value "baskets" variable {
+    context (collection)"basket" "Persist basket records."
+}
+
+(array)value "basketItems" variable {
+    context (collection)"basketItem" "Persist basket-item records."
+}
+
+(array)value "stockReservations" variable {
+    context (collection)"stockReservation" "Persist inventory reservations."
+}
+
+(array)value "paymentAttempts" variable {
+    context (collection)"paymentAttempt" "Persist payment attempts."
+}
+
+(array)value "orders" variable {
+    context (collection)"order" "Persist orders."
+}
+
+(array)value "receipts" variable {
+    context (collection)"receipt" "Persist immutable receipts."
+}
+
+(array)value "fulfillments" variable {
+    context (collection)"fulfillment" "Persist asynchronous fulfillment work."
+}
+
+collection "basket" {
+    (uuid)"id"
+    (uuid)"customerId"
+    (enum)"status" (value)"basketStatus"
+    (string)"currency"
+    (decimal)"subtotal"
+    (uint32)"version"
+}
+
+collection "basketItem" {
+    (uuid)"id"
+    (uuid)"basketId"
+    (string)"productId"
+    (uint32)"quantity"
+    (decimal)"unitPrice"
+}
+
+collection "stockReservation" {
+    (uuid)"id"
+    (uuid)"basketId"
+    (enum)"status" (value)"reservationStatus"
+    (array)"lines"
+    (dateTime)"expiresAt" optional
+    (string)"providerReference" optional
+    (string)"errorCode" optional
+    (boolean)"retryable" optional
+}
+
+collection "paymentAttempt" {
+    (uuid)"id"
+    (uuid)"basketId"
+    (string)"idempotencyKey"
+    (enum)"status" (value)"paymentStatus"
+    (decimal)"amount"
+    (string)"currency"
+    (string)"providerReference" optional
+    (string)"errorCode" optional
+    (boolean)"retryable" optional
+}
+
+collection "order" {
+    (uuid)"id"
+    (uuid)"basketId"
+    (uuid)"customerId"
+    (enum)"status" (value)"orderStatus"
+    (decimal)"total"
+    (string)"currency"
+    (object)"shippingAddress"
+    (dateTime)"createdAt"
+}
+
+collection "receipt" {
+    (uuid)"id"
+    (uuid)"orderId"
+    (uuid)"paymentId"
+    (string)"number"
+    (decimal)"total"
+    (string)"currency"
+    (dateTime)"issuedAt"
+}
+
+collection "fulfillment" {
+    (uuid)"id"
+    (uuid)"orderId"
+    (enum)"status" (value)"fulfillmentStatus"
+    (uint32)"attemptCount"
+    (dateTime)"nextAttemptAt" optional
+    (string)"carrierReference" optional
+    (string)"trackingUrl" optional
+    (string)"errorCode" optional
+}
+
+collection "basketResponse" {
+    (uint16)"httpStatus"
+    (uuid)"basketId" optional
+    (enum)"status" (value)"basketStatus" optional
+    (string)"currency" optional
+    (decimal)"subtotal" optional
+    (uint32)"version" optional
+    (array)"items" optional
+    (string)"errorCode" optional
+}
+
+collection "checkoutResult" {
+    (uint16)"httpStatus"
+    (uuid)"basketId"
+    (enum)"status" (value)"checkoutStatus"
+    (uuid)"orderId" optional
+    (uuid)"paymentId" optional
+    (uuid)"receiptId" optional
+    (uuid)"fulfillmentId" optional
+    (string)"errorCode" optional
+    (boolean)"retryable" optional
+}
+
+collection "orderResponse" {
+    (uint16)"httpStatus"
+    (uuid)"orderId" optional
+    (enum)"status" (value)"orderStatus" optional
+    (decimal)"total" optional
+    (string)"currency" optional
+    (array)"items" optional
+    (string)"receiptNumber" optional
+    (enum)"fulfillmentStatus" (value)"fulfillmentStatus" optional
+    (string)"trackingUrl" optional
+    (string)"errorCode" optional
+}
+
+function "createBasket" {
+    collection "createBasketInput" {
+        (uuid)"actorId"
+        (array)"actorRoles"
+    }
+
+    input (collection)"createBasketInput"
+    output (collection)"basketResponse"
+
+    logic {
+        "Expose this operation as HTTP POST /baskets and require an authenticated customer role; otherwise output httpStatus 401 or 403 with errorCode."
+        (value)"checkoutCurrency" "Create one open basket owned by actorId with this currency, subtotal 0, and version 1."
+        (value)"baskets" "Persist the basket before outputting httpStatus 201 and its complete basket response with an empty items array."
+    }
+}
+
+function "getBasket" {
+    collection "getBasketInput" {
+        (uuid)"actorId"
+        (array)"actorRoles"
+        (uuid)"basketId"
+    }
+
+    input (collection)"getBasketInput"
+    output (collection)"basketResponse"
+
+    logic {
+        "Expose this operation as HTTP GET /baskets/{basketId}; output httpStatus 401 when authentication is absent."
+        (value)"baskets" "Find basketId; output httpStatus 404 when it does not exist, and output 403 unless actorId owns it or actorRoles contains supportAdministrator."
+        (value)"basketItems" "For an authorized basket, output httpStatus 200 with its fields and items as basketItem records ordered by id."
+    }
+}
+
+function "putBasketItem" {
+    collection "putBasketItemInput" {
+        (uuid)"actorId"
+        (array)"actorRoles"
+        (uuid)"basketId"
+        (string)"productId"
+        (uint32)"quantity"
+        (decimal)"observedUnitPrice"
+        (uint32)"expectedVersion"
+    }
+
+    input (collection)"putBasketItemInput"
+    output (collection)"basketResponse"
+
+    logic {
+        "Expose this operation as HTTP PUT /baskets/{basketId}/items/{productId}; require an authenticated customer."
+        (value)"baskets" "Output httpStatus 404 if basketId does not exist, 403 if actorId is not its owner, 409 if it is not open or expectedVersion differs, and 422 if quantity is 0."
+        "Fetch the current sellable price for productId from the inventory integration; output httpStatus 404 when the product is unknown, 409 with errorCode priceChanged when it differs from observedUnitPrice, and 503 for a transient integration failure."
+        (value)"basketItems" "Atomically insert or replace the basketItem identified by basketId and productId with the validated quantity and current unit price."
+        (value)"baskets" "Atomically recompute subtotal from all item quantities multiplied by unit prices, increment version once, and output httpStatus 200 with the complete basket response."
+    }
+}
+
+function "deleteBasketItem" {
+    collection "deleteBasketItemInput" {
+        (uuid)"actorId"
+        (array)"actorRoles"
+        (uuid)"basketId"
+        (string)"productId"
+        (uint32)"expectedVersion"
+    }
+
+    input (collection)"deleteBasketItemInput"
+    output (collection)"basketResponse"
+
+    logic {
+        "Expose this operation as HTTP DELETE /baskets/{basketId}/items/{productId}; require an authenticated customer."
+        (value)"baskets" "Output httpStatus 404 if basketId does not exist, 403 if actorId is not its owner, and 409 if it is not open or expectedVersion differs."
+        (value)"basketItems" "Atomically remove the matching item; output httpStatus 404 if it does not exist."
+        (value)"baskets" "Atomically recompute subtotal, increment version once, and output httpStatus 200 with the complete basket response."
+    }
+}
+
+function "reserveInventory" {
+    collection "reserveInventoryInput" {
+        (uuid)"basketId"
+        (array)"lines"
+        (string)"idempotencyKey"
+        (array)"actorRoles"
+    }
+
+    input (collection)"reserveInventoryInput"
+    output (collection)"stockReservation"
+
+    logic {
+        "Allow only actorRoles containing checkoutService; otherwise output a failed reservation with errorCode forbidden."
+        "Require INVENTORY_API_TOKEN at service startup, send it only over HTTPS, and never log it."
+        (collection)"basketItem" "Treat lines as basketItem productId and quantity pairs and reject empty, duplicate, or non-positive lines before calling the provider."
+        "Call the inventory provider's bulk-reservation operation with idempotencyKey and a five-second timeout."
+        (value)"reservationLifetimeSeconds" "Request one all-or-nothing reservation that expires this many seconds after provider acceptance."
+        (value)"stockReservations" "Return the existing reservation for the same idempotencyKey and identical input; reject reuse with different input, and persist exactly one terminal provider result."
+        (collection)"stockReservation" "Output reserved only when every line is reserved; output failed with unavailable for a stock rejection, or providerUnavailable with retryable true for timeout or transient failure."
+    }
+}
+
+function "releaseInventory" {
+    collection "releaseInventoryInput" {
+        (uuid)"reservationId"
+        (string)"idempotencyKey"
+        (array)"actorRoles"
+    }
+
+    input (collection)"releaseInventoryInput"
+    output (collection)"stockReservation"
+
+    logic {
+        "Allow only actorRoles containing checkoutService; otherwise output a failed reservation with errorCode forbidden."
+        (value)"stockReservations" "If reservationId is already released or expired, output it unchanged so release is idempotent."
+        "Call the inventory provider release operation with idempotencyKey and a five-second timeout."
+        (value)"stockReservations" "On success persist released; on a timeout preserve the prior status, set errorCode providerUnavailable and retryable true, and schedule retry with the same idempotencyKey."
+    }
+}
+
+function "chargePayment" {
+    collection "chargePaymentInput" {
+        (uuid)"basketId"
+        (decimal)"amount"
+        (string)"currency"
+        (string)"paymentToken"
+        (string)"idempotencyKey"
+        (array)"actorRoles"
+    }
+
+    input (collection)"chargePaymentInput"
+    output (collection)"paymentAttempt"
+
+    logic {
+        "Allow only actorRoles containing checkoutService; otherwise output failed with errorCode forbidden."
+        "Require PAYMENT_API_TOKEN at service startup, send provider and one-time payment tokens only over HTTPS, and never persist or log either token."
+        (value)"paymentAttempts" "Atomically claim idempotencyKey; return the existing attempt for identical basketId, amount, and currency, and reject key reuse with different input."
+        "Authorize and capture the exact amount and currency through the payment provider using idempotencyKey and a ten-second timeout."
+        "If the provider times out or its response is lost, query by idempotencyKey before any retry and never create a second charge."
+        (value)"paymentAttempts" "Persist and output captured for provider success, declined with retryable false for a decline, pending with retryable true while the provider outcome is unknown, or failed with the provider error classification."
+    }
+}
+
+function "refundPayment" {
+    collection "refundPaymentInput" {
+        (uuid)"paymentId"
+        (decimal)"amount"
+        (string)"idempotencyKey"
+        (array)"actorRoles"
+    }
+
+    input (collection)"refundPaymentInput"
+    output (collection)"paymentAttempt"
+
+    logic {
+        "Allow only actorRoles containing checkoutService; otherwise output failed with errorCode forbidden."
+        (value)"paymentAttempts" "Reject an unknown payment or an amount other than its captured amount; if it is already refunded, output it unchanged."
+        "Call the provider refund operation with idempotencyKey; on an unknown timeout result query by that key before retrying."
+        (value)"paymentAttempts" "Persist refunded exactly once on success; otherwise preserve captured status, record a retryable error, and raise an operational alert."
+    }
+}
+
+function "issueReceipt" {
+    collection "issueReceiptInput" {
+        (uuid)"orderId"
+        (uuid)"paymentId"
+        (array)"actorRoles"
+    }
+
+    input (collection)"issueReceiptInput"
+    output (collection)"receipt"
+
+    logic {
+        "Allow only actorRoles containing checkoutService; otherwise output null."
+        (value)"receipts" "If orderId already has a receipt, output the existing immutable receipt."
+        (value)"orders" "Require a paid or fulfillmentPending order and a captured payment whose basket, total, and currency match it."
+        (collection)"receipt" "Persist and output exactly one immutable receipt with a unique human-readable number and the current time."
+    }
+}
+
+function "enqueueFulfillment" {
+    collection "enqueueFulfillmentInput" {
+        (uuid)"orderId"
+        (array)"actorRoles"
+    }
+
+    input (collection)"enqueueFulfillmentInput"
+    output (collection)"fulfillment"
+
+    logic {
+        "Allow only actorRoles containing checkoutService; otherwise output null."
+        (value)"fulfillments" "If orderId already has fulfillment work, output it without enqueueing a duplicate."
+        (value)"orders" "In one database transaction create queued fulfillment with attemptCount 0, write its outbox event, and set the paid order to fulfillmentPending."
+        "If that transaction fails, output null without publishing an event or changing the order."
+        "Publish committed outbox events asynchronously with at-least-once delivery and retain them until acknowledged."
+    }
+}
+
+function "runFulfillmentJob" {
+    collection "runFulfillmentJobInput" {
+        (uuid)"fulfillmentId"
+        (array)"actorRoles"
+    }
+
+    input (collection)"runFulfillmentJobInput"
+    output (collection)"fulfillment"
+
+    logic {
+        "Allow only actorRoles containing fulfillmentWorker; otherwise output null."
+        (value)"fulfillments" "Acquire one expired-or-unowned lease for fulfillmentId; acknowledge a duplicate event without work when status is shipped or delivered."
+        "Call the carrier create-shipment operation with orderId as its idempotency key and a ten-second timeout; after an unknown result query by orderId before retrying."
+        (value)"fulfillments" "On success atomically store carrierReference and trackingUrl, set status shipped, clear nextAttemptAt, and acknowledge the event."
+        (value)"fulfillmentRetryLimit" "On failure increment attemptCount; below this limit set queued with exponential backoff and release the event, otherwise set failed, clear nextAttemptAt, acknowledge the event, and raise an operational alert."
+        (value)"orders" "Set the order to fulfilled when shipment succeeds, or needsAttention when the final attempt fails."
+    }
+}
+
+function "checkoutBasket" {
+    collection "checkoutBasketInput" {
+        (uuid)"actorId"
+        (array)"actorRoles"
+        (uuid)"basketId"
+        (uint32)"expectedVersion"
+        (object)"shippingAddress"
+        (string)"paymentToken"
+        (string)"idempotencyKey"
+    }
+
+    input (collection)"checkoutBasketInput"
+    output (collection)"checkoutResult"
+
+    logic {
+        "Expose this operation as HTTP POST /baskets/{basketId}/checkout; require an authenticated customer."
+        (collection)"checkoutResult" "Atomically return the prior terminal result for the same actorId, basketId, idempotencyKey, expectedVersion, and request fingerprint; output httpStatus 409 for key reuse with different input."
+        (value)"baskets" "Output httpStatus 404 if basketId is absent, 403 unless actorId owns it, 409 unless it is open at expectedVersion, and 422 if it has no items or shippingAddress is invalid or outside the configured country allowlist."
+        (value)"basketItems" "Reprice every item; output httpStatus 409 with status failed and errorCode priceChanged if any price differs, without reserving inventory or charging payment."
+        (value)"baskets" "Atomically change the basket from open to checkingOut at expectedVersion so concurrent checkout attempts cannot start another workflow."
+        (function)"reserveInventory" "Call this function for all current items with idempotencyKey followed by :inventory; if it does not output reserved, restore the basket to open and output unavailable for a stock rejection or pending for a retryable provider failure."
+        (function)"chargePayment" "After reservation succeeds, call this function for the exact basket subtotal and currency with idempotencyKey followed by :payment."
+        (function)"releaseInventory" "If payment is declined or fails, call this function with idempotencyKey followed by :release, restore the basket to open after release succeeds, and output declined or failed; if payment is pending, preserve checkingOut and output pending without releasing."
+        (value)"orders" "After captured payment, atomically create exactly one paid order containing a snapshot of all basket items and shippingAddress, mark the reservation consumed, and mark the basket completed."
+        (function)"refundPayment" "If the order transaction fails after capture, call this function with idempotencyKey followed by :refund, release inventory, restore the basket to open only after both compensations succeed, and output failed; while either compensation is unresolved output pending and alert operations."
+        (function)"issueReceipt" "For the committed order, call this function and retain its immutable identifier."
+        (function)"enqueueFulfillment" "Call this function after receipt creation; if enqueueing fails, keep the paid order and receipt, set the order to needsAttention, alert operations, and continue to output checkout success."
+        (collection)"checkoutResult" "Persist the terminal result before responding; output httpStatus 201 and succeeded with order, payment, receipt, and any fulfillment identifiers."
+    }
+}
+
+function "getOrder" {
+    collection "getOrderInput" {
+        (uuid)"actorId"
+        (array)"actorRoles"
+        (uuid)"orderId"
+    }
+
+    input (collection)"getOrderInput"
+    output (collection)"orderResponse"
+
+    logic {
+        "Expose this operation as HTTP GET /orders/{orderId}; output httpStatus 401 when authentication is absent."
+        (value)"orders" "Output httpStatus 404 if orderId is absent, and 403 unless actorId owns it or actorRoles contains supportAdministrator."
+        (value)"receipts" "For an authorized order output httpStatus 200 with its immutable item snapshot, total, currency, status, receipt number, and no payment credentials."
+        (value)"fulfillments" "Include current fulfillment status and trackingUrl when present."
+    }
+}
+
+function "cancelOrder" {
+    collection "cancelOrderInput" {
+        (uuid)"actorId"
+        (array)"actorRoles"
+        (uuid)"orderId"
+        (string)"idempotencyKey"
+    }
+
+    input (collection)"cancelOrderInput"
+    output (collection)"orderResponse"
+
+    logic {
+        "Expose this operation as HTTP POST /orders/{orderId}/cancel; require an authenticated customer."
+        (value)"orders" "Output httpStatus 404 if orderId is absent, 403 unless actorId owns it or actorRoles contains supportAdministrator, and 409 if fulfillment is processing, shipped, or delivered."
+        (function)"refundPayment" "Refund the full captured amount with idempotencyKey followed by :refund; on a retryable failure output httpStatus 202 and leave the order unchanged."
+        (function)"releaseInventory" "Release any unconsumed reservation with idempotencyKey followed by :release and treat an already consumed reservation as requiring no release."
+        (value)"orders" "After required compensation succeeds atomically set status cancelled; repeated identical requests output the same cancelled order with httpStatus 200."
+    }
+}
+
+interface "checkout" {
+    context (collection)"basketResponse" (function)"createBasket" (function)"getBasket" (function)"putBasketItem" (function)"deleteBasketItem" (function)"checkoutBasket" "Render an accessible basket and checkout experience with product quantities, prices, subtotal, shipping address, one-time payment details, inline errors, and an order confirmation."
+
+    logic {
+        (function)"createBasket" "When an authenticated customer has no current basket, create one and display its empty state."
+        (function)"getBasket" "Load the current basket; for 401 ask the customer to sign in, for 403 or 404 show no basket data, and for 200 display every returned item and subtotal."
+        (function)"putBasketItem" "When an item quantity is added or changed, send the displayed price and version; replace the view only on 200, show price changes or conflicts without losing input, and allow retry for 503."
+        (function)"deleteBasketItem" "When Remove is activated, send the displayed version; replace the view only on 200 and reload after a version conflict."
+        "Disable checkout while the basket is empty and require a complete shipping address and one-time payment token before submission."
+        (function)"checkoutBasket" "For the first submission generate one idempotency key, disable all basket edits, call this function once, and reuse that key for every retry of the unchanged submission."
+        (function)"checkoutBasket" "On pending keep edits disabled, show that completion is being confirmed, and retry with bounded backoff; on declined or failed re-enable checkout without exposing provider details; on unavailable re-enable basket edits."
+        (function)"checkoutBasket" "On succeeded clear payment inputs, never submit the charge again, show the receipt identifier, and open the order-status screen for orderId."
+    }
+}
+
+interface "orderStatus" {
+    context (function)"getOrder" (function)"cancelOrder" "Render an accessible order summary, receipt number, fulfillment progress, tracking link, and eligible cancellation action."
+
+    logic {
+        (function)"getOrder" "Load the requested order; for 401 ask the customer to sign in, for 403 or 404 reveal no order data, and for 200 show the immutable item snapshot and current fulfillment state."
+        (function)"cancelOrder" "Offer Cancel only before fulfillment processing; generate one idempotency key per cancellation, reuse it for retries, show pending for 202, and show the cancelled state only after 200."
+        (function)"getOrder" "Poll while fulfillment is queued or processing, stop after fulfilled, cancelled, or needsAttention, and expose a tracking link only when trackingUrl is present."
+    }
+}
+
+screen "checkout" {
+    use (interface)"checkout"
+    logic "Use /checkout as this screen's URL path."
+}
+
+screen "order" {
+    use (interface)"orderStatus"
+    logic "Use /orders/{orderId} as this screen's URL path."
+}
+
+screen "api" {
+    logic {
+        (function)"createBasket" "Expose this public API operation."
+        (function)"getBasket" "Expose this public API operation."
+        (function)"putBasketItem" "Expose this public API operation."
+        (function)"deleteBasketItem" "Expose this public API operation."
+        (function)"checkoutBasket" "Expose this public API operation."
+        (function)"getOrder" "Expose this public API operation."
+        (function)"cancelOrder" "Expose this public API operation."
+    }
+}
+
+screen "fulfillmentWorker" {
+    logic {
+        (function)"runFulfillmentJob" "For every available fulfillment outbox event, call this function with the fulfillmentWorker role and acknowledge or retry exactly as its output requires."
+    }
+}

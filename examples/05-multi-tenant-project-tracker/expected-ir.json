@@ -1,0 +1,827 @@
+{
+  "surfaceVersion": "0.1",
+  "application": {
+    "id": "multiTenantProjectTracker",
+    "purpose": "Track projects and work items while isolating every tenant's resources and applying each user's tenant-specific role.",
+    "stacks": [
+      {
+        "id": "web",
+        "target": "browser",
+        "technologies": [
+          {
+            "role": "markup",
+            "name": "html"
+          },
+          {
+            "role": "styling",
+            "name": "css"
+          },
+          {
+            "role": "designSystem",
+            "name": "picoCss",
+            "version": "2.1.1"
+          },
+          {
+            "role": "language",
+            "name": "typescript"
+          },
+          {
+            "role": "api",
+            "name": "httpJson"
+          }
+        ]
+      },
+      {
+        "id": "service",
+        "target": "server",
+        "technologies": [
+          {
+            "role": "language",
+            "name": "typescript"
+          },
+          {
+            "role": "runtime",
+            "name": "deno"
+          },
+          {
+            "role": "storage",
+            "name": "postgresql"
+          },
+          {
+            "role": "authentication",
+            "name": "oidc"
+          }
+        ]
+      }
+    ]
+  },
+  "values": [
+    {
+      "id": "tenantRole",
+      "type": "enum",
+      "kind": "constant",
+      "values": [
+        "owner",
+        "administrator",
+        "contributor",
+        "viewer"
+      ]
+    },
+    {
+      "id": "tenantPermission",
+      "type": "enum",
+      "kind": "constant",
+      "values": [
+        "tenantRead",
+        "projectCreate",
+        "projectUpdate",
+        "workItemCreate",
+        "workItemUpdate",
+        "membershipManage"
+      ]
+    },
+    {
+      "id": "workItemStatus",
+      "type": "enum",
+      "kind": "constant",
+      "values": [
+        "backlog",
+        "active",
+        "done"
+      ]
+    }
+  ],
+  "collections": [
+    {
+      "id": "tenant",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "tenantMembership",
+      "fields": [
+        {
+          "name": "tenantId",
+          "type": "uuid"
+        },
+        {
+          "name": "userId",
+          "type": "uuid"
+        },
+        {
+          "name": "role",
+          "type": "enum",
+          "value": "tenantRole"
+        }
+      ]
+    },
+    {
+      "id": "project",
+      "fields": [
+        {
+          "name": "tenantId",
+          "type": "uuid"
+        },
+        {
+          "name": "id",
+          "type": "uuid"
+        },
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "version",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "workItem",
+      "fields": [
+        {
+          "name": "tenantId",
+          "type": "uuid"
+        },
+        {
+          "name": "projectId",
+          "type": "uuid"
+        },
+        {
+          "name": "id",
+          "type": "uuid"
+        },
+        {
+          "name": "title",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "value": "workItemStatus"
+        },
+        {
+          "name": "assigneeUserId",
+          "type": "uuid",
+          "optional": true
+        },
+        {
+          "name": "version",
+          "type": "integer"
+        }
+      ]
+    },
+    {
+      "id": "authorizationRequest",
+      "fields": [
+        {
+          "name": "actorUserId",
+          "type": "uuid"
+        },
+        {
+          "name": "tenantId",
+          "type": "uuid"
+        },
+        {
+          "name": "permission",
+          "type": "enum",
+          "value": "tenantPermission"
+        }
+      ]
+    },
+    {
+      "id": "authorizationDecision",
+      "fields": [
+        {
+          "name": "allowed",
+          "type": "boolean"
+        },
+        {
+          "name": "role",
+          "type": "enum",
+          "value": "tenantRole",
+          "optional": true
+        }
+      ]
+    },
+    {
+      "id": "userTenantList",
+      "fields": [
+        {
+          "name": "memberships",
+          "type": "array"
+        }
+      ]
+    },
+    {
+      "id": "tenantWorkspace",
+      "fields": [
+        {
+          "name": "tenantId",
+          "type": "uuid"
+        },
+        {
+          "name": "projects",
+          "type": "array"
+        },
+        {
+          "name": "workItems",
+          "type": "array"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "id": "authorizeTenantAction",
+      "input": {
+        "collection": "authorizationRequest"
+      },
+      "output": {
+        "collection": "authorizationDecision"
+      },
+      "logic": [
+        {
+          "instruction": "Find a membership whose tenantId and userId exactly equal the request tenantId and actorUserId; never use a membership from another tenant, even for the same user.",
+          "reference": {
+            "type": "collection",
+            "id": "tenantMembership"
+          }
+        },
+        {
+          "instruction": "If no exact membership exists, output allowed false and omit role.",
+          "reference": {
+            "type": "collection",
+            "id": "authorizationDecision"
+          }
+        },
+        {
+          "instruction": "Allow owner for every permission; allow administrator for every permission except membershipManage; allow contributor only for tenantRead, workItemCreate, and workItemUpdate; and allow viewer only for tenantRead.",
+          "reference": {
+            "type": "value",
+            "id": "tenantPermission"
+          }
+        },
+        {
+          "instruction": "Output allowed true with the exact membership role when the role grants the requested permission; otherwise output allowed false with that role.",
+          "reference": {
+            "type": "collection",
+            "id": "authorizationDecision"
+          }
+        }
+      ]
+    },
+    {
+      "id": "listUserTenants",
+      "collections": [
+        {
+          "id": "userIdentityInput",
+          "fields": [
+            {
+              "name": "actorUserId",
+              "type": "uuid"
+            }
+          ]
+        }
+      ],
+      "input": {
+        "collection": "userIdentityInput"
+      },
+      "output": {
+        "collection": "userTenantList"
+      },
+      "logic": [
+        {
+          "instruction": "Bind actorUserId exclusively from the authenticated identity and never from a caller-selected user identifier.",
+          "reference": {
+            "type": "collection",
+            "id": "userIdentityInput"
+          }
+        },
+        {
+          "instruction": "Read only memberships whose userId exactly equals actorUserId; preserve independent roles when that user belongs to several tenants.",
+          "reference": {
+            "type": "collection",
+            "id": "tenantMembership"
+          }
+        },
+        {
+          "instruction": "For each matching membership, include only its tenant's id and name together with that membership's role.",
+          "reference": {
+            "type": "collection",
+            "id": "tenant"
+          }
+        },
+        {
+          "instruction": "Output memberships as an array of objects with exactly tenantId, tenantName, and role; order them by tenantName and then tenantId.",
+          "reference": {
+            "type": "collection",
+            "id": "userTenantList"
+          }
+        }
+      ]
+    },
+    {
+      "id": "loadTenantWorkspace",
+      "collections": [
+        {
+          "id": "tenantWorkspaceInput",
+          "fields": [
+            {
+              "name": "actorUserId",
+              "type": "uuid"
+            },
+            {
+              "name": "tenantId",
+              "type": "uuid"
+            }
+          ]
+        }
+      ],
+      "input": {
+        "collection": "tenantWorkspaceInput"
+      },
+      "output": {
+        "collection": "tenantWorkspace"
+      },
+      "logic": [
+        {
+          "instruction": "Call this function with actorUserId, tenantId, and tenantRead; if it denies access, output null without revealing whether the tenant exists.",
+          "reference": {
+            "type": "function",
+            "id": "authorizeTenantAction"
+          }
+        },
+        {
+          "instruction": "Read only projects whose tenantId exactly equals the authorized tenantId, and order them by name and then id.",
+          "reference": {
+            "type": "collection",
+            "id": "project"
+          }
+        },
+        {
+          "instruction": "Read only work items whose tenantId exactly equals the authorized tenantId and whose projectId identifies a project from that same tenant; order them by projectId, status, title, and id.",
+          "reference": {
+            "type": "collection",
+            "id": "workItem"
+          }
+        },
+        {
+          "instruction": "Output the authorized tenantId, the ordered project objects in projects, and the ordered work-item objects in workItems; every array object must contain exactly the fields declared by its referenced collection.",
+          "reference": {
+            "type": "collection",
+            "id": "tenantWorkspace"
+          }
+        }
+      ]
+    },
+    {
+      "id": "createProject",
+      "collections": [
+        {
+          "id": "createProjectInput",
+          "fields": [
+            {
+              "name": "actorUserId",
+              "type": "uuid"
+            },
+            {
+              "name": "tenantId",
+              "type": "uuid"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "description",
+              "type": "string",
+              "optional": true
+            }
+          ]
+        }
+      ],
+      "input": {
+        "collection": "createProjectInput"
+      },
+      "output": {
+        "collection": "project"
+      },
+      "logic": [
+        {
+          "instruction": "Call this function with actorUserId, tenantId, and projectCreate; if it denies access, output null without revealing whether the tenant exists.",
+          "reference": {
+            "type": "function",
+            "id": "authorizeTenantAction"
+          }
+        },
+        {
+          "instruction": "Trim name; if it is empty, output null.",
+          "reference": {
+            "type": "collection",
+            "id": "createProjectInput"
+          }
+        },
+        {
+          "instruction": "Within the authorized tenant, require name to be unique without regard to letter case; if it conflicts, output null.",
+          "reference": {
+            "type": "collection",
+            "id": "project"
+          }
+        },
+        {
+          "instruction": "Generate a new id, copy only the authorized tenantId, set version to 1, persist the project, and output it; never accept or derive tenantId from any other source.",
+          "reference": {
+            "type": "collection",
+            "id": "project"
+          }
+        }
+      ]
+    },
+    {
+      "id": "updateProject",
+      "collections": [
+        {
+          "id": "updateProjectInput",
+          "fields": [
+            {
+              "name": "actorUserId",
+              "type": "uuid"
+            },
+            {
+              "name": "tenantId",
+              "type": "uuid"
+            },
+            {
+              "name": "projectId",
+              "type": "uuid"
+            },
+            {
+              "name": "expectedVersion",
+              "type": "integer"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "description",
+              "type": "string",
+              "optional": true
+            }
+          ]
+        }
+      ],
+      "input": {
+        "collection": "updateProjectInput"
+      },
+      "output": {
+        "collection": "project"
+      },
+      "logic": [
+        {
+          "instruction": "Call this function with actorUserId, tenantId, and projectUpdate; if it denies access, output null.",
+          "reference": {
+            "type": "function",
+            "id": "authorizeTenantAction"
+          }
+        },
+        {
+          "instruction": "Find the project only by the composite key tenantId and projectId; for a missing project or an identifier belonging to another tenant, output the same null result.",
+          "reference": {
+            "type": "collection",
+            "id": "project"
+          }
+        },
+        {
+          "instruction": "Trim name; if it is empty or expectedVersion does not equal the stored version, output null without changing the project.",
+          "reference": {
+            "type": "collection",
+            "id": "updateProjectInput"
+          }
+        },
+        {
+          "instruction": "Within tenantId, require the new name to be unique without regard to letter case except for this project.",
+          "reference": {
+            "type": "collection",
+            "id": "project"
+          }
+        },
+        {
+          "instruction": "Update name and description, increment version by 1, preserve tenantId and id unchanged, persist atomically, and output the project.",
+          "reference": {
+            "type": "collection",
+            "id": "project"
+          }
+        }
+      ]
+    },
+    {
+      "id": "createWorkItem",
+      "collections": [
+        {
+          "id": "createWorkItemInput",
+          "fields": [
+            {
+              "name": "actorUserId",
+              "type": "uuid"
+            },
+            {
+              "name": "tenantId",
+              "type": "uuid"
+            },
+            {
+              "name": "projectId",
+              "type": "uuid"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "name": "assigneeUserId",
+              "type": "uuid",
+              "optional": true
+            }
+          ]
+        }
+      ],
+      "input": {
+        "collection": "createWorkItemInput"
+      },
+      "output": {
+        "collection": "workItem"
+      },
+      "logic": [
+        {
+          "instruction": "Call this function with actorUserId, tenantId, and workItemCreate; if it denies access, output null.",
+          "reference": {
+            "type": "function",
+            "id": "authorizeTenantAction"
+          }
+        },
+        {
+          "instruction": "Find the parent only by tenantId and projectId; for a missing project or a project in another tenant, output the same null result.",
+          "reference": {
+            "type": "collection",
+            "id": "project"
+          }
+        },
+        {
+          "instruction": "Trim title; if it is empty, output null.",
+          "reference": {
+            "type": "collection",
+            "id": "createWorkItemInput"
+          }
+        },
+        {
+          "instruction": "If assigneeUserId is present, require a membership with exactly tenantId and assigneeUserId; a membership in any other tenant does not satisfy this constraint.",
+          "reference": {
+            "type": "collection",
+            "id": "tenantMembership"
+          }
+        },
+        {
+          "instruction": "Generate a new id, copy tenantId and projectId from the authorized same-tenant scope, set status to backlog and version to 1, persist the work item, and output it.",
+          "reference": {
+            "type": "collection",
+            "id": "workItem"
+          }
+        }
+      ]
+    },
+    {
+      "id": "updateWorkItem",
+      "collections": [
+        {
+          "id": "updateWorkItemInput",
+          "fields": [
+            {
+              "name": "actorUserId",
+              "type": "uuid"
+            },
+            {
+              "name": "tenantId",
+              "type": "uuid"
+            },
+            {
+              "name": "workItemId",
+              "type": "uuid"
+            },
+            {
+              "name": "expectedVersion",
+              "type": "integer"
+            },
+            {
+              "name": "title",
+              "type": "string"
+            },
+            {
+              "name": "status",
+              "type": "enum",
+              "value": "workItemStatus"
+            },
+            {
+              "name": "assigneeUserId",
+              "type": "uuid",
+              "optional": true
+            },
+            {
+              "name": "clearAssignee",
+              "type": "boolean"
+            }
+          ]
+        }
+      ],
+      "input": {
+        "collection": "updateWorkItemInput"
+      },
+      "output": {
+        "collection": "workItem"
+      },
+      "logic": [
+        {
+          "instruction": "Call this function with actorUserId, tenantId, and workItemUpdate; if it denies access, output null.",
+          "reference": {
+            "type": "function",
+            "id": "authorizeTenantAction"
+          }
+        },
+        {
+          "instruction": "Find the work item only by the composite key tenantId and workItemId; for a missing item or an identifier belonging to another tenant, output the same null result.",
+          "reference": {
+            "type": "collection",
+            "id": "workItem"
+          }
+        },
+        {
+          "instruction": "Trim title; if it is empty, expectedVersion differs from the stored version, or clearAssignee is true while assigneeUserId is present, output null without changing the work item.",
+          "reference": {
+            "type": "collection",
+            "id": "updateWorkItemInput"
+          }
+        },
+        {
+          "instruction": "If assigneeUserId is present, require a membership with exactly tenantId and assigneeUserId; a membership in any other tenant does not satisfy this constraint.",
+          "reference": {
+            "type": "collection",
+            "id": "tenantMembership"
+          }
+        },
+        {
+          "instruction": "Update title and status, clear the assignee when clearAssignee is true or otherwise apply a present assigneeUserId, increment version by 1, preserve tenantId, projectId, and id unchanged, persist atomically, and output the work item.",
+          "reference": {
+            "type": "collection",
+            "id": "workItem"
+          }
+        }
+      ]
+    },
+    {
+      "id": "setTenantMembership",
+      "collections": [
+        {
+          "id": "setTenantMembershipInput",
+          "fields": [
+            {
+              "name": "actorUserId",
+              "type": "uuid"
+            },
+            {
+              "name": "tenantId",
+              "type": "uuid"
+            },
+            {
+              "name": "memberUserId",
+              "type": "uuid"
+            },
+            {
+              "name": "role",
+              "type": "enum",
+              "value": "tenantRole"
+            }
+          ]
+        }
+      ],
+      "input": {
+        "collection": "setTenantMembershipInput"
+      },
+      "output": {
+        "collection": "tenantMembership"
+      },
+      "logic": [
+        {
+          "instruction": "Call this function with actorUserId, tenantId, and membershipManage; if it denies access, output null without revealing whether the tenant exists.",
+          "reference": {
+            "type": "function",
+            "id": "authorizeTenantAction"
+          }
+        },
+        {
+          "instruction": "Upsert only the membership identified by the composite key tenantId and memberUserId, so the same user may keep different roles in other tenants.",
+          "reference": {
+            "type": "collection",
+            "id": "tenantMembership"
+          }
+        },
+        {
+          "instruction": "Do not change tenantId on an existing membership and never copy a role to another tenant; persist and output exactly the one membership.",
+          "reference": {
+            "type": "collection",
+            "id": "tenantMembership"
+          }
+        }
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "projectTracker",
+      "logic": [
+        {
+          "instruction": "After authentication, call this function and offer exactly its returned tenants with each tenant-specific role; do not offer a tenant from any other source.",
+          "reference": {
+            "type": "function",
+            "id": "listUserTenants"
+          }
+        },
+        {
+          "instruction": "When a tenant is selected or its data is refreshed, call this function with the authenticated user and selected tenant.",
+          "reference": {
+            "type": "function",
+            "id": "loadTenantWorkspace"
+          }
+        },
+        {
+          "instruction": "Replace the visible projects and work items only when the output tenantId still equals the selected tenantId; discard prior tenant data before a switch and discard stale responses from another selection.",
+          "reference": {
+            "type": "collection",
+            "id": "tenantWorkspace"
+          }
+        },
+        {
+          "instruction": "Offer project creation only for owner or administrator, call this function for submission, and refresh the selected tenant after a non-null output.",
+          "reference": {
+            "type": "function",
+            "id": "createProject"
+          }
+        },
+        {
+          "instruction": "Offer project editing only for owner or administrator, submit the displayed version, and refresh the selected tenant after a non-null output.",
+          "reference": {
+            "type": "function",
+            "id": "updateProject"
+          }
+        },
+        {
+          "instruction": "Offer work-item creation for owner, administrator, or contributor, call this function for submission, and refresh the selected tenant after a non-null output.",
+          "reference": {
+            "type": "function",
+            "id": "createWorkItem"
+          }
+        },
+        {
+          "instruction": "Offer work-item editing for owner, administrator, or contributor, submit the displayed version, and refresh the selected tenant after a non-null output.",
+          "reference": {
+            "type": "function",
+            "id": "updateWorkItem"
+          }
+        },
+        {
+          "instruction": "Offer membership management only for owner, call this function for submission, and reload the tenant list after a non-null output.",
+          "reference": {
+            "type": "function",
+            "id": "setTenantMembership"
+          }
+        },
+        {
+          "instruction": "For every null operation result, show the same non-specific unavailable message and do not reveal whether a tenant, project, work item, membership, or identifier exists."
+        }
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "id": "home",
+      "interface": "projectTracker",
+      "logic": [
+        {
+          "instruction": "Use / as this screen's URL path and require an authenticated user."
+        }
+      ]
+    }
+  ]
+}

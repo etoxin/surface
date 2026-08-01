@@ -1,10 +1,11 @@
 # Surface
 
-Surface is a small, human- and LLM-readable KDL format for describing an application,
-including optional technology choices, without prescribing detailed UI syntax.
+Surface is a small KDL format for describing an application without prescribing its
+implementation. It gives humans and LLMs a shared, checked product specification: data,
+capabilities, interfaces, screens, technology choices, context, and ordered logic.
 
-**Status:** frozen grammar · **Version:** 0.1 · **Syntax:** KDL 2 · **Extension:**
-`.kdl`
+**Status:** experimental · **Format:** Surface 0.1 · **Syntax:** KDL 2 · **Extension:**
+`.kdl` · **Grammar:** frozen
 
 ```kdl
 /- kdl-version 2
@@ -24,136 +25,74 @@ screen "home" {
 }
 ```
 
-An `interface` uses context to describe what a user should see and logic for ordered
-interaction. It does not prescribe sections, text nodes, buttons, inputs, or layout. A
-`screen` places an interface in the application. Screens may instead contain context or
-logic for non-visual behaviour.
+Surface is not a source-code generator. Its CLI checks, formats, exports, and resolves
+references in a specification. Give the checked `.kdl` file and the included Surface
+skill to an LLM—or to a person—to produce the application.
 
-## Documentation
+## Try Surface
 
-1. [Writing Surface](./docs/README.md)
-2. [Starting a Surface file](./docs/node_surface.md)
-3. [Describing the application](./docs/node_application.md)
-4. [Surface 0.1 grammar](./docs/grammar.md)
-5. [Choosing the technology stack](./docs/node_stack.md)
-6. [Portable types](./docs/primitives.md)
-7. [Defining values and enums](./docs/node_value.md)
-8. [Defining data](./docs/node_collection.md)
-9. [Defining functions](./docs/node_function.md)
-10. [Describing an interface](./docs/node_interface.md)
-11. [Adding screens](./docs/node_screen.md)
-12. [Adding prompt context](./docs/node_context.md)
-13. [Adding ordered logic](./docs/node_logic.md)
-14. [Application roadmap](./roadmap.md)
-
-## Current Syntax
-
-Surface 0.1 is frozen. Existing syntax may receive bug fixes and clearer documentation,
-but new declarations, children, properties, modifiers, and reference types require a
-later Surface version.
-
-- A file starts with `/- kdl-version 2`, then one `surface "0.1"` and one `application`
-  containing a `purpose`. Optional named `stack` nodes record each target and its
-  open-ended technology choices.
-- `(type)value "id"` declares a constant by default; a bare trailing `variable` marks
-  mutable state. `(enum)value` contains unique quoted options.
-- `collection` fields use the same portable type annotations as values. Fields are
-  required by default; the only modifier is `optional`. An `(enum)` field has one
-  checked `(value)"id"` reference.
-- `function` describes a named capability. It currently has one
-  `output (collection)"id"`, an optional structured `input`, and may declare
-  function-private collections and one optional `logic` node.
-- `interface "id"` contains universal `context` and optional `logic`.
-- `screen "id"` contains either one `use (interface)"id"` plus optional context or
-  logic, or non-visual context or logic alone. Screens have no properties; describe a
-  URL path with logic when needed.
-- `context [(type)"id"...] "prompt"` can be attached to any supported node. Its
-  annotated strings are checked references to visible declarations.
-- `logic` contains ordered instructions. Each instruction is a quoted string, optionally
-  attached to one checked reference; a single instruction can use `logic "..."`.
-  Operators stay inside strings.
-- Declaration IDs and field names use lower camel case. Unknown or legacy syntax is
-  rejected.
-
-## Tooling
-
-[mise](https://mise.jdx.dev/) installs the pinned Deno version and exposes the
-repository tasks:
+Install [mise](https://mise.jdx.dev/), then run:
 
 ```sh
+git clone https://github.com/etoxin/surface-lang.git
+cd surface-lang
 mise install
+mise run surf check examples/01-hello-world/surface.kdl
+mise run surf export examples/01-hello-world/surface.kdl --format json
 mise run verify
 ```
 
-Useful commands:
+Start with [Getting started](./docs/getting_started.md) to write and implement your own
+specification. Surface is experimental, so keep the `.kdl` source and generated code in
+version control and review generated applications before using them.
 
-```sh
-mise run surf check examples/01-hello-world/surface.kdl
-mise run surf format examples/01-hello-world/surface.kdl
-mise run surf export examples/03-contact-viewer/surface.kdl --format json
-mise run surf reference examples/03-contact-viewer/surface.kdl --list
-mise run static-faq
-mise run contact-viewer
-mise run click-counter
-mise run todo-list
-mise run signup-determinism
-mise run design-consistency
-mise run design-visual
-mise run design-independent
-mise run design-independent-visual
-mise run url-shortener
-mise run file-converter
-INVENTORY_API_TOKEN=development PAYMENT_API_TOKEN=development mise run online-checkout
-mise run multi-tenant-project-tracker
+## Documentation
+
+| Guide | Purpose |
+| --- | --- |
+| [Writing Surface](./docs/README.md) | Documentation overview and language shape |
+| [Getting started](./docs/getting_started.md) | Install, write, validate, and implement a first app |
+| [Generating applications](./docs/generating_applications.md) | Give a Surface specification to an LLM reproducibly |
+| [Testing and reporting](./docs/testing.md) | Test implementations and report useful evidence |
+| [Surface 0.1 grammar](./docs/grammar.md) | Complete authoritative language reference |
+| [Starting a Surface file](./docs/node_surface.md) | File marker and format version |
+| [Application](./docs/node_application.md) | Application identity and purpose |
+| [Technology stacks](./docs/node_stack.md) | Targets, technologies, versions, and design systems |
+| [Portable types](./docs/primitives.md) | Language-neutral type annotations |
+| [Values and enums](./docs/node_value.md) | Constants, variables, and enum values |
+| [Collections](./docs/node_collection.md) | Typed data shapes |
+| [Functions](./docs/node_function.md) | Inputs, outputs, private collections, and capabilities |
+| [Interfaces](./docs/node_interface.md) | Intent-driven user interfaces |
+| [Screens](./docs/node_screen.md) | Interface placement and navigation intent |
+| [Context](./docs/node_context.md) | Prompt guidance and checked references |
+| [Logic](./docs/node_logic.md) | Ordered normative instructions |
+
+## Examples and Evidence
+
+Five examples cover the small language from first use through platform-scale tests:
+
+1. [Hello World](./examples/01-hello-world/README.md)
+2. [Todo List](./examples/02-todo-list/README.md)
+3. [Design Consistency](./examples/03-design-consistency/README.md)
+4. [Online Checkout](./examples/04-online-checkout/README.md)
+5. [Multi-tenant Project Tracker](./examples/05-multi-tenant-project-tracker/README.md)
+
+Examples 3–5 pin a design system in their application stack. The design-consistency
+example contains coordinated and independent builds, contract reports, and 48
+screenshots. The final two examples test the same frozen grammar at platform scale.
+
+## CLI
+
+```text
+mise run surf parse <file.kdl>
+mise run surf check <file.kdl>
+mise run surf format <file.kdl>
+mise run surf export <file.kdl> --format json
+mise run surf reference <file.kdl> <selector|--list>
 ```
 
-`design-visual` downloads its pinned Playwright Chromium browser on first use.
+Run `mise tasks` to see every example and benchmark task. The complete repository check
+is `mise run verify`.
 
-The direct equivalents are `deno task verify` and `deno task surf`. The CLI supports
-`parse`, `check`, `format`, `export`, and `reference`. Reference selectors include
-`interface.contactViewer`, `screen.contact`, and scoped private collections such as
-`function.contactById.collection.contactLookup`. Values use selectors such as
-`value.todoStatus`.
-
-## Examples
-
-### Completed rungs
-
-- [Rung 1: Hello World](./examples/01-hello-world/surface.kdl)
-- [Rung 2: Static FAQ](./examples/02-static-faq/surface.kdl)
-- [Rung 3: Contact Viewer](./examples/03-contact-viewer/surface.kdl)
-- [Rung 4: Click Counter](./examples/04-click-counter/surface.kdl)
-- [Rung 5: Todo List](./examples/05-todo-list/surface.kdl)
-
-Each completed rung includes expected JSON, invalid fixtures, a small implementation,
-human documentation, and updates to the LLM skill.
-
-### Candidate stress tests
-
-- [Rung 6: Signup Determinism](./examples/06-signup-determinism/benchmark.md)
-- [Rung 7: HTML Design Consistency](./examples/07-design-consistency/benchmark.md)
-- [Rung 8: URL Shortener API](./examples/08-url-shortener-api/surface.kdl)
-- [Rung 11: File Converter](./examples/11-file-converter/surface.kdl)
-- [Rung 15: Online Checkout](./examples/15-online-checkout/surface.kdl)
-- [Rung 16: Multi-tenant Project Tracker](./examples/16-multi-tenant-project-tracker/surface.kdl)
-
-These candidates test whether released syntax can support later applications. They
-include implementations and reviewed IR, but are not complete rung deliveries with
-invalid fixtures, full human documentation, or skill updates.
-
-The [LLM skill](./skills/surface/SKILL.md) covers the currently completed language
-surface.
-
-The Static FAQ runs at `http://localhost:8002/faq`; the Contact Viewer runs at
-`http://localhost:8000/contacts?id=ada`; the Click Counter runs at
-`http://localhost:8001/`; the self-contained Todo List HTML runs at
-`http://localhost:8003/` through its convenience task. The URL Shortener API runs at
-`http://localhost:8004/`, the File Converter at `http://localhost:8005/`, the Online
-Checkout at `http://localhost:8006/checkout`, and the Multi-tenant Project Tracker at
-`http://localhost:8007/`. The three signup builds run at `http://localhost:8010/`,
-`http://localhost:8011/`, and `http://localhost:8012/`. The three design-consistency
-builds run at `http://localhost:8020/`, `http://localhost:8021/`, and
-`http://localhost:8022/`.
-
-Surface 0.1 is frozen. Roadmap applications must use its documented grammar; missing
-capabilities become evidence for a later language version rather than new 0.1 syntax.
+Surface 0.1 is frozen. Bug fixes, diagnostics, formatting, documentation, and tooling may
+improve, but new valid syntax belongs to a later format version.

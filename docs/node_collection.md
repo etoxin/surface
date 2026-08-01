@@ -1,7 +1,6 @@
 # Defining Data
 
-A collection describes one kind of information used by the application. The
-Contact Viewer needs a contact:
+A collection describes one kind of information used by the application. For example:
 
 ```kdl
 collection "contact" {

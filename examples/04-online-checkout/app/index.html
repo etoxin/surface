@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Online checkout reference</title>
+    <link
+      rel="stylesheet"
+      href="/assets/pico.min.css"
+    >
+    <style>
+      body > header { background: var(--pico-primary-background); }
+      body > header a { color: var(--pico-primary-inverse); font-weight: 700; }
+      main { padding-block: 2rem; }
+      .grid { grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr)); }
+      section { margin-bottom: var(--pico-spacing); }
+      .money {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+      }
+      #message {
+        min-height: 1.5rem;
+        padding: var(--pico-spacing);
+        border-radius: var(--pico-border-radius);
+        background: var(--pico-card-background-color);
+      }
+      #message.error {
+        color: var(--pico-del-color);
+      }
+      .muted { color: var(--pico-muted-color); }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container">
+        <a href="/checkout">Online checkout reference</a>
+      </div>
+    </header>
+    <main class="container">
+      <section aria-labelledby="session-title">
+        <h1 id="session-title">Development session</h1>
+        <label>Signed-in user
+          <select id="user">
+            <option value="alice">Alice (customer)</option>
+            <option value="bob">Bob (customer)</option>
+            <option value="support">Support (customer + support administrator)</option>
+            <option value="">Signed out</option>
+          </select>
+        </label>
+        <p class="muted">
+          Authentication is a deterministic development-only header. Provider
+          credentials and payment tokens are never shown after submission.
+        </p>
+      </section>
+
+      <div id="checkout-page">
+        <div class="grid">
+          <section aria-labelledby="basket-title">
+            <h2 id="basket-title">Basket</h2>
+            <button id="create">Create basket</button>
+            <p id="basket-meta">No basket loaded.</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Quantity</th>
+                  <th class="money">Price</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="items"></tbody>
+              <tfoot>
+                <tr>
+                  <th colspan="2">Subtotal</th>
+                  <th id="subtotal" class="money">$0.00</th>
+                  <th></th>
+                </tr>
+              </tfoot>
+            </table>
+          </section>
+          <section aria-labelledby="products-title">
+            <h2 id="products-title">Products</h2>
+            <form id="add-form">
+              <label>Product
+                <select id="product">
+                  <option value="coffee-beans" data-price="12.5">
+                    Coffee beans — $12.50
+                  </option>
+                  <option value="tea-tin" data-price="8">Tea tin — $8.00</option>
+                  <option value="sold-out" data-price="5">Sold-out demo — $5.00</option>
+                </select>
+              </label>
+              <label>Quantity <input
+                  id="quantity"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value="1"
+                  required
+                ></label>
+              <button type="submit">Add or replace item</button>
+            </form>
+          </section>
+          <section aria-labelledby="shipping-title">
+            <h2 id="shipping-title">Shipping and payment</h2>
+            <form id="checkout-form">
+              <label>Full name <input
+                  id="name"
+                  autocomplete="name"
+                  value="Alice Example"
+                  required
+                ></label>
+              <label>Address <input
+                  id="address"
+                  autocomplete="street-address"
+                  value="1 Market Street"
+                  required
+                ></label>
+              <label>City <input
+                  id="city"
+                  autocomplete="address-level2"
+                  value="San Francisco"
+                  required
+                ></label>
+              <label>Postal code <input
+                  id="postal"
+                  autocomplete="postal-code"
+                  value="94105"
+                  required
+                ></label>
+              <label>Country
+                <select id="country">
+                  <option>US</option>
+                  <option>CA</option>
+                  <option>GB</option>
+                </select>
+              </label>
+              <label>One-time payment token
+                <select id="payment-token">
+                  <option value="tok_success">Successful payment</option>
+                  <option value="tok_decline">Declined payment</option>
+                  <option value="tok_pending">Unknown/pending outcome</option>
+                  <option value="tok_fail">Failed payment</option>
+                </select>
+              </label>
+              <button id="checkout" type="submit" disabled>Check out</button>
+            </form>
+          </section>
+        </div>
+      </div>
+
+      <section id="order-page" hidden aria-labelledby="order-title">
+        <h1 id="order-title">Order status</h1>
+        <div id="order-content">Loading…</div>
+        <button id="cancel" hidden>Cancel order</button>
+      </section>
+      <p id="message" role="status" aria-live="polite">Ready.</p>
+    </main>
+    <script>
+      const state = { basket: null, checkoutKey: null, cancellationKey: null };
+      const byId = (id) => document.getElementById(id);
+      const user = byId("user");
+      const message = byId("message");
+      const orderMatch = location.pathname.match(/^\/orders\/([^/]+)$/);
+
+      async function api(path, options = {}) {
+        const response = await fetch(path, {
+          ...options,
+          headers: {
+            "content-type": "application/json",
+            "x-dev-user": user.value,
+            ...(options.headers || {}),
+          },
+        });
+        return await response.json();
+      }
+      function announce(text, error = false) {
+        message.textContent = text;
+        message.classList.toggle("error", error);
+      }
+      function key(prefix) {
+        return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      }
+      function renderBasket(basket) {
+        state.basket = basket.httpStatus < 300 ? basket : state.basket;
+        if (!state.basket) return;
+        byId("basket-meta").textContent =
+          `Basket ${state.basket.basketId} · ${state.basket.status} · version ${state.basket.version}`;
+        byId("subtotal").textContent = `$${
+          Number(state.basket.subtotal).toFixed(2)
+        }`;
+        byId("items").replaceChildren(...state.basket.items.map((item) => {
+          const row = document.createElement("tr");
+          const name = document.createElement("td");
+          name.textContent = item.productId;
+          const quantity = document.createElement("td");
+          quantity.textContent = item.quantity;
+          const price = document.createElement("td");
+          price.className = "money";
+          price.textContent = `$${item.unitPrice.toFixed(2)}`;
+          const action = document.createElement("td");
+          const remove = document.createElement("button");
+          remove.className = "secondary";
+          remove.textContent = "Remove";
+          remove.addEventListener("click", () => removeItem(item.productId));
+          action.append(remove);
+          row.append(name, quantity, price, action);
+          return row;
+        }));
+        byId("checkout").disabled = !state.basket.items.length ||
+          state.basket.status !== "open";
+      }
+      async function removeItem(productId) {
+        const result = await api(
+          `/baskets/${state.basket.basketId}/items/${
+            encodeURIComponent(productId)
+          }`,
+          {
+            method: "DELETE",
+            body: JSON.stringify({ expectedVersion: state.basket.version }),
+          },
+        );
+        if (result.httpStatus === 200) renderBasket(result);
+        else announce(`Could not remove item: ${result.errorCode}`, true);
+      }
+      byId("create").addEventListener("click", async () => {
+        const result = await api("/baskets", { method: "POST", body: "{}" });
+        if (result.httpStatus === 201) {
+          renderBasket(result);
+          announce("Basket created.");
+        } else announce(`Could not create basket: ${result.errorCode}`, true);
+      });
+      byId("add-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!state.basket) return announce("Create a basket first.", true);
+        const option = byId("product").selectedOptions[0];
+        const result = await api(
+          `/baskets/${state.basket.basketId}/items/${
+            encodeURIComponent(option.value)
+          }`,
+          {
+            method: "PUT",
+            body: JSON.stringify({
+              quantity: Number(byId("quantity").value),
+              observedUnitPrice: Number(option.dataset.price),
+              expectedVersion: state.basket.version,
+            }),
+          },
+        );
+        if (result.httpStatus === 200) {
+          renderBasket(result);
+          announce("Basket updated.");
+        } else announce(`Could not update basket: ${result.errorCode}`, true);
+      });
+      byId("checkout-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!state.basket) return;
+        state.checkoutKey ||= key("checkout");
+        byId("checkout").disabled = true;
+        const result = await api(`/baskets/${state.basket.basketId}/checkout`, {
+          method: "POST",
+          body: JSON.stringify({
+            expectedVersion: state.basket.version,
+            shippingAddress: {
+              name: byId("name").value,
+              addressLine1: byId("address").value,
+              city: byId("city").value,
+              postalCode: byId("postal").value,
+              country: byId("country").value,
+            },
+            paymentToken: byId("payment-token").value,
+            idempotencyKey: state.checkoutKey,
+          }),
+        });
+        if (result.status === "succeeded") {
+          byId("payment-token").value = "tok_success";
+          announce(`Checkout succeeded. Receipt ${result.receiptId}.`);
+          location.assign(`/orders/${result.orderId}`);
+        } else {
+          announce(
+            `Checkout ${result.status}: ${result.errorCode}`,
+            result.status !== "pending",
+          );
+          if (result.status !== "pending") {
+            state.checkoutKey = null;
+            byId("checkout").disabled = false;
+          }
+        }
+      });
+      async function loadOrder() {
+        const orderId = decodeURIComponent(orderMatch[1]);
+        const result = await api(`/orders/${encodeURIComponent(orderId)}`);
+        if (result.httpStatus !== 200) {
+          return announce(`Order unavailable: ${result.errorCode}`, true);
+        }
+        byId("order-content").replaceChildren();
+        const summary = document.createElement("p");
+        summary.textContent = `Status: ${result.status} · Total: $${
+          result.total.toFixed(2)
+        } ${result.currency} · Receipt: ${
+          result.receiptNumber || "pending"
+        } · Fulfillment: ${result.fulfillmentStatus || "not queued"}`;
+        byId("order-content").append(summary);
+        if (result.trackingUrl) {
+          const link = document.createElement("a");
+          link.href = result.trackingUrl;
+          link.textContent = "Track shipment";
+          byId("order-content").append(link);
+        }
+        byId("cancel").hidden =
+          !["paid", "fulfillmentPending"].includes(result.status) ||
+          ["processing", "shipped", "delivered"].includes(
+            result.fulfillmentStatus,
+          );
+        announce("Order loaded.");
+      }
+      byId("cancel").addEventListener("click", async () => {
+        state.cancellationKey ||= key("cancel");
+        const orderId = decodeURIComponent(orderMatch[1]);
+        const result = await api(
+          `/orders/${encodeURIComponent(orderId)}/cancel`,
+          {
+            method: "POST",
+            body: JSON.stringify({ idempotencyKey: state.cancellationKey }),
+          },
+        );
+        if (result.httpStatus === 200) {
+          announce("Order cancelled.");
+          await loadOrder();
+        } else {announce(
+            `Cancellation ${
+              result.httpStatus === 202 ? "pending" : "failed"
+            }: ${result.errorCode}`,
+            result.httpStatus !== 202,
+          );}
+      });
+      user.addEventListener("change", () => {
+        state.basket = null;
+        state.checkoutKey = null;
+        if (orderMatch) loadOrder();
+        else location.reload();
+      });
+      if (orderMatch) {
+        byId("checkout-page").hidden = true;
+        byId("order-page").hidden = false;
+        loadOrder();
+      }
+    </script>
+  </body>
+</html>

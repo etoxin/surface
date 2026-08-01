@@ -1,9 +1,0 @@
-/- kdl-version 2
-
-surface "0.1"
-application "surfaceFaq" { purpose "Answer common questions." }
-screen "faq" {
-    section "What is Surface?" {
-        text "Surface is a format for describing applications."
-    }
-}

@@ -1,7 +1,0 @@
-/- kdl-version 2
-
-surface "0.1"
-application "contactViewer" { purpose "Display a contact." }
-screen "home" {
-    context (screen)"contact" "Redirect to this screen."
-}
