@@ -32,12 +32,15 @@ Surface file
 ├── function
 │   ├── private collection (optional)
 │   ├── input (optional)
-│   └── output
+│   ├── output
+│   └── logic (optional)
 ├── interface
-│   └── context
+│   ├── context
+│   └── logic (optional)
 └── screen
     ├── use (optional interface reference)
-    └── context
+    ├── context
+    └── logic (optional)
 ```
 
 Read the guides in order:
@@ -49,12 +52,13 @@ Read the guides in order:
 5. [Describing an interface](./node_interface.md)
 6. [Adding screens](./node_screen.md)
 7. [Adding prompt context](./node_context.md)
+8. [Adding ordered logic](./node_logic.md)
 
 Declaration IDs and field names start with a lowercase letter and use lower
 camel case, such as `contactViewer`. Purpose, routes, and context prompts are
 ordinary quoted strings.
 
 Surface currently supports applications, read-only collections,
-single-collection functions, intent-driven interfaces including local
-interaction, and screens. The [roadmap](../roadmap.md) adds syntax only when
-another example application needs it.
+single-collection functions, intent-driven interfaces, screens, and ordered
+logic for computations and interactions. The [roadmap](../roadmap.md) adds
+syntax only when another example application needs it.

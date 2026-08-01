@@ -16,8 +16,6 @@ collection "contact" {
 }
 
 function "contactById" {
-    context (collection)"contactLookup" (collection)"contact" "Find the contact whose id equals the lookup id."
-
     collection "contactLookup" {
         (string)"id"
     }
@@ -25,17 +23,26 @@ function "contactById" {
     input (collection)"contactLookup"
     output (collection)"contact"
 
-    context (collection)"contact" "If there is no contact, produce null."
+    logic {
+        (collection)"contactLookup" "Find the contact whose id equals this lookup id."
+        (collection)"contact" "If a matching contact exists, output it."
+        "If no contact matches, output null."
+    }
 }
 
 interface "contactViewer" {
     context (function)"contactById" (collection)"contact" "Render a user interface that asks for a contact id and displays the matching contact's name, email, and active status."
-    context (function)"contactById" "When no id is provided, ask the user to select a contact."
-    context (function)"contactById" "When no contact matches, show that the contact was not found."
+
+    logic {
+        (function)"contactById" "When no id is provided, ask the user to select a contact."
+        (function)"contactById" "When no contact matches, show that the contact was not found."
+    }
 }
 
 screen "home" route="/" {
-    context (screen)"contact" "Redirect to this screen."
+    logic {
+        (screen)"contact" "Open this screen."
+    }
 }
 
 screen "contact" route="/contacts" {

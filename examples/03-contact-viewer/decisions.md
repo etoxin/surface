@@ -4,21 +4,23 @@
 
 `contactById` declares a private `contactLookup` input collection and outputs
 the global `contact` collection. Typed string annotations make both references
-checkable. Context explains the lookup and says a failed lookup produces null.
+checkable. Ordered function logic explains the lookup and says a failed lookup
+produces null.
 
 The example implementation maps `/contacts?id=ada` to the input collection's
 `id` field. That URL mapping is an implementation choice, not Surface syntax.
 
 ## Interface and Screens
 
-`contactViewer` is an intent-driven interface. Its contexts reference the
-function and collection while describing the input, displayed contact fields,
-and missing input/result behavior. Surface leaves the exact controls, copy, and
-layout to the implementer.
+`contactViewer` is an intent-driven interface. Its context references the
+function and collection while describing the input and displayed contact
+fields. Its logic references the function for the required missing-input and
+missing-result reactions. Surface leaves the exact controls, copy, and layout
+to the implementer.
 
-The `contact` screen uses that interface. The context-only `home` screen says
-that `/` redirects to the checked `(screen)"contact"` reference without adding
-structured redirect or logic syntax.
+The `contact` screen uses that interface. The `home` screen uses logic to open
+the checked `(screen)"contact"` reference without adding structured redirect
+syntax.
 
 Collection fields are required by default; only values that may be absent use
 the bare `optional` modifier. Storage and seed data are implementation choices.

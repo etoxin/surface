@@ -7,14 +7,14 @@ application "clickCounter" {
 }
 
 interface "clickCounter" {
-    context """
-        Render an accessible counter starting at 0.
+    context "Render an accessible counter with its current value shown prominently."
 
-        Show the current value prominently.
-        Provide an action labelled Increment that increases the value by 1.
-        Provide an action labelled Reset that restores the value to 0.
-        Update the displayed value immediately after either action.
-        """
+    logic {
+        "Start the current value at 0."
+        "When Increment is activated, increase the current value by 1."
+        "When Reset is activated, set the current value to 0."
+        "After either action, immediately display the current value."
+    }
 }
 
 screen "home" route="/" {

@@ -557,6 +557,53 @@ screen "results" {
   assert(result.ir !== null);
 });
 
+Deno.test("logic preserves ordered strings and checked references", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1"
+application "logicExample" { purpose "Exercise logic." }
+collection "contact" { (string)"name" }
+function "loadContacts" {
+    output (collection)"contact"
+    logic {
+        "Send an HTTP GET request."
+        (collection)"contact" "If the response succeeds, decode it into this collection."
+        "If the response fails, output an error."
+    }
+}
+interface "contactList" {
+    logic {
+        (function)"loadContacts" "When the interface opens, invoke this function."
+    }
+}
+screen "home" {
+    use (interface)"contactList"
+    logic {
+        "If access is denied, show an error."
+    }
+}
+`;
+
+  const result = parseSurface(source, "logic.kdl");
+  assertEquals(result.diagnostics, []);
+  assert(result.ir !== null);
+  assertEquals(result.ir.functions?.[0].logic, [
+    { instruction: "Send an HTTP GET request." },
+    {
+      instruction: "If the response succeeds, decode it into this collection.",
+      reference: { type: "collection", id: "contact" },
+    },
+    { instruction: "If the response fails, output an error." },
+  ]);
+  assertEquals(result.ir.interfaces?.[0].logic, [{
+    instruction: "When the interface opens, invoke this function.",
+    reference: { type: "function", id: "loadContacts" },
+  }]);
+  assertEquals(result.ir.screens[0].logic, [{
+    instruction: "If access is denied, show an error.",
+  }]);
+});
+
 Deno.test("CLI check and export succeed for the valid example", () => {
   const specification = join(exampleRoot, "surface.kdl");
   const checked = runCli(["check", specification]);
@@ -824,17 +871,22 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /function "contactById"/);
   assertMatch(skill, /input \(collection\)"contactLookup"/);
   assertMatch(skill, /output \(collection\)"contact"/);
+  assertMatch(skill, /logic \{/);
+  assertMatch(
+    skill,
+    /\(collection\)"contact" "If a matching contact exists, output it\."/,
+  );
   assert(!/\b(?:entity|returns)\b/.test(skill));
-  assertMatch(skill, /If there is no contact, produce null\./);
+  assertMatch(skill, /If no contact matches, output null\./);
   assertMatch(skill, /interface "contactViewer"/);
   assertMatch(skill, /use \(interface\)"contactViewer"/);
   assertMatch(skill, /interface "clickCounter"/);
-  assertMatch(skill, /Provide an Increment action/);
-  assertMatch(skill, /Provide a Reset action/);
+  assertMatch(skill, /When Increment is activated, increase the current value by 1/);
+  assertMatch(skill, /When Reset is activated, set the current value to 0/);
   assertMatch(skill, /screen "home" route="\/"/);
   assertMatch(
     skill,
-    /context \(screen\)"contact" "Redirect to this screen\."/,
+    /\(screen\)"contact" "Open this screen\."/,
   );
   assertMatch(metadata, /default_prompt: "Use \$surface /);
 });

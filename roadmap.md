@@ -35,7 +35,11 @@ node distinguishes a Surface document from other KDL documents.
 ## Vocabulary Boundaries
 
 - `context` is universal prompt guidance. It explains intent, constraints, and
-  implementation considerations, but is not executable syntax.
+  implementation considerations. It is non-normative and omitted from the IR.
+- `logic` is an ordered, normative block on a function, interface, or screen.
+  Each line is either a quoted instruction or one checked reference followed
+  by a quoted instruction. Conditions, comparisons, HTTP requests, events,
+  errors, and every other operator stay inside those strings.
 - `function` is a named callable capability with an optional `input` and one
   `output`. A function may describe computation, an HTTP request, encryption,
   persistence, or another operation when invocation and output are the useful
@@ -43,12 +47,10 @@ node distinguishes a Surface document from other KDL documents.
 - `behaviour` is reserved for a named reaction to a trigger. A behaviour may
   change observable state, invoke functions, or emit and respond to events.
   It should not become a generic container for function implementation notes.
-- `algorithm` is reserved for a function child that prescribes a computational
-  method or ordered steps. Use `context` until an application needs stronger,
-  machine-checkable algorithm semantics.
 
-Do not release `behaviour` or `algorithm` merely to restate context. Introduce
-them only when a roadmap application requires their distinct semantics.
+Do not release `behaviour` merely to restate logic or context. Introduce it
+only when a roadmap application needs a named, reusable reaction with semantics
+that ordered local logic cannot express.
 
 ## Completion Gate
 
@@ -229,22 +231,29 @@ Delivered in:
 
 Build a counter that a visitor can increment and reset.
 
+Introduces:
+
+- `logic` blocks on functions, interfaces, and screens;
+- ordered, normative natural-language instructions retained in the IR;
+- optional checked references on logic instructions;
+- conditions, arithmetic, events, HTTP operations, and errors expressed inside
+  instruction strings rather than as structured operator nodes.
+
 Reuses:
 
 - `application`, `interface`, and `screen` declarations;
-- multiline `context` for precise interactive intent;
+- `context` for presentation guidance;
 - an interface-local value and observable state changes;
 - implementation-level acceptance tests.
 
-The interface context specifies an initial value of 0, a visible current value,
-an increment action, a reset action, and immediate visible updates. The example
-can be implemented and tested without modelling that local UI state as
-application data.
+The interface logic specifies an initial value of 0, an increment action, a
+reset action, and immediate visible updates. The example can be implemented and
+tested without modelling that local UI state as application data.
 
-Rung 4 introduces no new Surface syntax. `actor`, `behaviour`, `event`,
-`scenario`, numeric field types, structured state, preconditions, and effects
-remain unreleased until a later application demonstrates a concrete ambiguity
-or validation gap.
+`actor`, `behaviour`, `event`, `scenario`, numeric field types, structured
+state, preconditions, and effects remain unreleased until a later application
+demonstrates a concrete ambiguity or validation gap that logic strings cannot
+cover.
 
 Delivered in:
 
@@ -254,6 +263,7 @@ Delivered in:
 - [`examples/04-click-counter/app/server.ts`](./examples/04-click-counter/app/server.ts);
 - [Rung 4 decisions and acceptance scenarios](./examples/04-click-counter/decisions.md);
 - [Interface guide](./docs/node_interface.md);
+- [Logic guide](./docs/node_logic.md);
 - [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
 
 ### 5. Todo List
@@ -369,10 +379,9 @@ Introduces:
 - extension dependencies;
 - timeout and failure behaviour for custom capabilities.
 
-This stage should test whether `context` is sufficient to describe conversion
-logic. Introduce an `algorithm` child on `function` only if the implementation
-needs an ordered or normative computational method that context cannot express
-reliably.
+This stage should test whether the released `logic` block can describe
+conversion precisely enough. Extend the syntax only if ordered instruction
+strings and checked references leave a concrete implementation ambiguity.
 
 ### 12. Secure Document Vault
 

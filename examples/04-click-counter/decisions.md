@@ -1,19 +1,21 @@
 # Click Counter Decisions
 
-## Reusing Current Syntax
+## Ordered Interface Logic
 
 The Click Counter uses only `application`, `interface`, `screen`, `use`, and
-`context`. Its value is local interface state rather than application data that
-must be shared through a collection or function.
+the universal `context` and `logic` children. Its value is local interface state
+rather than application data that must be shared through a collection or
+function.
 
-The interface context describes the initial value, visible output, increment
-action, reset action, and required updates precisely enough to implement and
-test the app. Rung 4 therefore introduces no new Surface syntax.
+Interface context describes the visual presentation. Its ordered logic block
+describes the initial value, increment action, reset action, and required
+updates precisely enough to implement and test the app. Conditions and
+arithmetic remain inside instruction strings.
 
 `actor`, `behaviour`, `event`, `scenario`, numeric field types, structured
 state, preconditions, and effects remain unreleased. Add one only when a later
-application exposes a concrete ambiguity or validation gap that context cannot
-resolve.
+application exposes a concrete ambiguity or validation gap that context and
+logic cannot resolve.
 
 ## Implementation
 

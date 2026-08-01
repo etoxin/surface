@@ -1,0 +1,10 @@
+/- kdl-version 2
+
+surface "0.1"
+application "contactViewer" { purpose "Display a contact." }
+collection "contact" { (string)"id" }
+function "contactById" {
+    output (collection)"contact"
+    logic { "Return a contact" "unexpected argument" }
+}
+screen "contact" { context "Render a contact." }

@@ -40,16 +40,19 @@ different declaration type.
 Screens do not contain presentation nodes. Layout, copy, controls, and UI
 states belong in the referenced interface's prompt context.
 
-## Context-Only Screens
+## Non-Visual Screens
 
-A screen can contain only context when its route has no interface of its own:
+A screen can contain logic when its route has no interface of its own:
 
 ```kdl
 screen "home" route="/" {
-    context (screen)"contact" "Redirect to this screen."
+    logic {
+        (screen)"contact" "Open this screen."
+    }
 }
 ```
 
-This describes non-visual behaviour without introducing redirect or logic
-syntax. A screen must either use an interface or contain at least one context;
-a completely empty screen is invalid.
+This gives the screen one ordered, normative instruction without introducing a
+special redirect node. Screens may contain `context`, at most one
+[`logic`](./node_logic.md) block, or both. A screen must use an interface or
+contain context or logic; a completely empty screen is invalid.

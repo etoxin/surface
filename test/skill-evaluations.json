@@ -7,9 +7,10 @@
       "prompt": "Create a Surface Click Counter at /. It starts at 0, prominently displays the current value, has accessible Increment and Reset actions, increments by 1, resets to 0, and visibly updates after either action.",
       "acceptance": [
         "The result is valid Surface 0.1 KDL with exactly one application and at least one screen.",
-        "A top-level interface contains only context and specifies the initial value, displayed value, increment, reset, and visible updates.",
+        "A top-level interface uses context for presentation and one logic block for the ordered initial value, increment, reset, and visible updates.",
         "The / screen uses the interface with use (interface), and the reference resolves.",
         "No collection or function is added solely for interface-local state.",
+        "Every condition and arithmetic operation remains inside a logic instruction string; no structured operator node is introduced.",
         "No actor, behaviour, event, scenario, numeric field, state, action, button, or other unreleased node is introduced."
       ]
     },
@@ -17,7 +18,7 @@
       "id": "modify",
       "prompt": "Starting from examples/04-click-counter/surface.kdl, require the displayed value to be announced by assistive technology whenever it changes. Preserve the existing application, other interface intent, screen, formatting, and unrelated content.",
       "acceptance": [
-        "The existing interface context is minimally updated with the assistive-technology announcement requirement.",
+        "The existing interface logic is minimally updated with an ordered assistive-technology announcement instruction.",
         "No structured state, behaviour, event, action, or button node is added.",
         "The application, screen, existing intent, formatting, and unrelated content are preserved.",
         "The result remains valid Surface 0.1 KDL."
@@ -28,8 +29,8 @@
       "prompt": "Diagnose a Click Counter Surface file that declares a top-level behaviour, uses (number) for a counter field, and places a button child inside an interface.",
       "acceptance": [
         "The response identifies all three unsupported Surface constructs.",
-        "It explains that behaviour declarations and numeric field types are unreleased and interfaces accept only context children.",
-        "It replaces the intended counter interaction with interface context rather than speculative syntax.",
+        "It explains that behaviour declarations and numeric field types are unreleased and interfaces accept context children plus at most one logic block.",
+        "It replaces the intended counter interaction with interface logic rather than speculative syntax.",
         "The response distinguishes valid KDL from valid Surface.",
         "Every suggested correction uses only released syntax."
       ]

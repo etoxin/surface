@@ -44,16 +44,27 @@ export interface SurfaceFunctionIr {
   output: {
     collection: string;
   };
+  logic?: SurfaceLogicInstructionIr[];
+}
+
+export interface SurfaceLogicInstructionIr {
+  instruction: string;
+  reference?: {
+    type: string;
+    id: string;
+  };
 }
 
 export interface SurfaceScreenIr {
   id: string;
   route?: string;
   interface?: string;
+  logic?: SurfaceLogicInstructionIr[];
 }
 
 export interface SurfaceInterfaceIr {
   id: string;
+  logic?: SurfaceLogicInstructionIr[];
 }
 
 export interface KdlParseResult {
@@ -73,7 +84,7 @@ type PropertyType = "string" | "boolean";
 const IDENTIFIER_PATTERN = /^[a-z][A-Za-z0-9]*$/;
 const PRIMITIVE_TYPES = new Set<PrimitiveType>(["string", "boolean"]);
 const FIELD_MODIFIERS = new Set(["optional"]);
-const CONTEXT_REFERENCE_TYPES = new Set([
+const REFERENCE_TYPES = new Set([
   "application",
   "collection",
   "interface",
@@ -492,6 +503,7 @@ function validateFunction(node: Node, add: AddDiagnostic): void {
   const collections = children.filter((child) => child.getName() === "collection");
   const inputs = children.filter((child) => child.getName() === "input");
   const outputNodes = children.filter((child) => child.getName() === "output");
+  const logicNodes = children.filter((child) => child.getName() === "logic");
   for (const child of children) {
     if (child.getName() === "context") {
       validateContextNode(child, declaration, add);
@@ -500,7 +512,7 @@ function validateFunction(node: Node, add: AddDiagnostic): void {
 
     if (
       child.getName() !== "collection" && child.getName() !== "input" &&
-      child.getName() !== "output"
+      child.getName() !== "output" && child.getName() !== "logic"
     ) {
       add({
         code: "SURF-CHILD-002",
@@ -508,7 +520,7 @@ function validateFunction(node: Node, add: AddDiagnostic): void {
         element: child,
         declaration,
         suggestion:
-          "Use collection, input, output, and context child nodes in a function.",
+          "Use collection, input, output, logic, and context child nodes in a function.",
       });
     }
   }
@@ -546,6 +558,100 @@ function validateFunction(node: Node, add: AddDiagnostic): void {
   for (const outputNode of outputNodes) {
     validateOutput(outputNode, declaration, add);
   }
+
+  validateLogicNodes(logicNodes, declaration, add);
+}
+
+function validateLogic(
+  node: Node,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const subject = `${declaration}.logic`;
+  validateNoTag(node, add, declaration);
+  validateArguments(node, 0, subject, add);
+  validateProperties(node, [], subject, add);
+
+  const instructions = node.children?.nodes ?? [];
+  if (instructions.length === 0) {
+    add({
+      code: "SURF-CHILD-003",
+      message: `${subject} must contain at least one instruction.`,
+      element: node,
+      declaration,
+      suggestion: 'Add an instruction such as "Map over the input items".',
+    });
+  }
+
+  for (const instruction of instructions) {
+    validateLogicInstruction(instruction, declaration, add);
+  }
+}
+
+function validateLogicInstruction(
+  node: Node,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const subject = `${declaration}.logic instruction`;
+  const type = node.getTag();
+  const expectedArguments = type === null ? 0 : 1;
+
+  if (!isQuotedNodeName(node)) {
+    add({
+      code: "SURF-ARG-002",
+      message: "A logic instruction or reference must use a quoted string node name.",
+      element: node,
+      declaration,
+      suggestion: type === null
+        ? `Write "${node.getName()}" as a quoted instruction.`
+        : `Write (${type})"${node.getName()}" followed by a quoted instruction.`,
+    });
+  }
+
+  validateArguments(node, expectedArguments, subject, add);
+  validateProperties(node, [], subject, add);
+  validateNoChildren(node, subject, add);
+
+  if (type !== null && !REFERENCE_TYPES.has(type)) {
+    add({
+      code: "SURF-REF-002",
+      message: `Unsupported logic reference type ${type}.`,
+      element: node,
+      declaration,
+      suggestion:
+        "Use application, collection, interface, function, or screen references.",
+    });
+  }
+
+  const instruction = node.getArgumentEntry(0);
+  if (type !== null && instruction !== undefined) {
+    if (typeof instruction.getValue() !== "string") {
+      add({
+        code: "SURF-ARG-002",
+        message: "A referenced logic instruction must be a quoted string.",
+        element: instruction,
+        declaration,
+        suggestion:
+          'Follow the reference with an instruction such as "Use this value".',
+      });
+    }
+    if (instruction.getTag() !== null) {
+      add({
+        code: "SURF-TAG-001",
+        message: "A logic instruction string must not have a type annotation.",
+        element: instruction,
+        declaration,
+        suggestion: "Keep the annotation on the referenced node name only.",
+      });
+    }
+  }
+}
+
+function isQuotedNodeName(node: Node): boolean {
+  const representation = node.name.representation;
+  return representation?.startsWith('"') === true ||
+    /^#+"/.test(representation ?? "");
 }
 
 function validateInput(
@@ -574,7 +680,25 @@ function validateInterface(node: Node, add: AddDiagnostic): void {
   const declaration = declarationName(node);
   validateArguments(node, 1, declaration, add, true);
   validateProperties(node, [], declaration, add);
-  validateOnlyContextChildren(node, declaration, add);
+
+  const children = node.children?.nodes ?? [];
+  const logicNodes = children.filter((child) => child.getName() === "logic");
+  for (const child of children) {
+    if (child.getName() === "context") {
+      validateContextNode(child, declaration, add);
+      continue;
+    }
+    if (child.getName() !== "logic") {
+      add({
+        code: "SURF-CHILD-002",
+        message: `Unknown child node ${child.getName()} in ${declaration}.`,
+        element: child,
+        declaration,
+        suggestion: "Use only context and logic child nodes in an interface.",
+      });
+    }
+  }
+  validateLogicNodes(logicNodes, declaration, add);
 }
 
 function validateScreen(node: Node, add: AddDiagnostic): void {
@@ -585,19 +709,20 @@ function validateScreen(node: Node, add: AddDiagnostic): void {
   const children = node.children?.nodes ?? [];
   const uses = children.filter((child) => child.getName() === "use");
   const contexts = children.filter((child) => child.getName() === "context");
+  const logicNodes = children.filter((child) => child.getName() === "logic");
   for (const child of children) {
     if (child.getName() === "context") {
       validateContextNode(child, declaration, add);
       continue;
     }
 
-    if (child.getName() !== "use") {
+    if (child.getName() !== "use" && child.getName() !== "logic") {
       add({
         code: "SURF-CHILD-002",
         message: `Unknown child node ${child.getName()} in ${declaration}.`,
         element: child,
         declaration,
-        suggestion: "Use only one interface use and optional context children.",
+        suggestion: "Use one interface use and optional context and logic children.",
       });
     }
   }
@@ -616,14 +741,15 @@ function validateScreen(node: Node, add: AddDiagnostic): void {
     validateUse(use, declaration, add);
   }
 
-  if (uses.length === 0 && contexts.length === 0) {
+  validateLogicNodes(logicNodes, declaration, add);
+
+  if (uses.length === 0 && contexts.length === 0 && logicNodes.length === 0) {
     add({
       code: "SURF-CHILD-003",
-      message: `${declaration} must use an interface or contain context.`,
+      message: `${declaration} must use an interface or contain context or logic.`,
       element: node,
       declaration,
-      suggestion:
-        'Add use (interface)"interfaceId" or describe non-visual behavior with context.',
+      suggestion: 'Add use (interface)"interfaceId", context, or a logic block.',
     });
   }
 }
@@ -637,6 +763,25 @@ function validateUse(
   validateReferenceNode(node, "interface", subject, declaration, add);
   validateProperties(node, [], subject, add);
   validateOnlyContextChildren(node, subject, add);
+}
+
+function validateLogicNodes(
+  nodes: Node[],
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  if (nodes.length > 1) {
+    add({
+      code: "SURF-CHILD-005",
+      message: `${declaration} may contain at most one logic child node.`,
+      element: nodes[1],
+      declaration,
+      suggestion: "Combine the ordered instructions into one logic block.",
+    });
+  }
+  for (const node of nodes) {
+    validateLogic(node, declaration, add);
+  }
 }
 
 function validateLeafStringNode(
@@ -737,7 +882,7 @@ function validateContextNode(
         declaration,
         suggestion: 'Add a declaration annotation such as (screen)"home".',
       });
-    } else if (!CONTEXT_REFERENCE_TYPES.has(type)) {
+    } else if (!REFERENCE_TYPES.has(type)) {
       add({
         code: "SURF-REF-002",
         message: `Unsupported context reference type ${type}.`,
@@ -1046,14 +1191,6 @@ function validateReferences(
   add: AddDiagnostic,
 ): void {
   const collectionsById = nodesByIdentifier(collections);
-  for (const functionNode of functions) {
-    validateFunctionReferences(functionNode, collectionsById, add);
-  }
-
-  for (const screen of screens) {
-    validateScreenReferences(screen, nodesByIdentifier(interfaces), add);
-  }
-
   const declarationsByType = new Map<string, Map<string, Node>>([
     ["application", nodesByIdentifier(applications)],
     ["collection", collectionsById],
@@ -1061,6 +1198,18 @@ function validateReferences(
     ["function", nodesByIdentifier(functions)],
     ["screen", nodesByIdentifier(screens)],
   ]);
+  for (const functionNode of functions) {
+    validateFunctionReferences(
+      functionNode,
+      collectionsById,
+      add,
+    );
+  }
+
+  for (const screen of screens) {
+    validateScreenReferences(screen, nodesByIdentifier(interfaces), add);
+  }
+
   for (
     const node of [
       ...surfaceNodes,
@@ -1085,6 +1234,55 @@ function validateReferences(
       privateCollections,
       add,
     );
+    validateLogicReferences(
+      node,
+      declarationName(node),
+      declarationsByType,
+      privateCollections,
+      add,
+    );
+  }
+}
+
+function validateLogicReferences(
+  node: Node,
+  declaration: string,
+  declarationsByType: Map<string, Map<string, Node>>,
+  privateCollections: Map<string, Node> | undefined,
+  add: AddDiagnostic,
+): void {
+  if (node.getName() === "logic") {
+    for (const instruction of node.children?.nodes ?? []) {
+      const id = instruction.getName();
+      const type = instruction.getTag();
+      if (type === null || !REFERENCE_TYPES.has(type)) {
+        continue;
+      }
+      const resolved = type === "collection"
+        ? privateCollections?.get(id) ?? declarationsByType.get(type)?.get(id)
+        : declarationsByType.get(type)?.get(id);
+      if (resolved === undefined) {
+        add({
+          code: "SURF-REF-001",
+          message: `Unresolved ${type} reference ${id} in ${declaration}.logic.`,
+          element: instruction,
+          declaration,
+          suggestion:
+            `Declare ${type} "${id}" in the visible scope or change the reference.`,
+        });
+      }
+    }
+    return;
+  }
+
+  for (const child of node.children?.nodes ?? []) {
+    validateLogicReferences(
+      child,
+      declaration,
+      declarationsByType,
+      privateCollections,
+      add,
+    );
   }
 }
 
@@ -1101,7 +1299,7 @@ function validateContextReferences(
       const type = reference.getTag();
       if (
         typeof id !== "string" || type === null ||
-        !CONTEXT_REFERENCE_TYPES.has(type)
+        !REFERENCE_TYPES.has(type)
       ) {
         continue;
       }
@@ -1257,6 +1455,7 @@ function buildIr(document: Document): SurfaceIr {
           children.findNodeByName("output"),
           "function output",
         );
+        const logic = buildLogicIr(functionNode);
         return {
           id: expectString(functionNode.getArgument(0), "function identifier"),
           ...(localCollections.length === 0 ? {} : {
@@ -1276,16 +1475,21 @@ function buildIr(document: Document): SurfaceIr {
               "output collection",
             ),
           },
+          ...(logic === undefined ? {} : { logic }),
         };
       }),
     }),
     ...(interfaces.length === 0 ? {} : {
-      interfaces: interfaces.map((interfaceNode) => ({
-        id: expectString(
-          interfaceNode.getArgument(0),
-          "interface identifier",
-        ),
-      })),
+      interfaces: interfaces.map((interfaceNode) => {
+        const logic = buildLogicIr(interfaceNode);
+        return {
+          id: expectString(
+            interfaceNode.getArgument(0),
+            "interface identifier",
+          ),
+          ...(logic === undefined ? {} : { logic }),
+        };
+      }),
     }),
     screens: screens.map((screen) => {
       const route = optionalString(screen.getProperty("route"), "screen route");
@@ -1294,13 +1498,34 @@ function buildIr(document: Document): SurfaceIr {
       const interfaceId = interfaceUse === undefined
         ? undefined
         : expectString(interfaceUse.getArgument(0), "screen interface");
+      const logic = buildLogicIr(screen);
       return {
         id: expectString(screen.getArgument(0), "screen identifier"),
         ...(route === undefined ? {} : { route }),
         ...(interfaceId === undefined ? {} : { interface: interfaceId }),
+        ...(logic === undefined ? {} : { logic }),
       };
     }),
   };
+}
+
+function buildLogicIr(node: Node): SurfaceLogicInstructionIr[] | undefined {
+  const logic = node.children?.findNodeByName("logic");
+  if (logic === undefined) {
+    return undefined;
+  }
+  return expectChildren(logic, `${node.getName()} logic`).nodes.map(
+    (instruction): SurfaceLogicInstructionIr => {
+      const type = instruction.getTag();
+      return type === null ? { instruction: instruction.getName() } : {
+        instruction: expectString(
+          instruction.getArgument(0),
+          "logic instruction",
+        ),
+        reference: { type, id: instruction.getName() },
+      };
+    },
+  );
 }
 
 function buildCollectionIr(collection: Node): SurfaceCollectionIr {

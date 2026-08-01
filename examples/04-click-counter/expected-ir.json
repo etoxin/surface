@@ -6,7 +6,21 @@
   },
   "interfaces": [
     {
-      "id": "clickCounter"
+      "id": "clickCounter",
+      "logic": [
+        {
+          "instruction": "Start the current value at 0."
+        },
+        {
+          "instruction": "When Increment is activated, increase the current value by 1."
+        },
+        {
+          "instruction": "When Reset is activated, set the current value to 0."
+        },
+        {
+          "instruction": "After either action, immediately display the current value."
+        }
+      ]
     }
   ],
   "screens": [

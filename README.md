@@ -23,10 +23,10 @@ screen "home" route="/" {
 }
 ```
 
-An `interface` describes what a user should see or do through prompt context.
-It does not prescribe sections, text nodes, buttons, inputs, or layout. A
-`screen` places one interface at an optional route. Screens may instead contain
-only context for non-visual behaviour.
+An `interface` uses context to describe what a user should see and logic for
+ordered interaction. It does not prescribe sections, text nodes, buttons,
+inputs, or layout. A `screen` places one interface at an optional route. Screens
+may instead contain context or logic for non-visual behaviour.
 
 ## Documentation
 
@@ -38,7 +38,8 @@ only context for non-visual behaviour.
 6. [Describing an interface](./docs/node_interface.md)
 7. [Adding screens](./docs/node_screen.md)
 8. [Adding prompt context](./docs/node_context.md)
-9. [Application roadmap](./roadmap.md)
+9. [Adding ordered logic](./docs/node_logic.md)
+10. [Application roadmap](./roadmap.md)
 
 ## Current Syntax
 
@@ -48,12 +49,15 @@ only context for non-visual behaviour.
   are required by default; the only modifier is `optional`.
 - `function` describes a named capability. It currently has one
   `output (collection)"id"`, an optional structured `input`, and may declare
-  function-private collections.
-- `interface "id"` contains only universal `context` nodes.
+  function-private collections and one optional `logic` block.
+- `interface "id"` contains universal `context` and optional `logic`.
 - `screen "id"` contains either one `use (interface)"id"` plus optional
-  context, or context alone. Its `route` property is optional.
+  context or logic, or non-visual context or logic alone. Its `route` property
+  is optional.
 - `context [(type)"id"...] "prompt"` can be attached to any supported node.
   Its annotated strings are checked references to visible declarations.
+- `logic` contains ordered instructions. Each instruction is a quoted string,
+  optionally attached to one checked reference; operators stay inside strings.
 - Declaration IDs and field names use lower camel case. Unknown or legacy
   syntax is rejected.
 

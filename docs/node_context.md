@@ -8,8 +8,10 @@ interface "helloWorld" {
 }
 ```
 
-Context describes intent and behaviour. It is preserved in the Surface source
-but omitted from the reduced semantic JSON IR.
+Context describes intent, constraints, and implementation guidance. It is
+preserved in the Surface source but omitted from the reduced semantic JSON IR.
+Use [`logic`](./node_logic.md) instead when order or a required outcome is part
+of the application contract.
 
 ## Where Context Can Go
 

@@ -6,8 +6,6 @@ The Contact Viewer uses one to look up a contact by its ID:
 
 ```kdl
 function "contactById" {
-    context "Find the contact whose id equals the id input."
-
     collection "contactLookup" {
         (string)"id"
     }
@@ -15,7 +13,11 @@ function "contactById" {
     input (collection)"contactLookup"
     output (collection)"contact"
 
-    context "If there is no contact, produce null."
+    logic {
+        (collection)"contactLookup" "Find the contact whose id equals this lookup id."
+        (collection)"contact" "If a matching contact exists, output it."
+        "If no contact matches, output null."
+    }
 }
 ```
 
@@ -25,8 +27,9 @@ function "contactById" {
 use lower camel case. Each function needs a different ID.
 
 Functions have no properties. Their `input` and `output` nodes use checked
-collection references, while [`context`](./node_context.md) explains how the
-function uses the input to produce the result.
+collection references. An optional [`logic`](./node_logic.md) block gives an
+ordered, normative description of how the function produces its output, while
+[`context`](./node_context.md) supplies non-normative guidance.
 
 Rung 3 supports only an optional collection input and exactly one collection
 output. Later applications will extend that shape only when they need other
@@ -78,16 +81,18 @@ Surface file. The annotation identifies the expected declaration type; Surface
 reports an error if the collection does not exist or the annotation is missing
 or different.
 
-Use [`context`](./node_context.md) to describe what happens when no collection is
-found:
+Use [`logic`](./node_logic.md) when a missing result changes what the function
+must produce:
 
 ```kdl
-context "If there is no contact, produce null."
+logic {
+    "If no contact matches, output null."
+}
 ```
 
-Describe missing inputs and missing results in function or interface context.
-For example, an interface can reference the function and say what a user should
-see when no matching collection exists.
+Put conditions and operators such as `if`, comparisons, HTTP operations, and
+errors inside instruction strings. Do not invent structured expression or
+control-flow nodes.
 
 Function, input, and output nodes can all contain prompt-only
 [`context`](./node_context.md).

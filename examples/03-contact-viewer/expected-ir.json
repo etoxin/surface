@@ -47,18 +47,62 @@
       },
       "output": {
         "collection": "contact"
-      }
+      },
+      "logic": [
+        {
+          "instruction": "Find the contact whose id equals this lookup id.",
+          "reference": {
+            "type": "collection",
+            "id": "contactLookup"
+          }
+        },
+        {
+          "instruction": "If a matching contact exists, output it.",
+          "reference": {
+            "type": "collection",
+            "id": "contact"
+          }
+        },
+        {
+          "instruction": "If no contact matches, output null."
+        }
+      ]
     }
   ],
   "interfaces": [
     {
-      "id": "contactViewer"
+      "id": "contactViewer",
+      "logic": [
+        {
+          "instruction": "When no id is provided, ask the user to select a contact.",
+          "reference": {
+            "type": "function",
+            "id": "contactById"
+          }
+        },
+        {
+          "instruction": "When no contact matches, show that the contact was not found.",
+          "reference": {
+            "type": "function",
+            "id": "contactById"
+          }
+        }
+      ]
     }
   ],
   "screens": [
     {
       "id": "home",
-      "route": "/"
+      "route": "/",
+      "logic": [
+        {
+          "instruction": "Open this screen.",
+          "reference": {
+            "type": "screen",
+            "id": "contact"
+          }
+        }
+      ]
     },
     {
       "id": "contact",

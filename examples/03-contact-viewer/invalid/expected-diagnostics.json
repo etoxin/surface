@@ -21,5 +21,11 @@
   "unresolved-context-reference.kdl": "SURF-REF-001",
   "unresolved-interface.kdl": "SURF-REF-001",
   "duplicate-field.kdl": "SURF-ID-002",
-  "legacy-screen-content.kdl": "SURF-CHILD-002"
+  "legacy-screen-content.kdl": "SURF-CHILD-002",
+  "empty-logic.kdl": "SURF-CHILD-003",
+  "duplicate-logic.kdl": "SURF-CHILD-005",
+  "invalid-logic-instruction.kdl": "SURF-ARG-001",
+  "structured-logic-operator.kdl": "SURF-ARG-002",
+  "unsupported-logic-reference.kdl": "SURF-REF-002",
+  "unresolved-logic-reference.kdl": "SURF-REF-001"
 }

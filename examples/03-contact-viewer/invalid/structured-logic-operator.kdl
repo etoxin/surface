@@ -1,0 +1,14 @@
+/- kdl-version 2
+
+surface "0.1"
+application "contactViewer" { purpose "Display a contact." }
+collection "contact" { (string)"id" }
+function "contactById" {
+    output (collection)"contact"
+    logic {
+        if "a contact matches" {
+            "Output the contact"
+        }
+    }
+}
+screen "contact" { context "Render a contact." }
