@@ -6,9 +6,10 @@ application "helloWorld" {
     purpose "Display a greeting."
 }
 
+interface "helloWorld" {
+    context 42
+}
+
 screen "home" route="/" {
-    section "Home" {
-        context 42
-        text "Hello, world!"
-    }
+    use (interface)"helloWorld"
 }

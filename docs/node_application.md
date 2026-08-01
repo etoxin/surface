@@ -51,11 +51,14 @@ application "helloWorld" {
     purpose "Display a greeting."
 }
 
+interface "helloWorld" {
+    context "Render a user interface with the exact text: Hello, world!"
+}
+
 screen "home" {
-    section "Home" {
-        text "Hello, world!"
-    }
+    use (interface)"helloWorld"
 }
 ```
 
-Continue with [adding screens and text](./node_screen.md).
+The referenced interface is a separate top-level declaration. Continue with
+[describing an interface](./node_interface.md).

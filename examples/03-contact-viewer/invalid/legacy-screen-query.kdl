@@ -10,6 +10,5 @@ query "contactById" {
     input (entity)"contactLookup"
     returns (entity)"contact"
 }
-screen "contact" query="contactById" {
-    section "Contact" { text "Display a contact." }
-}
+interface "contactViewer" { context "Render a contact." }
+screen "contact" query="contactById" { use (interface)"contactViewer" }

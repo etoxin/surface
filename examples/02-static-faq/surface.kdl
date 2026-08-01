@@ -6,26 +6,26 @@ application "surfaceFaq" {
     purpose "Answer common questions about Surface."
 }
 
-screen "faq" route="/faq" {
+interface "surfaceFaq" {
     // Begin with the broadest question.
-    section "What is Surface?" {
-        context "Present the section name as a question followed by its text."
-        text """
-            Surface is a small format for describing an application.
+    context """
+        Render a user interface containing an FAQ with these exact questions and answers, in order.
 
-            It records what the application should contain without choosing an implementation framework.
-            """
-    }
+        Question: What is Surface?
+        Answer: Surface is a small format for describing an application.
 
-    section "Is Surface a programming language?" {
-        text "No. Surface is a specification format rather than an executable language."
-    }
+        It records what the application should contain without choosing an implementation framework.
 
-    section "Does every screen need a route?" {
-        text """
-            No. Add a route when a screen has a URL or similar address.
+        Question: Is Surface a programming language?
+        Answer: No. Surface is a specification format rather than an executable language.
 
-            Leave it out for screens that are not addressable.
-            """
-    }
+        Question: Does every screen need a route?
+        Answer: No. Add a route when a screen has a URL or similar address.
+
+        Leave it out for screens that are not addressable.
+        """
+}
+
+screen "faq" route="/faq" {
+    use (interface)"surfaceFaq"
 }

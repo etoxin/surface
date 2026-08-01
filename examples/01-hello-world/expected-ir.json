@@ -4,19 +4,16 @@
     "id": "helloWorld",
     "purpose": "Display a greeting."
   },
+  "interfaces": [
+    {
+      "id": "helloWorld"
+    }
+  ],
   "screens": [
     {
       "id": "home",
       "route": "/",
-      "sections": [
-        {
-          "name": "Home",
-          "title": "My app",
-          "text": [
-            "Hello, world!"
-          ]
-        }
-      ]
+      "interface": "helloWorld"
     }
   ]
 }

@@ -174,6 +174,12 @@ function collectReferences(ir: SurfaceIr): SurfaceReference[] {
       });
     }
   }
+  for (const interfaceNode of ir.interfaces ?? []) {
+    references.push({
+      selector: `interface.${interfaceNode.id}`,
+      reference: `(interface)"${interfaceNode.id}"`,
+    });
+  }
   for (const screen of ir.screens) {
     references.push({
       selector: `screen.${screen.id}`,

@@ -28,32 +28,16 @@ query "contactById" {
     context (entity)"contact" "If there is no contact, return null."
 }
 
+interface "contactViewer" {
+    context (query)"contactById" (entity)"contact" "Render a user interface that asks for a contact id and displays the matching contact's name, email, and active status."
+    context (query)"contactById" "When no id is provided, ask the user to select a contact."
+    context (query)"contactById" "When no contact matches, show that the contact was not found."
+}
+
 screen "home" route="/" {
     context (screen)"contact" "Redirect to this screen."
 }
 
 screen "contact" route="/contacts" {
-    context (query)"contactById" "Read its id input from the URL query parameter named id."
-    use (query)"contactById"
-
-    section "Contact" {
-        title "Contact"
-        field "name"
-        field "email"
-        field "active"
-    }
-
-    state "empty" {
-        section "No contact selected" {
-            title "Select a contact"
-            text "Choose a contact identifier to view its details."
-        }
-    }
-
-    state "notFound" {
-        section "Contact not found" {
-            title "Contact not found"
-            text "No contact exists for the selected identifier."
-        }
-    }
+    use (interface)"contactViewer"
 }

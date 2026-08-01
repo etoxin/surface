@@ -6,9 +6,5 @@ application "helloWorld" version="0.1.0" {
     purpose "Display a greeting."
 }
 
-screen "home" route="/" {
-    section "Home" {
-        title "My app"
-        text "Hello, world!"
-    }
-}
+interface "helloWorld" { context "Render a greeting." }
+screen "home" route="/" { use (interface)"helloWorld" }

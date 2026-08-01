@@ -7,5 +7,5 @@ entity "contact" {
     (string)"id"
 }
 screen "contact" {
-    section "Contact" { text "Display a contact." }
+    context "Render a contact."
 }

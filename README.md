@@ -1,17 +1,9 @@
 # Surface
 
-Surface is a small, human- and LLM-readable specification format for describing
-an application without choosing its implementation framework.
+Surface is a small, human- and LLM-readable KDL format for describing an
+application without choosing its framework or detailed UI syntax.
 
 **Status:** draft · **Version:** 0.1 · **Syntax:** KDL 2 · **Extension:** `.kdl`
-
-The format grows one example application at a time. Surface 0.1 currently
-contains the syntax needed for the first three roadmap rungs: Hello World,
-Static FAQ, and Contact Viewer. See
-[roadmap.md](./roadmap.md) for what comes next and the
-[writing guide](./docs/README.md) for the complete released syntax.
-
-## Example
 
 ```kdl
 /- kdl-version 2
@@ -22,101 +14,52 @@ application "helloWorld" {
     purpose "Display a greeting."
 }
 
+interface "helloWorld" {
+    context "Render a user interface with the title My app and the exact text: Hello, world!"
+}
+
 screen "home" route="/" {
-    section "Home" {
-        context "This section contains the text Hello, world!"
-        title "My app"
-        text "Hello, world!"
-    }
+    use (interface)"helloWorld"
 }
 ```
 
-This describes one application with one screen at `/`. Its `Home` section has a
-title and one text block.
+An `interface` describes what a user should see or do through prompt context.
+It does not prescribe sections, text nodes, buttons, inputs, or layout. A
+`screen` places one interface at an optional route. Screens may instead contain
+only context for non-visual behavior.
 
 ## Documentation
 
-Read the guides in this order:
+1. [Writing Surface](./docs/README.md)
+2. [Starting a Surface file](./docs/node_surface.md)
+3. [Describing the application](./docs/node_application.md)
+4. [Defining data](./docs/node_entity.md)
+5. [Looking up data](./docs/node_query.md)
+6. [Describing an interface](./docs/node_interface.md)
+7. [Adding screens](./docs/node_screen.md)
+8. [Adding prompt context](./docs/node_context.md)
+9. [Application roadmap](./roadmap.md)
 
-1. [Writing Surface](./docs/README.md) — a complete example and how the pieces
-   fit together
-2. [Starting a Surface file](./docs/node_surface.md) — the KDL marker and
-   `surface` declaration
-3. [Describing the application](./docs/node_application.md) — application IDs
-   and purpose
-4. [Defining data](./docs/node_entity.md) — entities, typed fields, and field
-   modifiers
-5. [Looking up data](./docs/node_query.md) — query inputs, return types, and
-   references
-6. [Adding screens and text](./docs/node_screen.md) — content, field references,
-   and screen states
-7. [Adding prompt context](./docs/node_context.md) — guidance for an LLM or
-   implementer
+## Current Syntax
 
-## Surface 0.1
-
-| Form | Rule |
-| --- | --- |
-| `surface "0.1"` | First semantic node; exactly one |
-| `application "<id>"` | Exactly one; contains one `purpose` |
-| `purpose "<text>"` | Child of `application`; exactly one string |
-| `entity "<id>"` | Declares a global entity, or a private entity inside a query |
-| `(<type>)"<name>" [optional]` | Declares a required-by-default entity field using a node annotation |
-| `query "<id>"` | Uses private/global entity references for structured input and output |
-| `input (entity)"<entity>"` | Optionally declares one structured query input |
-| `returns (entity)"<entity>"` | Returns a checked entity reference |
-| `screen "<id>" [route="<route>"]` | At least one; contains sections or only prompt context |
-| `use (query)"<query>"` | Gives a screen one checked query reference |
-| `section "<name>"` | Contains an optional `title` and one or more `text` or `field` nodes |
-| `field "<name>"` | In a section, refers to a field returned by the screen query |
-| `state "empty"|"notFound"` | Required alternatives for queried screens |
-| `title "<text>"` | Optional child of `section`; at most one |
-| `text "<text>"` | Child of `section`; one or more, in presentation order |
-| `context [(<type>)"<id>"...] "<prompt>"` | Repeatable prompt with optional checked references |
-
-Additional rules:
-
-- Files start with `/- kdl-version 2` and contain valid KDL 2.
-- Identifiers match `[a-z][A-Za-z0-9]*`, are case-sensitive, and should use
-  lower camel case.
-- Declaration identifiers and nested field/input names are unique within their
-  type and scope.
-- Entity field node annotations are currently `string` or `boolean`.
-- Entity fields are required by default. The bare `optional` modifier marks the
-  only alternative.
-- A type annotation on a string marks a checked reference to a declaration
-  visible in the current scope.
-- Query `input` and `returns` can reference private entities in that query or
-  global entities. Private entity IDs cannot shadow global entity IDs.
-- Use repeatable `context` nodes to describe behavior such as returning null
-  when no entity matches.
-- Screen `use` nodes reference global queries. All annotated references must
-  resolve to the declared type.
-- Local projected field references must also resolve.
-- A section uses either ordered text or ordered field references, not both.
-- Routes are optional strings and currently opaque. Section names, titles, and
-  text are strings.
-- A non-visual screen can contain only `context`; an empty screen is invalid.
-- Sections and their text remain in source order.
-- Triple-quoted KDL strings can hold multiline natural-language content.
-- `context` ends with one unannotated prompt string. Any earlier arguments are
-  typed references to visible applications, entities, queries, or screens.
-  Context has no properties or children and is omitted from the semantic JSON
-  IR.
-- Unknown nodes, properties, duplicate properties, misplaced annotations, and
-  unsupported reference types are rejected.
-- Comments are supported and preserved by the formatter.
-- Canonical formatting uses quoted strings, four-space indentation, one node
-  per line, a blank line between top-level declarations, and a final newline.
-
-A project currently contains one Surface `.kdl` file. The extension identifies
-KDL, while the `surface` node identifies Surface. Imports and multi-file
-projects are not yet supported.
+- A file starts with `/- kdl-version 2`, then one `surface "0.1"` and one
+  `application` containing a `purpose`.
+- `entity` declares fields as `(string)"name"` or `(boolean)"active"`. Fields
+  are required by default; the only modifier is `optional`.
+- `query` has one `returns (entity)"id"`, an optional structured `input`, and
+  may declare query-private entities.
+- `interface "id"` contains only universal `context` nodes.
+- `screen "id"` contains either one `use (interface)"id"` plus optional
+  context, or context alone. Its `route` property is optional.
+- `context [(type)"id"...] "prompt"` can be attached to any supported node.
+  Its annotated strings are checked references to visible declarations.
+- Declaration IDs and field names use lower camel case. Unknown or legacy
+  syntax is rejected.
 
 ## Tooling
 
-[mise](https://mise.jdx.dev/) installs the pinned Deno version and runs the
-project tasks:
+[mise](https://mise.jdx.dev/) installs the pinned Deno version and exposes the
+repository tasks:
 
 ```sh
 mise install
@@ -126,68 +69,28 @@ mise run verify
 Useful commands:
 
 ```sh
-mise run format
-mise run typecheck
-mise run test
 mise run surf check examples/01-hello-world/surface.kdl
+mise run surf format examples/01-hello-world/surface.kdl
 mise run surf export examples/03-contact-viewer/surface.kdl --format json
 mise run surf reference examples/03-contact-viewer/surface.kdl --list
-mise run surf reference examples/03-contact-viewer/surface.kdl screen.contact
+mise run contact-viewer
 ```
 
-Run `mise tasks` to see every task. `mise run verify` checks formatting, linting,
-types, tests, fixtures, skill metadata, and repository consistency. The
-equivalent direct Deno entry points are `deno task verify` and `deno task surf`.
-Deno resolves the dependencies pinned in `deno.json` and `deno.lock`; no
-separate package-manager install is needed.
+The direct equivalents are `deno task verify` and `deno task surf`. The CLI
+supports `parse`, `check`, `format`, `export`, and `reference`. Reference
+selectors include `interface.contactViewer`, `screen.contact`, and scoped
+private entities such as `query.contactById.entity.contactLookup`.
 
-The CLI supports:
+## Examples
 
-```text
-surf parse <file.kdl>
-surf check <file.kdl>
-surf format <file.kdl>
-surf export <file.kdl> --format json
-surf reference <file.kdl> <selector|--list>
-```
-
-`surf reference <file.kdl> --list` returns every declaration selector and its
-canonical typed reference. Pass a selector such as `screen.contact` to print only
-`(screen)"contact"`. Private entities use their query scope, for example
-`query.contactById.entity.contactLookup`.
-
-## Rung 1
-
-- [Writing guide](./docs/README.md)
-- [Surface example](./examples/01-hello-world/surface.kdl)
-- [Expected JSON representation](./examples/01-hello-world/expected-ir.json)
-- [Invalid examples](./examples/01-hello-world/invalid/)
-- [Implemented page](./examples/01-hello-world/app/index.html)
+- [Rung 1: Hello World](./examples/01-hello-world/surface.kdl)
+- [Rung 2: Static FAQ](./examples/02-static-faq/surface.kdl)
+- [Rung 3: Contact Viewer](./examples/03-contact-viewer/surface.kdl)
 - [LLM skill](./skills/surface/SKILL.md)
 
-## Rung 2
+Each rung includes expected JSON, invalid fixtures, a small implementation,
+human documentation, and updates to the LLM skill. Run the Contact Viewer and
+open `http://localhost:8000/contacts?id=ada`.
 
-- [Static FAQ specification](./examples/02-static-faq/surface.kdl)
-- [Expected JSON representation](./examples/02-static-faq/expected-ir.json)
-- [Invalid examples](./examples/02-static-faq/invalid/)
-- [Implemented FAQ page](./examples/02-static-faq/app/index.html)
-- [Decisions and acceptance scenario](./examples/02-static-faq/decisions.md)
-- [Writing FAQs with sections](./docs/node_screen.md#building-an-faq)
-
-## Rung 3
-
-- [Contact Viewer specification](./examples/03-contact-viewer/surface.kdl)
-- [Expected JSON representation](./examples/03-contact-viewer/expected-ir.json)
-- [Invalid examples](./examples/03-contact-viewer/invalid/)
-- [Deno Contact Viewer app](./examples/03-contact-viewer/app/server.ts)
-- [Decisions and acceptance scenarios](./examples/03-contact-viewer/decisions.md)
-- [Entity guide](./docs/node_entity.md)
-- [Query guide](./docs/node_query.md)
-
-Run it with `mise run contact-viewer`, then open
-`http://localhost:8000/contacts?id=ada`.
-
-Only the syntax documented above is released. Later concepts—including
-behavior, components, workflows, integrations, and deployment—will be added
-only when a roadmap application requires them. Each rung also updates and tests
-the LLM skill.
+Only the documented syntax is released. New syntax is added when a roadmap
+application demonstrates that it is necessary.

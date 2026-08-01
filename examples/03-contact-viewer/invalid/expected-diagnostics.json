@@ -15,9 +15,7 @@
   "private-entity-shadow.kdl": "SURF-ID-003",
   "unresolved-input-entity.kdl": "SURF-REF-001",
   "unresolved-context-reference.kdl": "SURF-REF-001",
-  "unresolved-query.kdl": "SURF-REF-001",
-  "missing-state.kdl": "SURF-STATE-001",
-  "unresolved-field.kdl": "SURF-REF-001",
+  "unresolved-interface.kdl": "SURF-REF-001",
   "duplicate-field.kdl": "SURF-ID-002",
-  "mixed-section-content.kdl": "SURF-CHILD-006"
+  "legacy-screen-content.kdl": "SURF-CHILD-002"
 }

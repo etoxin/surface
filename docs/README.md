@@ -1,10 +1,7 @@
 # Writing Surface
 
-Surface files describe an application in a way that is easy to read before
-choosing how to build it. The current version is intentionally small: it can
-describe an application made of screens and ordered text.
-
-## A Complete Example
+Surface is a small KDL vocabulary for describing an application without
+choosing its framework or detailed UI syntax.
 
 ```kdl
 /- kdl-version 2
@@ -15,64 +12,48 @@ application "helloWorld" {
     purpose "Display a greeting."
 }
 
+interface "helloWorld" {
+    context "Render a user interface with the title My app and the exact text: Hello, world!"
+}
+
 screen "home" route="/" {
-    section "Home" {
-        context "Keep this section welcoming and concise."
-        title "My app"
-        text "Hello, world!"
-    }
+    use (interface)"helloWorld"
 }
 ```
 
-Copy the KDL marker and `surface` declaration exactly as shown. They tell KDL
-and Surface how to read the file.
-
-## How the Pieces Fit
+The main declarations are:
 
 ```text
 Surface file
 ├── application
 │   └── purpose
 ├── entity
-│   └── typed field
+│   └── typed fields
 ├── query
 │   ├── private entity (optional)
 │   ├── input (optional)
 │   └── returns
+├── interface
+│   └── context
 └── screen
-    ├── use (optional query reference)
-    ├── section (or context only for a non-visual screen)
-    │   ├── title (optional)
-    │   ├── text
-    │   └── field reference
-    └── state
-        └── section
+    ├── use (optional interface reference)
+    └── context
 ```
 
-You can add a prompt-only `context` note inside any of these nodes.
+Read the guides in order:
 
-Continue with:
+1. [Starting a Surface file](./node_surface.md)
+2. [Describing the application](./node_application.md)
+3. [Defining data](./node_entity.md)
+4. [Looking up data](./node_query.md)
+5. [Describing an interface](./node_interface.md)
+6. [Adding screens](./node_screen.md)
+7. [Adding prompt context](./node_context.md)
 
-- [Starting a Surface file](./node_surface.md)
-- [Describing the application](./node_application.md)
-- [Defining data](./node_entity.md)
-- [Looking up data](./node_query.md)
-- [Adding screens and text](./node_screen.md)
-- [Adding prompt context](./node_context.md)
+Declaration IDs and field names start with a lowercase letter and use lower
+camel case, such as `contactViewer`. Purpose, routes, and context prompts are
+ordinary quoted strings.
 
-## Naming Things
-
-Applications, entities, queries, screens, fields, and inputs have IDs or names
-such as `helloWorld` and `contactById`. Start one with a lowercase letter
-and use lower camel case for multiple words: `contactViewer`, not
-`ContactViewer` or `contact-viewer`.
-
-Section names, titles, text, purposes, routes, and context are ordinary
-quoted text.
-
-## What Surface Supports Today
-
-A file contains one application and at least one screen. It can describe
-read-only entities and single-entity lookups. Imports, actions, components, and
-other planned features are not available yet. The [roadmap](../roadmap.md)
-shows when those ideas will be introduced.
+Surface currently supports applications, read-only entities, single-entity
+queries, intent-driven interfaces, and screens. The [roadmap](../roadmap.md)
+adds syntax only when another example application needs it.

@@ -121,9 +121,9 @@ Introduces:
 - the KDL-based Surface file;
 - the Surface version marker;
 - `application` declarations;
+- intent-driven `interface` declarations;
 - `screen` declarations;
-- named `section` blocks;
-- optional section titles and ordered text;
+- checked interface references from screens;
 - prompt-only `context` notes on any node;
 - nested child blocks;
 - declaration identifiers;
@@ -151,15 +151,14 @@ Build a page containing several questions and answers.
 
 Introduces:
 
-- repeated FAQ entries composed from generic sections and text;
+- detailed interface intent expressed through prompt context;
 - multiline natural-language content;
-- ordering across repeated content groups;
+- ordering within prompt content;
 - comment preservation;
 - canonical formatting of nested content.
 
-This stage should settle how repeated KDL nodes map into ordered IR collections.
-It MUST NOT add FAQ-specific `question` or `answer` nodes: a section name holds
-the question and its text holds the answer.
+This stage demonstrates that an interface can describe a content-heavy page
+without adding FAQ-specific `question` or `answer` nodes.
 
 Delivered in:
 
@@ -168,7 +167,7 @@ Delivered in:
 - [`examples/02-static-faq/invalid/`](./examples/02-static-faq/invalid/);
 - [`examples/02-static-faq/app/index.html`](./examples/02-static-faq/app/index.html);
 - [Rung 2 decisions and acceptance scenario](./examples/02-static-faq/decisions.md);
-- [FAQ writing guide](./docs/node_screen.md#building-an-faq);
+- [Interface guide](./docs/node_interface.md);
 - [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
 
 ### 3. Contact Viewer
@@ -186,7 +185,7 @@ Introduces:
 - Boolean and null values;
 - private query entities and structured entity input/output references;
 - annotated references between top-level declarations;
-- not-found and empty screen states.
+- context that relates queries, entities, interfaces, and screens.
 
 This stage should establish field syntax and contextual reference resolution.
 Rung 3 supports only `string` and `boolean` primitive types; numeric values
@@ -201,7 +200,8 @@ Delivered in:
 - [Rung 3 decisions and acceptance scenarios](./examples/03-contact-viewer/decisions.md);
 - [Entity guide](./docs/node_entity.md);
 - [Query guide](./docs/node_query.md);
-- [Screen data and state guide](./docs/node_screen.md#showing-query-fields);
+- [Interface guide](./docs/node_interface.md);
+- [Screen guide](./docs/node_screen.md);
 - [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
 
 ### 4. Click Counter
@@ -277,7 +277,7 @@ Build an HTTP API that creates short links and resolves them.
 
 Introduces:
 
-- `interface` declarations;
+- `endpoint` declarations;
 - HTTP operations;
 - methods and paths;
 - path parameters;
@@ -286,7 +286,7 @@ Introduces:
 - URL domain values;
 - public and protected operations.
 
-This stage should establish whether interface operations use contextual or fully
+This stage should establish whether endpoint operations use contextual or fully
 qualified references.
 
 ### 9. Reminder Service
@@ -477,6 +477,7 @@ specification rather than only a documentation format.
 | Declaration type | First application |
 | --- | --- |
 | `application` | 1. Hello World Page |
+| `interface` | 1. Hello World Page |
 | `screen` | 1. Hello World Page |
 | `entity` | 3. Contact Viewer |
 | `query` | 3. Contact Viewer |
@@ -490,7 +491,7 @@ specification rather than only a documentation format.
 | `component` | 6. Signup Form |
 | `requirement` | 6. Signup Form |
 | `policy` | 7. Private Notes |
-| `interface` | 8. URL Shortener API |
+| `endpoint` | 8. URL Shortener API |
 | `job` | 9. Reminder Service |
 | `integration` | 9. Reminder Service |
 | `decision` | 10. Expense Approval |

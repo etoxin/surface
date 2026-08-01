@@ -13,7 +13,7 @@ line.
 
 The `surface` line tells tools that this is a Surface document. `"0.1"` is
 the Surface format version currently supported, so copy it exactly. A file has
-one `surface` node, before the application and screens.
+one `surface` node, before the other declarations.
 
 Usually the node does not need a child block. If guidance applies to the whole
 file, add [context](./node_context.md):

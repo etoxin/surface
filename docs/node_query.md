@@ -1,6 +1,6 @@
 # Looking Up Data
 
-A query describes how a screen retrieves one entity. The Contact Viewer looks
+A query describes how an application retrieves one entity. The Contact Viewer looks
 up a contact by its ID:
 
 ```kdl
@@ -56,10 +56,10 @@ The reference can target a private entity in the query or a global entity in
 the Surface file. A query can omit `input` when it needs no caller-supplied
 data, but it cannot contain several input nodes.
 
-When a web screen uses a query, URL query parameters with matching names supply
-the input entity's fields. For example, `/contacts?id=ada` supplies `"ada"`
-to the `id` field of `contactLookup`. Missing required fields activate the
-screen's `empty` state; optional fields can be absent.
+The query deliberately does not prescribe where those values come from. An
+interface might collect them through controls, while another implementation
+might map them from a URL, file, or API. Describe that relationship with
+typed [`context`](./node_context.md) references.
 
 ## Returns
 
@@ -81,9 +81,9 @@ found:
 context "If there is no contact, return null."
 ```
 
-Queried screens include a `notFound` state for a missing result. A screen needs
-an `empty` state only when its query input entity has at least one required
-field.
+Describe missing inputs and missing results in query or interface context. For
+example, an interface can reference the query and say what a user should see
+when no matching entity exists.
 
 Queries, inputs, and returns can all contain prompt-only
 [`context`](./node_context.md).

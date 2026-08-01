@@ -133,6 +133,12 @@ Deno.test(
         result.diagnostics.some((diagnostic) => diagnostic.code === code),
         `${file} should report ${code}`,
       );
+      if (file === "wrong-reference-type.kdl") {
+        assertEquals(
+          result.diagnostics.map((diagnostic) => diagnostic.code),
+          ["SURF-REF-003"],
+        );
+      }
       assertEquals(result.ir, null);
     }
   },
@@ -148,12 +154,12 @@ application "helloWorld" {
 purpose "Display a greeting."
 }
 
-screen "home" route="/" {
-section "Home" {
+interface "helloWorld" {
 context "Keep this prompt."
-title "My app"
-text "Hello, world!"
 }
+
+screen "home" route="/" {
+use (interface)"helloWorld"
 }
 `;
 
@@ -163,28 +169,28 @@ text "Hello, world!"
   assertMatch(first.output, /\/\/ Keep this comment\./);
   assertMatch(first.output, /context "Keep this prompt\."/);
   assertMatch(first.output, /^[ ]{4}purpose/m);
-  assertMatch(first.output, /^[ ]{4}section/m);
-  assertMatch(first.output, /^[ ]{8}title/m);
-  assertMatch(first.output, /^[ ]{8}text/m);
+  assertMatch(first.output, /^[ ]{4}context/m);
+  assertMatch(first.output, /^[ ]{4}use/m);
 
   const second = formatSurface(first.output, "surface.kdl");
   assertEquals(second.output, first.output);
 });
 
-Deno.test("the formatter preserves multiline text and its indentation", () => {
+Deno.test("the formatter preserves multiline context and its indentation", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
 application "faq" { purpose "Answer questions." }
-screen "faq" {
-section "What is preserved?" {
+interface "faq" {
 // Keep this question.
-text """
+context """
 The answer text is preserved.
 
 So are {braces} inside the string.
 """
 }
+screen "faq" {
+use (interface)"faq"
 }
 `;
 
@@ -195,8 +201,8 @@ So are {braces} inside the string.
   assertEquals(first.diagnostics, []);
   assert(first.output !== null);
   assertMatch(first.output, /\/\/ Keep this question\./);
-  assertMatch(first.output, /^[ ]{8}text """/m);
-  assertMatch(first.output, /^[ ]{12}The answer text is preserved\./m);
+  assertMatch(first.output, /^[ ]{4}context """/m);
+  assertMatch(first.output, /^[ ]{8}The answer text is preserved\./m);
 
   const after = parseSurface(first.output, "faq.kdl");
   assertEquals(after.diagnostics, []);
@@ -215,49 +221,38 @@ Deno.test("the parser reports KDL syntax locations", () => {
   assertEquals(typeof result.diagnostics[0].column, "number");
 });
 
-Deno.test("screen and section order is retained in the IR", () => {
+Deno.test("interface and screen order is retained in the IR", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
 application "ordered" { purpose "Check ordering." }
-screen "first" route="/first" {
-    section "A" {
-        title "First"
-        text "A1"
-        text "A2"
-    }
-    section "B" { text "B1" }
-}
-screen "second" route="/second" {
-    section "C" { text "C1" }
-}
+interface "first" { context "Render the first interface." }
+interface "second" { context "Render the second interface." }
+screen "first" route="/first" { use (interface)"first" }
+screen "second" route="/second" { use (interface)"second" }
 `;
 
   const result = parseSurface(source, "ordered.kdl");
   assertEquals(result.diagnostics, []);
   assert(result.ir !== null);
   assertEquals(
-    result.ir.screens.map(({ id }: { id: string }) => id),
+    result.ir.interfaces?.map(({ id }: { id: string }) => id),
     ["first", "second"],
   );
   assertEquals(
-    result.ir.screens[0].sections.map(({ name }: { name: string }) => name),
-    ["A", "B"],
+    result.ir.screens.map(({ id }: { id: string }) => id),
+    ["first", "second"],
   );
-  assertEquals(result.ir.screens[0].sections[0], {
-    name: "A",
-    title: "First",
-    text: ["A1", "A2"],
-  });
 });
 
-Deno.test("section title and screen route are optional and omitted from the IR", () => {
+Deno.test("screen route is optional and omitted from the IR", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
 application "nativeApp" { purpose "Run without a website." }
+interface "home" { context "Render a native interface." }
 screen "home" {
-    section "Home" { text "Hello, world!" }
+    use (interface)"home"
 }
 `;
 
@@ -266,10 +261,7 @@ screen "home" {
   assert(result.ir !== null);
   assertEquals(result.ir.screens[0], {
     id: "home",
-    sections: [{
-      name: "Home",
-      text: ["Hello, world!"],
-    }],
+    interface: "home",
   });
 });
 
@@ -281,8 +273,9 @@ application "routing" { purpose "Describe a routed application." }
 screen "home" route="/" {
     context (screen)"contact" "Redirect to this screen."
 }
+interface "contact" { context "Render contact details." }
 screen "contact" route="/contacts" {
-    section "Contact" { text "Contact details." }
+    use (interface)"contact"
 }
 `;
 
@@ -292,7 +285,6 @@ screen "contact" route="/contacts" {
   assertEquals(result.ir.screens[0], {
     id: "home",
     route: "/",
-    sections: [],
   });
 
   const empty = parseSurface(
@@ -316,14 +308,15 @@ application "references" { purpose "Exercise context references." }
 entity "contact" { (string)"id" }
 query "getContact" {
     entity "lookup" { (string)"id" }
-    context (entity)"lookup" (entity)"contact" (screen)"contact" "Use these declarations together."
+    context (entity)"lookup" (entity)"contact" (interface)"contact" (screen)"contact" "Use these declarations together."
     returns (entity)"contact"
 }
 screen "home" route="/" {
-    context (query)"getContact" (screen)"contact" "Delegate to these declarations."
+    context (query)"getContact" (interface)"contact" (screen)"contact" "Delegate to these declarations."
 }
+interface "contact" { context "Render contact details." }
 screen "contact" route="/contacts" {
-    section "Contact" { text "Contact details." }
+    use (interface)"contact"
 }
 `;
 
@@ -361,16 +354,13 @@ application "contextual" {
         context "Purpose guidance."
     }
 }
+interface "home" {
+    context "Interface guidance."
+}
 screen "home" {
     context "Screen guidance."
-    section "Home" {
-        context "Section guidance."
-        title "My app" {
-            context "Title guidance."
-        }
-        text "Hello, world!" {
-            context "Text guidance."
-        }
+    use (interface)"home" {
+        context "Use guidance."
     }
 }
 `;
@@ -379,11 +369,8 @@ screen "home" {
   assertEquals(result.diagnostics, []);
   assert(result.ir !== null);
   assert(!JSON.stringify(result.ir).includes("guidance"));
-  assertEquals(result.ir.screens[0].sections[0], {
-    name: "Home",
-    title: "My app",
-    text: ["Hello, world!"],
-  });
+  assertEquals(result.ir.interfaces, [{ id: "home" }]);
+  assertEquals(result.ir.screens, [{ id: "home", interface: "home" }]);
 });
 
 Deno.test("context is valid on rung-3 nodes and omitted from the IR", () => {
@@ -413,22 +400,12 @@ query "contactById" {
     }
     context "Return null when no contact matches."
 }
+interface "contact" {
+    context (query)"contactById" (entity)"contact" "Interface guidance."
+}
 screen "contact" {
-    use (query)"contactById" {
-        context "Query reference guidance."
-    }
-    section "Contact" {
-        field "id" {
-            context "Field reference guidance."
-        }
-    }
-    state "empty" {
-        context "Empty state guidance."
-        section "Empty" { text "Select a contact." }
-    }
-    state "notFound" {
-        context "Not-found state guidance."
-        section "Missing" { text "Contact not found." }
+    use (interface)"contact" {
+        context "Interface reference guidance."
     }
 }
 `;
@@ -455,15 +432,11 @@ query "getMessage" {
     returns (entity)"message"
     context "Return null when no message matches."
 }
+interface "message" {
+    context (query)"getMessage" "Render the returned message text."
+}
 screen "message" {
-    use (query)"getMessage"
-    section "Message" { field "text" }
-    state "empty" {
-        section "Empty" { text "Enter an identifier." }
-    }
-    state "notFound" {
-        section "Missing" { text "Message not found." }
-    }
+    use (interface)"message"
 }
 `;
 
@@ -479,7 +452,7 @@ screen "message" {
     input: { entity: "lookup" },
     returns: { entity: "message" },
   });
-  assertEquals(result.ir.screens[0].sections[0].fields, ["text"]);
+  assertEquals(result.ir.screens[0].interface, "message");
 });
 
 Deno.test("a query can return a private entity without an input", () => {
@@ -494,12 +467,11 @@ query "getHello" {
     returns (entity)"hello"
     context "Return null when no greeting is available."
 }
+interface "hello" {
+    context (query)"getHello" "Render the greeting message."
+}
 screen "hello" {
-    use (query)"getHello"
-    section "Hello" { field "message" }
-    state "notFound" {
-        section "Missing" { text "Greeting not found." }
-    }
+    use (interface)"hello"
 }
 `;
 
@@ -510,7 +482,7 @@ screen "hello" {
   assertEquals(result.ir.queries?.[0].returns.entity, "hello");
 });
 
-Deno.test("an optional-only input does not require an empty state", () => {
+Deno.test("a query can use an optional-only input entity", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
@@ -522,12 +494,11 @@ query "searchMessages" {
     returns (entity)"result"
     context "Return null when no message matches."
 }
+interface "results" {
+    context (query)"searchMessages" "Render matching messages or a no-results experience."
+}
 screen "results" {
-    use (query)"searchMessages"
-    section "Result" { field "message" }
-    state "notFound" {
-        section "Missing" { text "No messages found." }
-    }
+    use (interface)"results"
 }
 `;
 
@@ -559,6 +530,13 @@ Deno.test("CLI reference lists and returns canonical checked references", () => 
     references.some(
       ({ selector, reference }: { selector: string; reference: string }) =>
         selector === "screen.contact" && reference === '(screen)"contact"',
+    ),
+  );
+  assert(
+    references.some(
+      ({ selector, reference }: { selector: string; reference: string }) =>
+        selector === "interface.contactViewer" &&
+        reference === '(interface)"contactViewer"',
     ),
   );
   assert(
@@ -622,11 +600,11 @@ surface "0.1"
 application "helloWorld" {
 purpose "Display a greeting."
 }
-screen "home" route="/" {
-section "Home" {
-title "My app"
-text "Hello, world!"
+interface "helloWorld" {
+context "Render the exact text: Hello, world!"
 }
+screen "home" route="/" {
+use (interface)"helloWorld"
 }
 `;
 
@@ -638,15 +616,14 @@ text "Hello, world!"
     const output = await Deno.readTextFile(temporaryFile);
     assertMatch(output, /\/\/ Retain me\./);
     assertMatch(output, /^[ ]{4}purpose/m);
-    assertMatch(output, /^[ ]{4}section/m);
-    assertMatch(output, /^[ ]{8}title/m);
-    assertMatch(output, /^[ ]{8}text/m);
+    assertMatch(output, /^[ ]{4}context/m);
+    assertMatch(output, /^[ ]{4}use/m);
   } finally {
     await Deno.remove(temporaryDirectory, { recursive: true });
   }
 });
 
-Deno.test("the implemented page matches the Surface section", async () => {
+Deno.test("the implemented page matches the Surface interface intent", async () => {
   const html = await Deno.readTextFile(join(exampleRoot, "app", "index.html"));
   assertMatch(html, /<h1>My app<\/h1>/);
   assertMatch(html, /<p>Hello, world!<\/p>/);
@@ -743,8 +720,8 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /input \(entity\)"contactLookup"/);
   assertMatch(skill, /returns \(entity\)"contact"/);
   assertMatch(skill, /If there is no contact, return null\./);
-  assertMatch(skill, /use \(query\)"contactById"/);
-  assertMatch(skill, /state "notFound"/);
+  assertMatch(skill, /interface "contactViewer"/);
+  assertMatch(skill, /use \(interface\)"contactViewer"/);
   assertMatch(skill, /screen "home" route="\/"/);
   assertMatch(
     skill,

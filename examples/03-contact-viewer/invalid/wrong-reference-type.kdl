@@ -12,11 +12,4 @@ query "contactById" {
 }
 screen "contact" {
     use (entity)"contact"
-    section "Contact" { field "id" }
-    state "empty" {
-        section "Empty" { text "Select a contact." }
-    }
-    state "notFound" {
-        section "Missing" { text "Contact not found." }
-    }
 }

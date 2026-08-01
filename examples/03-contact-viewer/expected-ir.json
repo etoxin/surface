@@ -50,54 +50,20 @@
       }
     }
   ],
+  "interfaces": [
+    {
+      "id": "contactViewer"
+    }
+  ],
   "screens": [
     {
       "id": "home",
-      "route": "/",
-      "sections": []
+      "route": "/"
     },
     {
       "id": "contact",
       "route": "/contacts",
-      "query": "contactById",
-      "sections": [
-        {
-          "name": "Contact",
-          "title": "Contact",
-          "text": [],
-          "fields": [
-            "name",
-            "email",
-            "active"
-          ]
-        }
-      ],
-      "states": [
-        {
-          "id": "empty",
-          "sections": [
-            {
-              "name": "No contact selected",
-              "title": "Select a contact",
-              "text": [
-                "Choose a contact identifier to view its details."
-              ]
-            }
-          ]
-        },
-        {
-          "id": "notFound",
-          "sections": [
-            {
-              "name": "Contact not found",
-              "title": "Contact not found",
-              "text": [
-                "No contact exists for the selected identifier."
-              ]
-            }
-          ]
-        }
-      ]
+      "interface": "contactViewer"
     }
   ]
 }

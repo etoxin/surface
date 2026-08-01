@@ -1,51 +1,37 @@
 ---
 name: surface
-description: Create, edit, review, format, and validate Surface application specifications written as KDL 2 files. Use for files containing a surface node, requests to author a Surface specification, or work on the Surface repository and its released Hello World, Static FAQ, and Contact Viewer applications.
+description: Create, edit, review, format, and validate Surface 0.1 application specifications written as KDL 2 files. Use for Surface files or repository work involving the released application, entity, query, interface, screen, and context syntax.
 ---
 
 # Surface
 
-Work only with the released Surface syntax described here. Do not introduce
-constructs from future roadmap applications.
+Use only the released syntax below. Do not invent structured UI or behavior
+nodes when prompt context can express the requirement.
 
 ## Workflow
 
-1. Confirm the document contains `surface "0.1"`. Do not treat an arbitrary
-   `.kdl` file as Surface based on its extension alone.
-2. Read the repository's `README.md` when available and treat it as
-   authoritative if it differs from this skill.
-3. Preserve comments, declaration order, unrelated content, and quoted strings
-   when editing.
-4. Use only the nodes and properties supported below.
-5. Run `surf reference surface.kdl --list` before adding a reference when the
-   repository toolchain is available. Use its selector output instead of
-   guessing declaration types or IDs.
-6. Run `surf check` after editing when the repository toolchain is available.
-7. Run `surf format` only when the document already passes validation.
-8. Report requests outside the current Surface scope instead of inventing
-   syntax.
+1. Confirm the first line is `/- kdl-version 2` and the first semantic node is
+   `surface "0.1"`.
+2. Read the repository `README.md` when available; it is authoritative if it
+   differs from this skill.
+3. Preserve comments, declaration order, prompts, and unrelated content.
+4. When editing an existing file, run `surf reference surface.kdl --list`
+   before adding a reference if the repository CLI is available. For a new
+   file, draft its declarations first, then use the command to verify them.
+5. After editing, run `surf check`; format only a valid document.
+6. Explain an out-of-scope request instead of inventing syntax.
 
-## Complete Released Syntax
-
-Write the KDL marker and Surface version first:
+## Canonical Example
 
 ```kdl
 /- kdl-version 2
 
 surface "0.1"
-```
 
-Declare exactly one application:
-
-```kdl
-application "helloWorld" {
-    purpose "Display a greeting."
+application "contactViewer" {
+    purpose "Display a contact selected by identifier."
 }
-```
 
-Declare read-only data and a single-entity lookup when needed:
-
-```kdl
 entity "contact" {
     (string)"id"
     (string)"name"
@@ -54,197 +40,162 @@ entity "contact" {
 }
 
 query "contactById" {
+    context "Find the contact whose id equals the id input."
+
+    entity "contactLookup" {
+        (string)"id"
+    }
+
+    input (entity)"contactLookup"
+    returns (entity)"contact"
+
+    context "If there is no contact, return null."
+}
+
+interface "contactViewer" {
+    context (query)"contactById" (entity)"contact" "Render a user interface that asks for a contact id and displays the matching contact's name, email, and active status."
+    context (query)"contactById" "When no id is provided, ask the user to select a contact."
+    context (query)"contactById" "When no contact matches, show that the contact was not found."
+}
+
+screen "home" route="/" {
+    context (screen)"contact" "Redirect to this screen."
+}
+
+screen "contact" route="/contacts" {
+    use (interface)"contactViewer"
+}
+```
+
+## Declarations
+
+Declare exactly one application with one purpose:
+
+```kdl
+application "helloWorld" {
+    purpose "Display a greeting."
+}
+```
+
+An application and purpose take one quoted string, have no properties, and may
+contain `context`. The application ID is not a display title.
+
+An entity takes one ID, has no properties, and contains one or more fields:
+
+```kdl
+entity "contact" {
+    (string)"name"
+    (string)"email" optional
+    (boolean)"active"
+}
+```
+
+A field is a node whose annotation is `(string)` or `(boolean)` and whose name
+is a quoted lower-camel-case identifier. Fields are required by default. The
+only modifier is bare `optional`; do not write `required`, `generated`, or
+`field "name" type="string"`.
+
+A query has one ID, no properties, zero or more private entities, zero or one
+structured input, and exactly one return entity:
+
+```kdl
+query "contactById" {
     entity "contactLookup" {
         (string)"id"
     }
     input (entity)"contactLookup"
     returns (entity)"contact"
-    context "If there is no contact, return null."
 }
 ```
 
-An application has exactly:
+`input` and `returns` may reference a private entity in their query or a global
+entity. Private IDs are unique in their query and cannot shadow global entity
+IDs. Other queries cannot see them. Use context to explain data sources,
+transformations, and missing results; Surface does not define URL-to-input
+mapping.
 
-- one quoted identifier argument;
-- no properties;
-- one `purpose` child containing one quoted string.
-
-An entity has one quoted identifier, no properties, and one or more typed field
-children. Give every field:
-
-- a `(string)` or `(boolean)` node annotation;
-- a quoted lower-camel-case node name unique within the entity;
-- an optional bare `optional` modifier when the value may be absent.
-
-Treat fields as required when `optional` is absent. Do not write `required` or
-`generated`, give `optional` a value, or repeat it. Reject the earlier
-`field "name" type="string"` syntax.
-
-A query returns one entity reference. Give it:
-
-- one quoted identifier;
-- no properties;
-- zero or more private `entity` declarations;
-- zero or one `input (entity)"<entity>"` child;
-- exactly one `returns (entity)"<entity>"` child.
-
-Allow `input` and `returns` to reference either a private entity in their query
-or a global top-level entity. Keep private entity IDs unique within the query
-and reject a private ID that matches a global entity ID. Do not resolve private
-entities from other queries.
-
-Use private entities for query-specific request or response shapes. Use global
-entities for data shapes shared across queries. For a web screen, populate the
-fields of the input entity from same-named URL query parameters. Explain how
-the query transforms input into output with `context`. Use another `context`
-node to describe missing-result behavior, such as returning null.
-
-Treat a type annotation on a string value as a checked reference to a
-declaration visible in the current scope. Require the annotation and verify
-both the target ID and its declaration type. Rung 3 supports `(entity)` on
-query `input` and `returns` arguments and `(query)` on screen `use` arguments.
-
-Distinguish those value annotations from the node annotations that declare
-entity field types: `(string)"name"` is a field node, while
-`(entity)"contact"` following `returns` is a reference value. Reject
-annotations in all other positions.
-
-Declare at least one screen. A queried screen looks like:
+An interface describes visible or usable UI through intent, not widget syntax:
 
 ```kdl
-screen "contact" route="/contacts" {
-    use (query)"contactById"
-    section "Contact" {
-        title "Contact"
-        field "name"
-        field "email"
-        field "active"
-    }
-    state "empty" {
-        section "No contact selected" {
-            text "Choose a contact identifier."
-        }
-    }
-    state "notFound" {
-        section "Contact not found" {
-            text "No contact exists for that identifier."
-        }
-    }
+interface "helloWorld" {
+    context "Render a user interface with the exact text: Hello, world!"
 }
 ```
 
-A screen has:
+An interface takes one ID, has no properties, and accepts only `context`
+children. Do not add `section`, `title`, `text`, `field`, `input`, `button`,
+`selector`, or component children. The implementing LLM or person chooses copy,
+layout, and controls consistent with the context.
 
-- one quoted identifier argument;
-- zero or one quoted `route` property;
-- zero or one `use (query)"<query>"` child;
-- one or more ordered `section` children, or only `context` children when it
-  has no interface.
-
-Use `route` for addressable screens such as web pages. Omit it when the screen
-does not have a URL or equivalent address.
-
-Use a context-only screen for a non-visual route behavior without adding a new
-language feature:
+Declare at least one screen. A screen takes one ID, an optional quoted `route`,
+and either one interface use plus optional contexts or context alone:
 
 ```kdl
 screen "home" route="/" {
-    context (screen)"contact" "Redirect to this screen."
+    use (interface)"helloWorld"
+}
+
+screen "redirectHome" {
+    context (screen)"home" "Continue to this screen."
 }
 ```
 
-Do not add `logic` or `redirect` nodes. Do not add `use` or states to a
-context-only screen, and reject a completely empty screen.
+`use` accepts exactly one checked `(interface)` reference. A screen cannot have
+multiple uses and cannot be empty. A context-only screen expresses non-visual
+behavior; do not invent `logic`, `redirect`, or UI-state nodes.
 
-For web screens, populate query input-entity fields from URL query parameters
-with matching names. Require every queried screen to contain exactly one
-`notFound` state. Also require exactly one `empty` state when the query's input
-entity has a required field; reject `empty` when it has no required input
-fields. Put one or more static sections inside each state. Do not put field
-references in state sections.
+Identifiers match `[a-z][A-Za-z0-9]*`, are case-sensitive, and should use lower
+camel case. Declaration IDs are unique within their type. Field names are
+unique within their entity.
 
-A section has:
+## Context and References
 
-- one quoted string name;
-- no properties;
-- zero or one `title` child containing one quoted string;
-- one or more ordered `text` or `field` children.
-
-Use `field "<name>"` in a normal section to project a field from the entity
-returned by the screen query. Require that reference to resolve. Do not use
-`field` for declarations inside an entity; use typed child nodes there.
-Do not mix `text` and field references in the same section.
-
-Build a static FAQ with repeated sections: use each section name as the
-question and its text as the answer. Do not invent `question` or `answer`
-nodes.
-
-Use KDL triple-quoted strings for multiline text. Put the opening newline
-immediately after `"""` and align content with the closing delimiter so KDL
-dedents it correctly.
-
-## Prompt Context
-
-Add zero or more `context` children to any Surface node except another
-`context`. This includes entities, fields, queries, inputs, returns, uses,
-states, and text. End each context with exactly one unannotated quoted prompt
-string. Put zero or more typed string references before the prompt:
+Add repeatable `context` children to any supported node except another context:
 
 ```kdl
-context (screen)"contact" "Redirect to this screen."
-context (entity)"contact" (query)"contactById" "Use this query to load this entity."
+context "Use accessible defaults."
+context (query)"contactById" (entity)"contact" "Display the returned contact."
 ```
 
-Allow references to global applications, entities, queries, and screens. Also
-allow a context inside a query to reference private entities in that query.
-Require every reference to resolve in the current scope with the annotated
-declaration type. Do not allow properties or children on context.
+The last argument is exactly one unannotated prompt string. Earlier arguments,
+if present, are annotated string references. A type annotation on a string
+means that the string references another Surface declaration. Global
+`application`, `entity`, `interface`, `query`, and `screen` declarations may be
+referenced. A context inside a query may also reference that query's private
+entities. Verify every reference's visibility, ID, and annotation type.
 
-Use context as unstructured guidance for interpreting or implementing its
-parent. Preserve it when editing and formatting, and omit it from the semantic
-JSON IR.
+Context has no properties or children. Preserve it in source and formatting;
+it is omitted from the reduced semantic JSON IR. Use KDL triple-quoted strings
+for multiline prompts, with content starting on the next line.
 
-Identifiers must match `[a-z][A-Za-z0-9]*` and should use lower camel case.
+Do not confuse value annotations with field node annotations:
+`(string)"name"` declares a field, while `(entity)"contact"` after `returns`
+is a checked reference.
 
 ## Validation Checklist
 
-Check all of the following:
+- The file parses as KDL 2 and begins with the required marker.
+- `surface "0.1"` occurs once as the first semantic node.
+- Exactly one application and at least one screen exist.
+- Required arguments and children occur exactly as specified.
+- IDs and field names are valid and unique in their scopes.
+- Entity fields use supported node annotations and only bare `optional`.
+- Private entities do not shadow globals.
+- Every typed reference resolves with the correct type and visibility.
+- Every interface contains only context.
+- Every screen has one interface use or at least one context, never multiple
+  uses or an empty body.
+- Properties are allowed only where documented and are not duplicated.
+- No unsupported or legacy nodes, modifiers, annotations, or properties appear.
 
-- The source parses as KDL 2.
-- The first line is `/- kdl-version 2`.
-- `surface "0.1"` is the first semantic node and occurs once.
-- Exactly one application exists.
-- At least one screen exists.
-- Declaration identifiers are valid and unique within their type.
-- Required arguments, properties, and children are present exactly as defined.
-- Global and private entity fields have valid unique names and supported types.
-- Entity fields are required by default; only optional fields use the bare
-  `optional` modifier.
-- Private entity IDs do not collide with global entity IDs.
-- Annotated entity and query references have the required type, visibility,
-  and target.
-- Typed context references precede the final prompt and resolve to visible
-  declarations of the annotated type.
-- Projected fields resolve on the query's returned private or global entity.
-- Every queried screen contains one `notFound` state and, exactly when its
-  query input entity has a required field, one `empty` state.
-- Every section contains at least one text or field node.
-- Every screen contains at least one section or consists only of context nodes.
-- Properties are not duplicated.
-- No unsupported top-level nodes, child nodes, properties, field/reference
-  types, or misplaced annotations appear.
+When diagnosing, distinguish valid KDL from valid Surface and give a concrete
+released-syntax correction with the source location.
 
-When reporting a problem, include its location, the violated rule, and a
-specific valid correction.
-
-## Formatting
+## Formatting and CLI
 
 Use four spaces, no tabs, quoted strings, one node per line, one blank line
-between top-level declarations, and a final newline. Preserve comments and all
-declaration, field, input, screen, state, section, text, and field-reference
-order.
-
-## Tool Commands
+between top-level declarations, and a final newline. Preserve comments and
+source order.
 
 ```text
 surf parse surface.kdl
@@ -252,16 +203,15 @@ surf check surface.kdl
 surf format surface.kdl
 surf export surface.kdl --format json
 surf reference surface.kdl --list
-surf reference surface.kdl screen.contact
+surf reference surface.kdl interface.contactViewer
 ```
 
-The list form returns declaration selectors with canonical typed references.
-The selector form prints only the reference for direct insertion. Use a scoped
-selector such as `query.contactById.entity.contactLookup` for a private entity.
+Private entity selectors include their query scope, such as
+`query.contactById.entity.contactLookup`.
 
 ## Current Limits
 
-Do not add actors, numeric types or values, behaviors, events, policies,
-workflows, interfaces, components, scenarios, imports, executable logic, list
-queries, filtering, sorting, or code generation. These features are not part
-of the released syntax.
+Do not add actors, numeric field types, behaviors, events, policies, workflows,
+components, scenarios, imports, executable logic, list queries, filtering,
+sorting, structured UI elements, or code-generation directives. Add future
+syntax only when a later roadmap rung releases it.
