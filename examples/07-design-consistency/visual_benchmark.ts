@@ -4,18 +4,39 @@ import { type Browser, chromium, type Page } from "playwright";
 import { createApp as createRenderFunctionsApp } from "./builds/01-render-functions/server.ts";
 import { createApp as createTemplateClonesApp } from "./builds/02-template-clones/server.ts";
 import { createApp as createControllerApp } from "./builds/03-controller/server.ts";
+import { createApp as createIndependentOneApp } from "./independent-builds/01/server.ts";
+import { createApp as createIndependentTwoApp } from "./independent-builds/02/server.ts";
+import { createApp as createIndependentThreeApp } from "./independent-builds/03/server.ts";
 
 type App = (request: Request) => Promise<Response>;
 type StateName = "initial" | "error" | "review" | "confirmation";
 type Viewport = { name: string; width: number; height: number };
 
 const exampleRoot = new URL("./", import.meta.url);
-const artifactRoot = new URL("./artifacts/", exampleRoot);
-const builds: Array<{ name: string; port: number; createApp: () => App }> = [
+const independentMode = Deno.args.includes("--independent");
+const artifactRoot = new URL(
+  independentMode ? "./independent-artifacts/" : "./artifacts/",
+  exampleRoot,
+);
+const coordinatedBuilds: Array<{
+  name: string;
+  port: number;
+  createApp: () => App;
+}> = [
   { name: "01-render-functions", port: 8120, createApp: createRenderFunctionsApp },
   { name: "02-template-clones", port: 8121, createApp: createTemplateClonesApp },
   { name: "03-controller", port: 8122, createApp: createControllerApp },
 ];
+const independentBuilds: Array<{
+  name: string;
+  port: number;
+  createApp: () => App;
+}> = [
+  { name: "01-independent", port: 8130, createApp: createIndependentOneApp },
+  { name: "02-independent", port: 8131, createApp: createIndependentTwoApp },
+  { name: "03-independent", port: 8132, createApp: createIndependentThreeApp },
+];
+const builds = independentMode ? independentBuilds : coordinatedBuilds;
 const viewports: Viewport[] = [
   { name: "mobile", width: 390, height: 844 },
   { name: "desktop", width: 1440, height: 900 },
@@ -43,7 +64,7 @@ try {
       try {
         await page.goto(`http://127.0.0.1:${build.port}/`);
         await page.evaluate(() => document.fonts.ready);
-        await assertAccessibleShell(page);
+        await assertAccessibleShell(page, !independentMode);
 
         for (const state of states) {
           if (state === "error") {
@@ -67,7 +88,7 @@ try {
             await execute(
               page,
               `
-                document.getElementById('problemType-pothole').checked = true;
+                document.querySelector('[name=problemType][value=pothole]').checked = true;
                 document.getElementById('location').value = '1 Market Street';
                 document.getElementById('details').value = 'Outside the library';
                 document.getElementById('reporterEmail').value = '  PERSON@Example.COM ';
@@ -76,7 +97,7 @@ try {
               `,
             );
             await page.waitForFunction(
-              "document.querySelector('h1')?.textContent.includes('Check your answers')",
+              "Array.from(document.querySelectorAll('h1')).some(node => node.offsetParent !== null && node.textContent.includes('Check your answers'))",
             );
             assertEquals(
               await execute<string[]>(
@@ -93,10 +114,10 @@ try {
           } else if (state === "confirmation") {
             await execute(
               page,
-              "document.querySelector('[data-action=send]').click(); return true;",
+              "document.querySelector('#send-report, [data-action=send]').click(); return true;",
             );
             await page.waitForFunction(
-              "document.querySelector('h1')?.textContent.trim() === 'Report submitted'",
+              "Array.from(document.querySelectorAll('h1')).some(node => node.offsetParent !== null && node.textContent.trim() === 'Report submitted')",
             );
             assertEquals(
               await execute<string>(
@@ -172,6 +193,7 @@ try {
     componentSignatureEqual
   ).length;
   const report = {
+    generationMode: independentMode ? "independent" : "coordinated",
     browser: `Chromium ${browser.version()}`,
     designSystem: "GOV.UK Frontend 6.4.0",
     builds: builds.map(({ name }) => name),
@@ -190,7 +212,12 @@ try {
     `${JSON.stringify(report, null, 2)}\n`,
   );
   console.log(JSON.stringify(report, null, 2));
-  assert(report.passed, "The design consistency benchmark did not meet its threshold");
+  if (!independentMode) {
+    assert(
+      report.passed,
+      "The design consistency benchmark did not meet its threshold",
+    );
+  }
 } finally {
   await browser?.close();
   await Promise.all(servers.map((server) => server.shutdown()));
@@ -215,7 +242,10 @@ function execute<T = unknown>(page: Page, script: string): Promise<T> {
   return page.evaluate(script) as Promise<T>;
 }
 
-async function assertAccessibleShell(page: Page): Promise<void> {
+async function assertAccessibleShell(
+  page: Page,
+  requireOneHeading: boolean,
+): Promise<void> {
   const result = await execute<Record<string, unknown>>(
     page,
     `
@@ -229,14 +259,29 @@ async function assertAccessibleShell(page: Page): Promise<void> {
       };
     `,
   );
-  assertEquals(result, {
-    headingCount: 1,
-    mainCount: 1,
-    skipLinkCount: 1,
-    styleElementCount: 0,
-    styleAttributeCount: 0,
-    stylesheet: "/assets/govuk-frontend.min.css",
-  });
+  if (requireOneHeading) {
+    assertEquals(result, {
+      headingCount: 1,
+      mainCount: 1,
+      skipLinkCount: 1,
+      styleElementCount: 0,
+      styleAttributeCount: 0,
+      stylesheet: "/assets/govuk-frontend.min.css",
+    });
+    return;
+  }
+  assert(Number(result.headingCount) >= 1, "The page must contain a heading");
+  assert(result.mainCount === 1, "The page must contain one main landmark");
+  assert(result.skipLinkCount === 1, "The page must contain one skip link");
+  assert(result.styleElementCount === 0, "The page must not contain custom styles");
+  assert(
+    result.styleAttributeCount === 0,
+    "The page must not contain style attributes",
+  );
+  assert(
+    result.stylesheet === "/assets/govuk-frontend.min.css",
+    "The page must use the pinned stylesheet route",
+  );
 }
 
 function componentSignature(page: Page): Promise<string> {

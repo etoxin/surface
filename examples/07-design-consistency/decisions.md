@@ -36,7 +36,8 @@ before capture so navigation history does not create a false visual mismatch.
 
 ## Limitation
 
-The checked-in implementations are separate architectures produced during one
-development run. They establish the benchmark harness, not independent model-to-model
-evidence. A later run should regenerate each build in a clean workspace with a fresh
-agent and compare it with the Markdown-only control described in the roadmap.
+The original implementations are separate architectures produced during one development
+run. The additional `independent-builds` were produced by three isolated agents that
+could read only the frozen generation inputs and their own output. This provides the
+first independent-generation evidence, but it remains one three-agent sample using one
+model family. The Markdown-only control described in the roadmap is still needed.

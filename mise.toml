@@ -86,6 +86,11 @@ description = "Check the three rung-7 design builds"
 depends = ["deps"]
 run = "deno task design-consistency"
 
+[tasks."design-independent"]
+description = "Measure the three independently generated rung-7 builds"
+depends = ["deps"]
+run = "deno task design-independent"
+
 [tasks."design-browser-install"]
 description = "Install the pinned Chromium browser for the rung-7 visual benchmark"
 depends = ["deps"]
@@ -95,6 +100,11 @@ run = "deno task design-browser-install"
 description = "Capture and compare the rung-7 browser screenshots"
 depends = ["design-browser-install"]
 run = "deno task design-visual"
+
+[tasks."design-independent-visual"]
+description = "Capture and compare the independent rung-7 browser screenshots"
+depends = ["design-browser-install", "design-independent"]
+run = "deno task design-independent-visual"
 
 [tasks."design-build-1"]
 description = "Run the render-functions design build on port 8020"

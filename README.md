@@ -99,6 +99,8 @@ mise run todo-list
 mise run signup-determinism
 mise run design-consistency
 mise run design-visual
+mise run design-independent
+mise run design-independent-visual
 mise run url-shortener
 mise run file-converter
 INVENTORY_API_TOKEN=development PAYMENT_API_TOKEN=development mise run online-checkout
@@ -149,9 +151,9 @@ The Static FAQ runs at `http://localhost:8002/faq`; the Contact Viewer runs at
 `http://localhost:8004/`, the File Converter at `http://localhost:8005/`, the Online
 Checkout at `http://localhost:8006/checkout`, and the Multi-tenant Project Tracker at
 `http://localhost:8007/`. The three signup builds run at `http://localhost:8010/`,
-`http://localhost:8011/`, and `http://localhost:8012/`.
-The three design-consistency builds run at `http://localhost:8020/`,
-`http://localhost:8021/`, and `http://localhost:8022/`.
+`http://localhost:8011/`, and `http://localhost:8012/`. The three design-consistency
+builds run at `http://localhost:8020/`, `http://localhost:8021/`, and
+`http://localhost:8022/`.
 
 Surface 0.1 is frozen. Roadmap applications must use its documented grammar; missing
 capabilities become evidence for a later language version rather than new 0.1 syntax.
