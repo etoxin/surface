@@ -341,6 +341,93 @@ screen "second" { use (interface)"second" }
   );
 });
 
+Deno.test("application stacks preserve targets and open technology roles", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1"
+application "commerce" {
+    purpose "Sell products."
+    stack "frontend" {
+        context "The customer-facing application."
+        target "browser" {
+            context "Support modern browsers."
+        }
+        technology "language" "typescript" version="5.9" {
+            context "Compile with strict type checking."
+        }
+        technology "framework" "react" version="19"
+    }
+    stack "api" {
+        target "server"
+        technology "language" "typescript"
+        technology "runtime" "deno"
+    }
+}
+screen "home" { context "Render the shop." }
+`;
+
+  const result = parseSurface(source, "application-stacks.kdl");
+  assertEquals(result.diagnostics, []);
+  assert(result.ir !== null);
+  assertEquals(result.ir.application.stacks, [
+    {
+      id: "frontend",
+      target: "browser",
+      technologies: [
+        { role: "language", name: "typescript", version: "5.9" },
+        { role: "framework", name: "react", version: "19" },
+      ],
+    },
+    {
+      id: "api",
+      target: "server",
+      technologies: [
+        { role: "language", name: "typescript" },
+        { role: "runtime", name: "deno" },
+      ],
+    },
+  ]);
+  assert(!JSON.stringify(result.ir).includes("strict type checking"));
+});
+
+Deno.test("application stacks reject incomplete or ambiguous technology", () => {
+  const missingTarget = parseSurface(
+    `/- kdl-version 2
+surface "0.1"
+application "missingTarget" {
+    purpose "Reject an incomplete stack."
+    stack "web" { technology "language" "typescript" }
+}
+screen "home" { context "Render home." }
+`,
+    "missing-stack-target.kdl",
+  );
+  assert(missingTarget.diagnostics.some(({ code }) => code === "SURF-CHILD-001"));
+
+  const invalidTechnology = parseSurface(
+    `/- kdl-version 2
+surface "0.1"
+application "invalidTechnology" {
+    purpose "Reject ambiguous technology."
+    stack "web" {
+        target "browser"
+        technology "language" "typescript" version=5
+        technology "language" "typescript"
+    }
+    stack "web" {
+        target "server"
+        technology "language" "typescript"
+    }
+}
+screen "home" { context "Render home." }
+`,
+    "invalid-stack-technology.kdl",
+  );
+  assert(invalidTechnology.diagnostics.some(({ code }) => code === "SURF-PROP-004"));
+  assert(invalidTechnology.diagnostics.some(({ code }) => code === "SURF-ID-002"));
+  assertEquals(invalidTechnology.ir, null);
+});
+
 Deno.test("a screen does not need URL logic", () => {
   const source = `/- kdl-version 2
 
@@ -1129,6 +1216,10 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   );
   assertMatch(skill, /^---\nname: surface\ndescription: .+\n---/);
   assertMatch(skill, /surface "0\.1"/);
+  assertMatch(skill, /stack "web"/);
+  assertMatch(skill, /target "browser"/);
+  assertMatch(skill, /technology "language" "typescript"/);
+  assertMatch(skill, /optional quoted `version` property/);
   assertMatch(skill, /collection "contact"/);
   assertMatch(skill, /\(string\)"id"/);
   assertMatch(skill, /collection "contactLookup"/);

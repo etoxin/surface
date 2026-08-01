@@ -1,0 +1,10 @@
+/- kdl-version 2
+
+surface "0.1"
+application "todoList" {
+    purpose "Manage tasks."
+    stack "web" {
+        technology "language" "javascript"
+    }
+}
+screen "home" { context "Render tasks." }

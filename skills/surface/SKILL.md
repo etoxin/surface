@@ -1,6 +1,6 @@
 ---
 name: surface
-description: Create, edit, review, format, and validate Surface 0.1 application specifications written as KDL 2 files. Use for Surface files or repository work involving released application, typed value, collection, function, interface, screen, context, and ordered logic syntax.
+description: Create, edit, review, format, and validate Surface 0.1 application specifications written as KDL 2 files. Use for Surface files or repository work involving released application stacks, typed value, collection, function, interface, screen, context, and ordered logic syntax.
 ---
 
 # Surface
@@ -30,6 +30,12 @@ surface "0.1"
 
 application "contactViewer" {
     purpose "Display a contact selected by identifier."
+
+    stack "web" {
+        target "browser"
+        technology "language" "typescript"
+        technology "runtime" "deno"
+    }
 }
 
 collection "contact" {
@@ -86,7 +92,31 @@ application "helloWorld" {
 ```
 
 An application and purpose take one quoted string, have no properties, and may
-contain `context`. The application ID is not a display title.
+contain `context`. The application ID is not a display title. An application
+may also contain uniquely named stacks:
+
+```kdl
+application "todoList" {
+    purpose "Manage personal tasks."
+    stack "web" {
+        target "browser"
+        technology "markup" "html"
+        technology "styling" "css"
+        technology "language" "javascript"
+        technology "storage" "browserMemory"
+        technology "packaging" "singleFile"
+    }
+}
+```
+
+Every stack takes one lower-camel-case ID, has no properties, and contains
+exactly one non-empty string `target` plus one or more `technology` nodes. A
+technology takes an open-ended lower-camel-case role followed by a non-empty
+name. It may have an optional quoted `version` property. Multiple technologies
+may share a role, but a role-and-name pair cannot be duplicated within one
+stack. Stack, target, and technology nodes may contain context. Do not invent
+fixed framework, database, build, or deployment child nodes; express these as
+technology roles.
 
 A value puts its portable type annotation on the node. It is constant by
 default; add bare `variable` last for mutable state. A compatible scalar initial
@@ -357,6 +387,8 @@ only advisory.
 - The file parses as KDL 2 and begins with the required marker.
 - `surface "0.1"` occurs once as the first semantic node.
 - Exactly one application and at least one screen exist.
+- Every application stack has a unique ID, exactly one target, and at least one
+  technology; technology versions are quoted strings when present.
 - Required arguments and children occur exactly as specified.
 - IDs and field names are valid and unique in their scopes.
 - Enum values contain at least one unique, non-empty quoted option.

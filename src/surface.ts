@@ -17,12 +17,25 @@ export interface SurfaceIr {
   application: {
     id: string;
     purpose: string;
+    stacks?: SurfaceStackIr[];
   };
   values?: SurfaceValueIr[];
   collections?: SurfaceCollectionIr[];
   functions?: SurfaceFunctionIr[];
   interfaces?: SurfaceInterfaceIr[];
   screens: SurfaceScreenIr[];
+}
+
+export interface SurfaceStackIr {
+  id: string;
+  target: string;
+  technologies: SurfaceTechnologyIr[];
+}
+
+export interface SurfaceTechnologyIr {
+  role: string;
+  name: string;
+  version?: string;
 }
 
 export interface SurfaceValueIr {
@@ -398,19 +411,21 @@ function validateApplication(node: Node, add: AddDiagnostic): void {
 
   const children = node.children?.nodes ?? [];
   const purposes = children.filter((child) => child.getName() === "purpose");
+  const stacks = children.filter((child) => child.getName() === "stack");
   for (const child of children) {
     if (child.getName() === "context") {
       validateContextNode(child, declaration, add);
       continue;
     }
 
-    if (child.getName() !== "purpose") {
+    if (child.getName() !== "purpose" && child.getName() !== "stack") {
       add({
         code: "SURF-CHILD-002",
         message: `Unknown child node ${child.getName()} in ${declaration}.`,
         element: child,
         declaration,
-        suggestion: "Use one purpose child and optional context children.",
+        suggestion:
+          "Use one purpose, optional stack children, and optional context children.",
       });
     }
   }
@@ -427,6 +442,142 @@ function validateApplication(node: Node, add: AddDiagnostic): void {
 
   for (const purpose of purposes) {
     validateLeafStringNode(purpose, "purpose", declaration, add);
+  }
+
+  const stackIdentities = new Set<string>();
+  for (const stack of stacks) {
+    validateStack(stack, declaration, add);
+    validateIdentity(stack, stackIdentities, add);
+  }
+}
+
+function validateStack(
+  node: Node,
+  applicationDeclaration: string,
+  add: AddDiagnostic,
+): void {
+  const id = node.getArgument(0);
+  const declaration = `${applicationDeclaration}.stack.${
+    typeof id === "string" ? id : "?"
+  }`;
+  validateNoTag(node, add, declaration);
+  validateArguments(node, 1, declaration, add, true);
+  validateProperties(node, [], declaration, add);
+
+  const children = node.children?.nodes ?? [];
+  const targets = children.filter((child) => child.getName() === "target");
+  const technologies = children.filter((child) => child.getName() === "technology");
+  for (const child of children) {
+    if (child.getName() === "context") {
+      validateContextNode(child, declaration, add);
+    } else if (child.getName() !== "target" && child.getName() !== "technology") {
+      add({
+        code: "SURF-CHILD-002",
+        message: `Unknown child node ${child.getName()} in ${declaration}.`,
+        element: child,
+        declaration,
+        suggestion: "Use one target, technology entries, and optional context.",
+      });
+    }
+  }
+
+  if (targets.length !== 1) {
+    add({
+      code: "SURF-CHILD-001",
+      message: `${declaration} must contain exactly one target child node.`,
+      element: targets[1] ?? node,
+      declaration,
+      suggestion: 'Add target "browser" exactly once.',
+    });
+  }
+  for (const target of targets) {
+    validateLeafStringNode(target, "target", declaration, add);
+    const value = target.getArgument(0);
+    if (typeof value === "string" && value.length === 0) {
+      add({
+        code: "SURF-ARG-002",
+        message: `${declaration}.target must not be empty.`,
+        element: target.getArgumentEntry(0),
+        declaration,
+        suggestion: 'Use a target such as "browser", "server", or "cloud".',
+      });
+    }
+  }
+
+  if (technologies.length === 0) {
+    add({
+      code: "SURF-CHILD-003",
+      message: `${declaration} must contain at least one technology child node.`,
+      element: node,
+      declaration,
+      suggestion: 'Add technology "language" "typescript".',
+    });
+  }
+
+  const seenTechnologies = new Set<string>();
+  for (const technology of technologies) {
+    validateTechnology(technology, declaration, add);
+    const role = technology.getArgument(0);
+    const name = technology.getArgument(1);
+    if (typeof role !== "string" || typeof name !== "string") continue;
+    const identity = `${role}\u0000${name}`;
+    if (seenTechnologies.has(identity)) {
+      add({
+        code: "SURF-ID-002",
+        message: `Duplicate technology ${role} ${name} in ${declaration}.`,
+        element: technology,
+        declaration,
+        suggestion: "Remove or rename one of the duplicate technologies.",
+      });
+    }
+    seenTechnologies.add(identity);
+  }
+}
+
+function validateTechnology(
+  node: Node,
+  stackDeclaration: string,
+  add: AddDiagnostic,
+): void {
+  const subject = `${stackDeclaration}.technology`;
+  validateNoTag(node, add, stackDeclaration);
+  validateArguments(node, 2, subject, add);
+  validateProperties(node, ["version"], subject, add, [], {
+    version: "string",
+  });
+  validateOnlyContextChildren(node, subject, add);
+
+  const role = node.getArgument(0);
+  if (typeof role !== "string" || !IDENTIFIER_PATTERN.test(role)) {
+    add({
+      code: typeof role === "string" ? "SURF-ID-001" : "SURF-ARG-002",
+      message: `${subject} role must be a lower-camel-case string.`,
+      element: node.getArgumentEntry(0) ?? node,
+      declaration: stackDeclaration,
+      suggestion: 'Use a role such as "language" or "packageManager".',
+    });
+  }
+
+  const name = node.getArgument(1);
+  if (typeof name !== "string" || name.length === 0) {
+    add({
+      code: "SURF-ARG-002",
+      message: `${subject} name must be a non-empty string.`,
+      element: node.getArgumentEntry(1) ?? node,
+      declaration: stackDeclaration,
+      suggestion: 'Use a technology name such as "typescript" or "postgresql".',
+    });
+  }
+
+  const version = node.getProperty("version");
+  if (typeof version === "string" && version.length === 0) {
+    add({
+      code: "SURF-PROP-004",
+      message: `Property version on ${subject} must not be empty.`,
+      element: node.getPropertyEntry("version") ?? node,
+      declaration: stackDeclaration,
+      suggestion: 'Use version="2" or remove the property.',
+    });
   }
 }
 
@@ -1869,6 +2020,7 @@ function buildIr(document: Document): SurfaceIr {
     applicationChildren.findNodeByName("purpose"),
     "application purpose",
   );
+  const stacks = applicationChildren.findNodesByName("stack");
   const values = document.nodes.filter((node) => node.getName() === "value");
   const collections = document.nodes.filter((node) => node.getName() === "collection");
   const functions = document.nodes.filter((node) => node.getName() === "function");
@@ -1882,6 +2034,37 @@ function buildIr(document: Document): SurfaceIr {
     application: {
       id: expectString(application.getArgument(0), "application identifier"),
       purpose: expectString(purpose.getArgument(0), "application purpose"),
+      ...(stacks.length === 0 ? {} : {
+        stacks: stacks.map((stack) => {
+          const children = expectChildren(stack, "application stack");
+          const target = expectNode(
+            children.findNodeByName("target"),
+            "stack target",
+          );
+          return {
+            id: expectString(stack.getArgument(0), "stack identifier"),
+            target: expectString(target.getArgument(0), "stack target"),
+            technologies: children.findNodesByName("technology").map(
+              (technology) => {
+                const version = technology.getProperty("version");
+                return {
+                  role: expectString(
+                    technology.getArgument(0),
+                    "technology role",
+                  ),
+                  name: expectString(
+                    technology.getArgument(1),
+                    "technology name",
+                  ),
+                  ...(version === undefined ? {} : {
+                    version: expectString(version, "technology version"),
+                  }),
+                };
+              },
+            ),
+          };
+        }),
+      }),
     },
     ...(values.length === 0 ? {} : {
       values: values.map((value) => {

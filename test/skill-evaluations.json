@@ -4,9 +4,10 @@
   "cases": [
     {
       "id": "create",
-      "prompt": "Create a Surface personal todo list at /. It starts empty, rejects blank task text, and groups every task as Open, Completed, or Archived. Users can add, complete, reopen, and archive tasks, and every group shows a current count.",
+      "prompt": "Create a Surface personal todo list at /. The delivered application is one self-contained browser HTML file using CSS, JavaScript, browser-memory storage, and no framework. It starts empty, rejects blank task text, and groups every task as Open, Completed, or Archived. Users can add, complete, reopen, and archive tasks, and every group shows a current count.",
       "acceptance": [
         "The result is valid Surface 0.1 KDL with exactly one application and at least one screen.",
+        "The application declares a web stack targeting browser, with markup html, styling css, language javascript, storage browserMemory, and packaging singleFile technologies.",
         "A global (enum)value todoStatus declares exactly the unique quoted options open, completed, and archived.",
         "A constant number defaultPriority and variable array todos are declared as typed values.",
         "A global todo collection uses date, number, and array fields and its enum status field has the checked (value)todoStatus reference.",
@@ -26,15 +27,16 @@
         "The existing interface logic is minimally updated to request confirmation and invoke deleteTodo for an archived task.",
         "The existing enum value and todo status value reference are preserved unchanged.",
         "No workflow, structured state, transition, behaviour, event, action, button, or other unreleased node is added.",
-        "The application, screen, existing intent, formatting, and unrelated content are preserved.",
+        "The application stack, screen, existing intent, formatting, and unrelated content are preserved.",
         "The result remains valid Surface 0.1 KDL."
       ]
     },
     {
       "id": "diagnose",
-      "prompt": "Diagnose a Todo List Surface file whose (enum)value todoStatus is empty, whose Boolean field has a (value) constraint, whose enum field references a missing value, and whose screen sets route=\"/\".",
+      "prompt": "Diagnose a Todo List Surface file whose web stack has no target and uses technology \"language\" \"javascript\" version=2026, whose (enum)value todoStatus is empty, whose Boolean field has a (value) constraint, whose enum field references a missing value, and whose screen sets route=\"/\".",
       "acceptance": [
-        "The response identifies the empty enum value, constraint on a Boolean field, unresolved value reference, and route property as invalid Surface.",
+        "The response identifies the missing stack target, numeric technology version, empty enum value, constraint on a Boolean field, unresolved value reference, and route property as invalid Surface.",
+        "It explains that every stack needs exactly one target and technology version is an optional quoted string.",
         "It explains that enum is a value primitive with at least one unique quoted option and that enum fields require one checked value reference.",
         "It replaces the legacy screen route property with inline logic describing the URL path.",
         "The response distinguishes valid KDL from valid Surface.",

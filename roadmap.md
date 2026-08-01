@@ -274,6 +274,9 @@ Build a personal todo list with open, completed, and archived tasks.
 
 Introduces:
 
+- application `stack` declarations with one target and open-ended technology
+  roles;
+- technology choices and optional versions in the semantic IR;
 - `value` declarations for constants and variables;
 - a broad set of portable types shared by values and collection fields;
 - the `enum` primitive with unique quoted options;
@@ -305,6 +308,7 @@ Delivered in:
 - [`examples/05-todo-list/invalid/`](./examples/05-todo-list/invalid/);
 - [`examples/05-todo-list/app/index.html`](./examples/05-todo-list/app/index.html);
 - [Rung 5 decisions and acceptance scenarios](./examples/05-todo-list/decisions.md);
+- [Technology stack guide](./docs/node_stack.md);
 - [Portable type guide](./docs/primitives.md);
 - [Value and enum guide](./docs/node_value.md);
 - [Collection guide](./docs/node_collection.md);

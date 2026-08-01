@@ -4,6 +4,15 @@ surface "0.1"
 
 application "todoList" {
     purpose "Manage personal tasks as open, completed, or archived."
+
+    stack "web" {
+        target "browser"
+        technology "markup" "html"
+        technology "styling" "css"
+        technology "language" "javascript"
+        technology "storage" "browserMemory"
+        technology "packaging" "singleFile"
+    }
 }
 
 (number)value "defaultPriority" 1

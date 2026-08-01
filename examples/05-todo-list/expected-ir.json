@@ -2,7 +2,35 @@
   "surfaceVersion": "0.1",
   "application": {
     "id": "todoList",
-    "purpose": "Manage personal tasks as open, completed, or archived."
+    "purpose": "Manage personal tasks as open, completed, or archived.",
+    "stacks": [
+      {
+        "id": "web",
+        "target": "browser",
+        "technologies": [
+          {
+            "role": "markup",
+            "name": "html"
+          },
+          {
+            "role": "styling",
+            "name": "css"
+          },
+          {
+            "role": "language",
+            "name": "javascript"
+          },
+          {
+            "role": "storage",
+            "name": "browserMemory"
+          },
+          {
+            "role": "packaging",
+            "name": "singleFile"
+          }
+        ]
+      }
+    ]
   },
   "values": [
     {

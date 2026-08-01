@@ -1,5 +1,13 @@
 # Todo List Decisions
 
+## Declaring the Technology Stack
+
+The application declares one `web` stack targeting the browser. Its technology
+entries make the example's HTML, CSS, JavaScript, in-memory storage, and
+single-file packaging explicit. These are implementation constraints rather
+than framework-specific Surface nodes. Deno remains only a local file server,
+so it is not part of the delivered application's stack.
+
 ## Adding Values and Portable Types
 
 The Todo List introduces the `value` declaration. `defaultPriority` is a number

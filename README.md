@@ -1,7 +1,8 @@
 # Surface
 
 Surface is a small, human- and LLM-readable KDL format for describing an
-application without choosing its framework or detailed UI syntax.
+application, including optional technology choices, without prescribing
+detailed UI syntax.
 
 **Status:** draft · **Version:** 0.1 · **Syntax:** KDL 2 · **Extension:** `.kdl`
 
@@ -33,20 +34,22 @@ may instead contain context or logic for non-visual behaviour.
 1. [Writing Surface](./docs/README.md)
 2. [Starting a Surface file](./docs/node_surface.md)
 3. [Describing the application](./docs/node_application.md)
-4. [Portable types](./docs/primitives.md)
-5. [Defining values and enums](./docs/node_value.md)
-6. [Defining data](./docs/node_collection.md)
-7. [Defining functions](./docs/node_function.md)
-8. [Describing an interface](./docs/node_interface.md)
-9. [Adding screens](./docs/node_screen.md)
-10. [Adding prompt context](./docs/node_context.md)
-11. [Adding ordered logic](./docs/node_logic.md)
-12. [Application roadmap](./roadmap.md)
+4. [Choosing the technology stack](./docs/node_stack.md)
+5. [Portable types](./docs/primitives.md)
+6. [Defining values and enums](./docs/node_value.md)
+7. [Defining data](./docs/node_collection.md)
+8. [Defining functions](./docs/node_function.md)
+9. [Describing an interface](./docs/node_interface.md)
+10. [Adding screens](./docs/node_screen.md)
+11. [Adding prompt context](./docs/node_context.md)
+12. [Adding ordered logic](./docs/node_logic.md)
+13. [Application roadmap](./roadmap.md)
 
 ## Current Syntax
 
 - A file starts with `/- kdl-version 2`, then one `surface "0.1"` and one
-  `application` containing a `purpose`.
+  `application` containing a `purpose`. Optional named `stack` nodes record
+  each target and its open-ended technology choices.
 - `(type)value "id"` declares a constant by default; a bare trailing `variable`
   marks mutable state. `(enum)value` contains unique quoted options.
 - `collection` fields use the same portable type annotations as values. Fields

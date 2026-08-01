@@ -41,7 +41,22 @@ purpose "Display a greeting." {
 An application can contain:
 
 - exactly one `purpose`;
+- any number of uniquely named `stack` nodes;
 - any number of prompt-only `context` notes.
+
+A stack records the implementation target and technology choices without
+giving frameworks special syntax:
+
+```kdl
+stack "web" {
+    target "browser"
+    technology "language" "javascript"
+    technology "storage" "browserMemory"
+}
+```
+
+Stacks are optional, so an application can leave implementation choices open.
+See [choosing the technology stack](./node_stack.md) for the complete rules.
 
 It cannot contain screens. Screens are separate top-level declarations,
 usually written after the application:
@@ -61,4 +76,5 @@ screen "home" {
 ```
 
 The referenced interface is a separate top-level declaration. Continue with
+[choosing the technology stack](./node_stack.md) or
 [describing an interface](./node_interface.md).
