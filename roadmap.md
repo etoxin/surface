@@ -17,7 +17,7 @@ node distinguishes a Surface document from other KDL documents.
 
 ## Guiding Rules
 
-1. Begin with observable application behavior.
+1. Begin with observable application behaviour.
 2. Attempt to express it using existing Surface features.
 3. Add the smallest general feature that removes the blocking limitation.
 4. Avoid adding syntax solely for a hypothetical future application.
@@ -31,6 +31,24 @@ node distinguishes a Surface document from other KDL documents.
    teaches.
 10. Add or update human-facing node documentation in `docs/` in the same rung
     as the syntax it describes.
+
+## Vocabulary Boundaries
+
+- `context` is universal prompt guidance. It explains intent, constraints, and
+  implementation considerations, but is not executable syntax.
+- `function` is a named callable capability with an optional `input` and one
+  `output`. A function may describe computation, an HTTP request, encryption,
+  persistence, or another operation when invocation and output are the useful
+  model.
+- `behaviour` is reserved for a named reaction to a trigger. A behaviour may
+  change observable state, invoke functions, or emit and respond to events.
+  It should not become a generic container for function implementation notes.
+- `algorithm` is reserved for a function child that prescribes a computational
+  method or ordered steps. Use `context` until an application needs stronger,
+  machine-checkable algorithm semantics.
+
+Do not release `behaviour` or `algorithm` merely to restate context. Introduce
+them only when a roadmap application requires their distinct semantics.
 
 ## Completion Gate
 
@@ -47,7 +65,7 @@ Each application is complete when:
   rung;
 - the application can be implemented from the specification;
 - implementation assumptions are recorded as decisions;
-- the application has at least one observable acceptance scenario when behavior
+- the application has at least one observable acceptance scenario when behaviour
   is present;
 - the Surface LLM skill documents the newly supported syntax;
 - the skill does not expose syntax from future rungs;
@@ -211,16 +229,18 @@ Build a counter that a visitor can increment and reset.
 Introduces:
 
 - `actor` declarations;
-- `behavior` declarations;
+- `behaviour` declarations for triggered reactions;
 - `event` declarations;
 - `scenario` declarations;
 - numeric values;
 - preconditions and effects;
 - emitted events;
-- behavior errors;
+- behaviour errors;
 - observable state changes.
 
-This is the first application with mutation and acceptance behavior.
+This is the first application with mutation and acceptance behaviour. It should
+establish how a behaviour is triggered, how it invokes functions, and how its
+observable effects differ from function output and explanatory context.
 
 ### 5. Todo List
 
@@ -232,14 +252,14 @@ Introduces:
 - `enum` declarations;
 - `workflow` declarations;
 - default field values;
-- multiple behaviors and functions;
+- multiple behaviours and functions;
 - workflow states and transitions;
 - initial states;
 - transition invariants;
 - reusable domain values.
 
-This stage should determine how workflows relate to collection fields and behavior
-effects without duplicating the same fact.
+This stage should determine how workflows relate to collection fields and
+behaviour effects without duplicating the same fact.
 
 ### 6. Signup Form
 
@@ -269,7 +289,7 @@ Introduces:
 - allow and deny rules;
 - authorization failures;
 - negative acceptance scenarios;
-- policy references from behaviors, functions, and screens.
+- policy references from behaviours, functions, and screens.
 
 ### 8. URL Shortener API
 
@@ -302,7 +322,7 @@ Introduces:
 - integration operations;
 - timeouts and retry limits;
 - idempotency;
-- transient and permanent failure behavior;
+- transient and permanent failure behaviour;
 - required secret names without secret values.
 
 ### 10. Expense Approval
@@ -333,7 +353,12 @@ Introduces:
 - extension inputs and outputs;
 - implementation constraints;
 - extension dependencies;
-- timeout and failure behavior for custom capabilities.
+- timeout and failure behaviour for custom capabilities.
+
+This stage should test whether `context` is sufficient to describe conversion
+logic. Introduce an `algorithm` child on `function` only if the implementation
+needs an ordered or normative computational method that context cannot express
+reliably.
 
 ### 12. Secure Document Vault
 
@@ -368,7 +393,7 @@ covered by at least one application.
 
 ### 14. Modular Help Desk
 
-Build a help-desk application split across domain, behavior, interface, screen,
+Build a help-desk application split across domain, behaviour, interface, screen,
 scenario, and operational files.
 
 Introduces:
@@ -393,7 +418,7 @@ Exercises together:
 - payment and inventory integrations;
 - chained workflows;
 - asynchronous jobs;
-- idempotent payment behavior;
+- idempotent payment behaviour;
 - external failures and compensation;
 - authorization policies;
 - unresolved product decisions;
@@ -429,11 +454,11 @@ Tests future needs for:
 - concurrent edits;
 - conflict resolution;
 - event ordering;
-- offline behavior;
+- offline behaviour;
 - synchronization and eventual consistency.
 
 This application is expected to expose semantics beyond Surface 0.1 rather than
-forcing concurrency behavior into controlled natural language indefinitely.
+forcing concurrency behaviour into controlled natural language indefinitely.
 
 ### 18. Bank Transfer System
 
@@ -482,7 +507,7 @@ specification rather than only a documentation format.
 | `collection` | 3. Contact Viewer |
 | `function` | 3. Contact Viewer |
 | `actor` | 4. Click Counter |
-| `behavior` | 4. Click Counter |
+| `behaviour` | 4. Click Counter |
 | `event` | 4. Click Counter |
 | `scenario` | 4. Click Counter |
 | `value` | 5. Todo List |
