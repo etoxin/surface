@@ -57,7 +57,6 @@ export interface SurfaceLogicInstructionIr {
 
 export interface SurfaceScreenIr {
   id: string;
-  route?: string;
   interface?: string;
   logic?: SurfaceLogicInstructionIr[];
 }
@@ -569,10 +568,26 @@ function validateLogic(
 ): void {
   const subject = `${declaration}.logic`;
   validateNoTag(node, add, declaration);
-  validateArguments(node, 0, subject, add);
   validateProperties(node, [], subject, add);
 
-  const instructions = node.children?.nodes ?? [];
+  if (node.children === null) {
+    validateArguments(node, 1, subject, add);
+    const instruction = node.getArgumentEntry(0);
+    if (instruction !== undefined && typeof instruction.getValue() !== "string") {
+      add({
+        code: "SURF-ARG-002",
+        message: "Inline logic must contain one quoted instruction string.",
+        element: instruction,
+        declaration,
+        suggestion: 'Write logic "Describe the required operation.".',
+      });
+    }
+    return;
+  }
+
+  validateArguments(node, 0, subject, add);
+
+  const instructions = node.children.nodes;
   if (instructions.length === 0) {
     add({
       code: "SURF-CHILD-003",
@@ -704,7 +719,7 @@ function validateInterface(node: Node, add: AddDiagnostic): void {
 function validateScreen(node: Node, add: AddDiagnostic): void {
   const declaration = declarationName(node);
   validateArguments(node, 1, declaration, add, true);
-  validateProperties(node, ["route"], declaration, add);
+  validateProperties(node, [], declaration, add);
 
   const children = node.children?.nodes ?? [];
   const uses = children.filter((child) => child.getName() === "use");
@@ -1492,7 +1507,6 @@ function buildIr(document: Document): SurfaceIr {
       }),
     }),
     screens: screens.map((screen) => {
-      const route = optionalString(screen.getProperty("route"), "screen route");
       const screenChildren = expectChildren(screen, "screen");
       const interfaceUse = screenChildren.findNodeByName("use");
       const interfaceId = interfaceUse === undefined
@@ -1501,7 +1515,6 @@ function buildIr(document: Document): SurfaceIr {
       const logic = buildLogicIr(screen);
       return {
         id: expectString(screen.getArgument(0), "screen identifier"),
-        ...(route === undefined ? {} : { route }),
         ...(interfaceId === undefined ? {} : { interface: interfaceId }),
         ...(logic === undefined ? {} : { logic }),
       };
@@ -1513,6 +1526,14 @@ function buildLogicIr(node: Node): SurfaceLogicInstructionIr[] | undefined {
   const logic = node.children?.findNodeByName("logic");
   if (logic === undefined) {
     return undefined;
+  }
+  if (logic.children === null) {
+    return [{
+      instruction: expectString(
+        logic.getArgument(0),
+        `${node.getName()} inline logic`,
+      ),
+    }];
   }
   return expectChildren(logic, `${node.getName()} logic`).nodes.map(
     (instruction): SurfaceLogicInstructionIr => {
@@ -1580,11 +1601,4 @@ function expectPrimitiveType(
     throw new Error(`Validated ${subject} is not a primitive type.`);
   }
   return type as PrimitiveType;
-}
-
-function optionalString(
-  value: Primitive | undefined,
-  subject: string,
-): string | undefined {
-  return value === undefined ? undefined : expectString(value, subject);
 }

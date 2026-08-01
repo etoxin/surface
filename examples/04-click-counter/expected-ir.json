@@ -26,8 +26,12 @@
   "screens": [
     {
       "id": "home",
-      "route": "/",
-      "interface": "clickCounter"
+      "interface": "clickCounter",
+      "logic": [
+        {
+          "instruction": "Use / as this screen's URL path."
+        }
+      ]
     }
   ]
 }

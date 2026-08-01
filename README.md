@@ -18,14 +18,14 @@ interface "helloWorld" {
     context "Render a user interface with the title My app and the exact text: Hello, world!"
 }
 
-screen "home" route="/" {
+screen "home" {
     use (interface)"helloWorld"
 }
 ```
 
 An `interface` uses context to describe what a user should see and logic for
 ordered interaction. It does not prescribe sections, text nodes, buttons,
-inputs, or layout. A `screen` places one interface at an optional route. Screens
+inputs, or layout. A `screen` places an interface in the application. Screens
 may instead contain context or logic for non-visual behaviour.
 
 ## Documentation
@@ -49,15 +49,16 @@ may instead contain context or logic for non-visual behaviour.
   are required by default; the only modifier is `optional`.
 - `function` describes a named capability. It currently has one
   `output (collection)"id"`, an optional structured `input`, and may declare
-  function-private collections and one optional `logic` block.
+  function-private collections and one optional `logic` node.
 - `interface "id"` contains universal `context` and optional `logic`.
 - `screen "id"` contains either one `use (interface)"id"` plus optional
-  context or logic, or non-visual context or logic alone. Its `route` property
-  is optional.
+  context or logic, or non-visual context or logic alone. Screens have no
+  properties; describe a URL path with logic when needed.
 - `context [(type)"id"...] "prompt"` can be attached to any supported node.
   Its annotated strings are checked references to visible declarations.
 - `logic` contains ordered instructions. Each instruction is a quoted string,
-  optionally attached to one checked reference; operators stay inside strings.
+  optionally attached to one checked reference; a single instruction can use
+  `logic "..."`. Operators stay inside strings.
 - Declaration IDs and field names use lower camel case. Unknown or legacy
   syntax is rejected.
 

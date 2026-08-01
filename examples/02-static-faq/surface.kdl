@@ -19,13 +19,13 @@ interface "surfaceFaq" {
         Question: Is Surface a programming language?
         Answer: No. Surface is a specification format rather than an executable language.
 
-        Question: Does every screen need a route?
-        Answer: No. Add a route when a screen has a URL or similar address.
+        Question: How does a screen get a URL?
+        Answer: Describe the URL path in the screen's logic.
 
-        Leave it out for screens that are not addressable.
+        Leave that instruction out for screens that are not addressable.
         """
 }
 
-screen "faq" route="/faq" {
+screen "faq" {
     use (interface)"surfaceFaq"
 }

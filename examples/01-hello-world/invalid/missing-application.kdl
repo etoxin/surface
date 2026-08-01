@@ -3,4 +3,4 @@
 surface "0.1"
 
 interface "helloWorld" { context "Render a greeting." }
-screen "home" route="/" { use (interface)"helloWorld" }
+screen "home" { use (interface)"helloWorld" }

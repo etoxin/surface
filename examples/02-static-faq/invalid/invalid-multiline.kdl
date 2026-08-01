@@ -6,7 +6,7 @@ application "surfaceFaq" {
     purpose "Answer common questions about Surface."
 }
 
-screen "faq" route="/faq" {
+screen "faq" {
     section "What is Surface?" {
         text """Multiline text must start on the next line."""
     }

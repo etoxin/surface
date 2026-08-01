@@ -16,7 +16,7 @@ interface "helloWorld" {
     context "Render a user interface with the title My app and the exact text: Hello, world!"
 }
 
-screen "home" route="/" {
+screen "home" {
     use (interface)"helloWorld"
 }
 ```
@@ -55,8 +55,8 @@ Read the guides in order:
 8. [Adding ordered logic](./node_logic.md)
 
 Declaration IDs and field names start with a lowercase letter and use lower
-camel case, such as `contactViewer`. Purpose, routes, and context prompts are
-ordinary quoted strings.
+camel case, such as `contactViewer`. Purpose, context prompts, and logic
+instructions are ordinary quoted strings.
 
 Surface currently supports applications, read-only collections,
 single-collection functions, intent-driven interfaces, screens, and ordered

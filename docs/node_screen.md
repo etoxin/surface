@@ -8,7 +8,7 @@ interface "helloWorld" {
     context "Render a user interface with the exact text: Hello, world!"
 }
 
-screen "home" route="/" {
+screen "home" {
     use (interface)"helloWorld"
 }
 ```
@@ -18,14 +18,17 @@ screen "home" route="/" {
 `"home"` is the screen ID. It starts with a lowercase letter, should use lower
 camel case, and must be unique among screens.
 
-`route` is optional. Use it for a URL or similar address and omit it for a
-screen that is not independently addressable:
+Screens have no properties. When a screen needs a URL or similar address,
+describe it with inline [`logic`](./node_logic.md):
 
 ```kdl
 screen "contact" {
     use (interface)"contactViewer"
+    logic "Use /contacts as this screen's URL path."
 }
 ```
+
+Do not write `route="/contacts"`; `route` is legacy syntax.
 
 A visual screen uses exactly one checked interface reference:
 
@@ -42,17 +45,18 @@ states belong in the referenced interface's prompt context.
 
 ## Non-Visual Screens
 
-A screen can contain logic when its route has no interface of its own:
+A screen can contain logic when it has no interface of its own:
 
 ```kdl
-screen "home" route="/" {
+screen "home" {
     logic {
+        "Use / as this screen's URL path."
         (screen)"contact" "Open this screen."
     }
 }
 ```
 
-This gives the screen one ordered, normative instruction without introducing a
-special redirect node. Screens may contain `context`, at most one
-[`logic`](./node_logic.md) block, or both. A screen must use an interface or
+This gives the screen ordered, normative instructions without introducing a
+special redirect node or route property. Screens may contain `context`, at most
+one [`logic`](./node_logic.md) node, or both. A screen must use an interface or
 contain context or logic; a completely empty screen is invalid.

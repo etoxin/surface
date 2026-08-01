@@ -62,14 +62,16 @@ interface "contactViewer" {
     }
 }
 
-screen "home" route="/" {
+screen "home" {
     logic {
+        "Use / as this screen's URL path."
         (screen)"contact" "Open this screen."
     }
 }
 
-screen "contact" route="/contacts" {
+screen "contact" {
     use (interface)"contactViewer"
+    logic "Use /contacts as this screen's URL path."
 }
 ```
 
@@ -105,7 +107,7 @@ A function is a named computation or capability. It may represent a database
 lookup, HTTP request, file read, calculation, or another implementation. The
 current syntax gives it one ID, no properties, zero or more private collections,
 zero or one structured input, exactly one collection output, and at most one
-logic block:
+logic node:
 
 ```kdl
 function "contactById" {
@@ -136,7 +138,7 @@ interface "helloWorld" {
 ```
 
 An interface takes one ID, has no properties, and accepts `context` plus at
-most one `logic` block. Do not add `section`, `title`, `text`, `field`, `input`,
+most one `logic` node. Do not add `section`, `title`, `text`, `field`, `input`,
 `button`, `selector`, or component children. The implementing LLM or person
 chooses copy, layout, and controls consistent with the context and logic.
 
@@ -161,12 +163,13 @@ Do not invent `actor`, `behaviour`, `event`, `scenario`, `state`, `action`, or
 numeric field syntax. Use additional released declarations only when the
 application needs shared data or a separately callable capability.
 
-Declare at least one screen. A screen takes one ID, an optional quoted `route`,
-and one interface use, context, logic, or a combination of those children:
+Declare at least one screen. A screen takes one ID, has no properties, and
+contains one interface use, context, logic, or a combination of those children:
 
 ```kdl
-screen "home" route="/" {
+screen "home" {
     use (interface)"helloWorld"
+    logic "Use / as this screen's URL path."
 }
 
 screen "redirectHome" {
@@ -177,9 +180,10 @@ screen "redirectHome" {
 ```
 
 `use` accepts exactly one checked `(interface)` reference. A screen cannot have
-multiple uses, cannot have multiple logic blocks, and cannot be empty. Use
+multiple uses, cannot have multiple logic nodes, and cannot be empty. Use
 screen logic for ordered non-visual behavior; do not invent `redirect` or
-UI-state nodes.
+UI-state nodes. Express a URL or similar address with a logic instruction; do
+not use the legacy `route` property.
 
 Identifiers match `[a-z][A-Za-z0-9]*`, are case-sensitive, and should use lower
 camel case. Declaration IDs are unique within their type. Field names are
@@ -212,9 +216,15 @@ is a checked reference.
 
 ## Logic
 
-Add at most one non-empty `logic` block to a function, interface, or screen.
-Its child nodes are ordered, normative instructions retained in the semantic
-IR:
+Add at most one non-empty `logic` node to a function, interface, or screen. Use
+an inline node for one unreferenced instruction:
+
+```kdl
+logic "Use / as this screen's URL path."
+```
+
+Use a block for ordered instructions or checked references. Logic is retained
+in the semantic IR:
 
 ```kdl
 logic {
@@ -224,11 +234,12 @@ logic {
 }
 ```
 
-A plain instruction is a quoted node name with no arguments. A referenced
+A plain block instruction is a quoted node name with no arguments. A referenced
 instruction is an annotated quoted node name followed by exactly one
 unannotated quoted instruction. Its annotation is a checked `application`,
 `collection`, `function`, `interface`, or `screen` reference. Function logic
-can also reference private collections in that function.
+can also reference private collections in that function. Inline logic takes
+exactly one unannotated quoted instruction.
 
 Put every operator inside the instruction string, including `if`, comparisons,
 arithmetic, HTTP requests, emitting or listening for events, and errors. Do not
@@ -246,9 +257,9 @@ only advisory.
 - Collection fields use supported node annotations and only bare `optional`.
 - Private collections do not shadow globals.
 - Every typed reference resolves with the correct type and visibility.
-- Every logic block is non-empty, occurs at most once on its parent, preserves
+- Every logic node is non-empty, occurs at most once on its parent, preserves
   instruction order, and keeps operators inside strings.
-- Every interface contains only context children and at most one logic block.
+- Every interface contains only context children and at most one logic node.
 - Every screen has an interface use, context, or logic, never multiple uses or
   an empty body.
 - Properties are allowed only where documented and are not duplicated.

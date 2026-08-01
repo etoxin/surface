@@ -12,7 +12,6 @@
   "screens": [
     {
       "id": "faq",
-      "route": "/faq",
       "interface": "surfaceFaq"
     }
   ]

@@ -93,8 +93,10 @@
   "screens": [
     {
       "id": "home",
-      "route": "/",
       "logic": [
+        {
+          "instruction": "Use / as this screen's URL path."
+        },
         {
           "instruction": "Open this screen.",
           "reference": {
@@ -106,8 +108,12 @@
     },
     {
       "id": "contact",
-      "route": "/contacts",
-      "interface": "contactViewer"
+      "interface": "contactViewer",
+      "logic": [
+        {
+          "instruction": "Use /contacts as this screen's URL path."
+        }
+      ]
     }
   ]
 }

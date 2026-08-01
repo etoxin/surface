@@ -10,6 +10,6 @@ interface "helloWorld" {
     context 42
 }
 
-screen "home" route="/" {
+screen "home" {
     use (interface)"helloWorld"
 }

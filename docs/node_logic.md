@@ -4,6 +4,13 @@
 `interface`, or `screen`:
 
 ```kdl
+logic "Use / as this screen's URL path."
+```
+
+Use this inline form for one unreferenced instruction. Use a block for multiple
+instructions or checked references:
+
+```kdl
 logic {
     "Map over the input items."
     (collection)"contact" "If the active value is true, keep this item."
@@ -53,5 +60,6 @@ Do not create `if`, `else`, `expression`, `operator`, `request`, `emit`,
 not as Surface grammar.
 
 Each function, interface, or screen may contain at most one non-empty `logic`
-block. Instructions cannot have properties or child blocks. Use `context` for
-advice whose order and exact outcome are not normative.
+node. Inline logic takes exactly one unannotated string. Block instructions
+cannot have properties or child blocks. Use `context` for advice whose order
+and exact outcome are not normative.

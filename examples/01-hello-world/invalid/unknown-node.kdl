@@ -9,4 +9,4 @@ application "helloWorld" {
 component "greeting"
 
 interface "helloWorld" { context "Render a greeting." }
-screen "home" route="/" { use (interface)"helloWorld" }
+screen "home" { use (interface)"helloWorld" }

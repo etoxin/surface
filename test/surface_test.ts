@@ -208,7 +208,7 @@ interface "helloWorld" {
 context "Keep this prompt."
 }
 
-screen "home" route="/" {
+screen "home" {
 use (interface)"helloWorld"
 }
 `;
@@ -278,8 +278,8 @@ surface "0.1"
 application "ordered" { purpose "Check ordering." }
 interface "first" { context "Render the first interface." }
 interface "second" { context "Render the second interface." }
-screen "first" route="/first" { use (interface)"first" }
-screen "second" route="/second" { use (interface)"second" }
+screen "first" { use (interface)"first" }
+screen "second" { use (interface)"second" }
 `;
 
   const result = parseSurface(source, "ordered.kdl");
@@ -295,7 +295,7 @@ screen "second" route="/second" { use (interface)"second" }
   );
 });
 
-Deno.test("screen route is optional and omitted from the IR", () => {
+Deno.test("a screen does not need URL logic", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
@@ -315,26 +315,49 @@ screen "home" {
   });
 });
 
-Deno.test("a context-only screen can describe non-visual route behaviour", () => {
+Deno.test("the legacy screen route property is rejected", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
-application "routing" { purpose "Describe a routed application." }
-screen "home" route="/" {
-    context (screen)"contact" "Redirect to this screen."
+application "legacyRoute" { purpose "Reject the route property." }
+screen "home" route="/" { context "Render home." }
+`;
+
+  const result = parseSurface(source, "legacy-route.kdl");
+  assert(result.diagnostics.some(({ code }) => code === "SURF-PROP-003"));
+  assertEquals(result.ir, null);
+});
+
+Deno.test("a logic-only screen can describe non-visual navigation", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1"
+application "navigation" { purpose "Describe application navigation." }
+screen "home" {
+    logic {
+        "Use / as this screen's URL path."
+        (screen)"contact" "Open this screen."
+    }
 }
 interface "contact" { context "Render contact details." }
-screen "contact" route="/contacts" {
+screen "contact" {
     use (interface)"contact"
+    logic { "Use /contacts as this screen's URL path." }
 }
 `;
 
-  const result = parseSurface(source, "context-only-screen.kdl");
+  const result = parseSurface(source, "logic-only-screen.kdl");
   assertEquals(result.diagnostics, []);
   assert(result.ir !== null);
   assertEquals(result.ir.screens[0], {
     id: "home",
-    route: "/",
+    logic: [
+      { instruction: "Use / as this screen's URL path." },
+      {
+        instruction: "Open this screen.",
+        reference: { type: "screen", id: "contact" },
+      },
+    ],
   });
 
   const empty = parseSurface(
@@ -361,11 +384,11 @@ function "getContact" {
     context (collection)"lookup" (collection)"contact" (interface)"contact" (screen)"contact" "Use these declarations together."
     output (collection)"contact"
 }
-screen "home" route="/" {
+screen "home" {
     context (function)"getContact" (interface)"contact" (screen)"contact" "Delegate to these declarations."
 }
 interface "contact" { context "Render contact details." }
-screen "contact" route="/contacts" {
+screen "contact" {
     use (interface)"contact"
 }
 `;
@@ -725,7 +748,7 @@ purpose "Display a greeting."
 interface "helloWorld" {
 context "Render the exact text: Hello, world!"
 }
-screen "home" route="/" {
+screen "home" {
 use (interface)"helloWorld"
 }
 `;
@@ -758,7 +781,7 @@ Deno.test("the implemented FAQ page contains every ordered question", async () =
   const questions = [
     "What is Surface?",
     "Is Surface a programming language?",
-    "Does every screen need a route?",
+    "How does a screen get a URL?",
   ];
   const positions = questions.map((question) => html.indexOf(`<h2>${question}</h2>`));
 
@@ -772,7 +795,7 @@ Deno.test("the implemented FAQ page contains every ordered question", async () =
     html,
     /No\. Surface is a specification format rather than an executable language\./,
   );
-  assertMatch(html, /Leave it out for screens that are not addressable\./);
+  assertMatch(html, /Describe the URL path in the screen's logic\./);
 });
 
 Deno.test("the Contact Viewer implements selected, empty, and not-found states", () => {
@@ -795,7 +818,7 @@ Deno.test("the Contact Viewer implements selected, empty, and not-found states",
   assertMatch(missing, /No contact exists for the selected identifier/);
 });
 
-Deno.test("the Contact Viewer redirects its root URL to its declared route", async () => {
+Deno.test("the Contact Viewer follows its screen navigation logic", async () => {
   const root = handleContactRequest(new Request("http://localhost:8000/"));
   assertEquals(root.status, 302);
   assertEquals(root.headers.get("location"), "http://localhost:8000/contacts");
@@ -883,7 +906,7 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /interface "clickCounter"/);
   assertMatch(skill, /When Increment is activated, increase the current value by 1/);
   assertMatch(skill, /When Reset is activated, set the current value to 0/);
-  assertMatch(skill, /screen "home" route="\/"/);
+  assertMatch(skill, /"Use \/ as this screen's URL path\."/);
   assertMatch(
     skill,
     /\(screen\)"contact" "Open this screen\."/,

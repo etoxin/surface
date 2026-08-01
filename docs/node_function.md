@@ -27,7 +27,7 @@ function "contactById" {
 use lower camel case. Each function needs a different ID.
 
 Functions have no properties. Their `input` and `output` nodes use checked
-collection references. An optional [`logic`](./node_logic.md) block gives an
+collection references. An optional [`logic`](./node_logic.md) node gives an
 ordered, normative description of how the function produces its output, while
 [`context`](./node_context.md) supplies non-normative guidance.
 

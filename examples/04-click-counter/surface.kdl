@@ -17,6 +17,8 @@ interface "clickCounter" {
     }
 }
 
-screen "home" route="/" {
+screen "home" {
     use (interface)"clickCounter"
+
+    logic "Use / as this screen's URL path."
 }

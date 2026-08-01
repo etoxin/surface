@@ -7,8 +7,9 @@ the global `contact` collection. Typed string annotations make both references
 checkable. Ordered function logic explains the lookup and says a failed lookup
 produces null.
 
-The example implementation maps `/contacts?id=ada` to the input collection's
-`id` field. That URL mapping is an implementation choice, not Surface syntax.
+The contact screen's inline logic assigns `/contacts` as its URL path. The
+implementation's mapping from the `id=ada` query value to the input
+collection's `id` field remains an implementation choice.
 
 ## Interface and Screens
 
@@ -18,9 +19,9 @@ fields. Its logic references the function for the required missing-input and
 missing-result reactions. Surface leaves the exact controls, copy, and layout
 to the implementer.
 
-The `contact` screen uses that interface. The `home` screen uses logic to open
-the checked `(screen)"contact"` reference without adding structured redirect
-syntax.
+The `contact` screen uses that interface. The `home` screen uses block logic to
+assign `/` and open the checked `(screen)"contact"` reference without adding
+structured route or redirect syntax.
 
 Collection fields are required by default; only values that may be absent use
 the bare `optional` modifier. Storage and seed data are implementation choices.

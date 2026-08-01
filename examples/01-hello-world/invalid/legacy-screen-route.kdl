@@ -1,0 +1,6 @@
+/- kdl-version 2
+
+surface "0.1"
+application "helloWorld" { purpose "Display a greeting." }
+interface "helloWorld" { context "Render a greeting." }
+screen "home" route="/" { use (interface)"helloWorld" }

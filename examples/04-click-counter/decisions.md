@@ -10,7 +10,8 @@ function.
 Interface context describes the visual presentation. Its ordered logic block
 describes the initial value, increment action, reset action, and required
 updates precisely enough to implement and test the app. Conditions and
-arithmetic remain inside instruction strings.
+arithmetic remain inside instruction strings. The screen uses inline logic to
+assign `/` as its URL path rather than a dedicated property.
 
 `actor`, `behaviour`, `event`, `scenario`, numeric field types, structured
 state, preconditions, and effects remain unreleased. Add one only when a later

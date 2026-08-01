@@ -36,10 +36,10 @@ node distinguishes a Surface document from other KDL documents.
 
 - `context` is universal prompt guidance. It explains intent, constraints, and
   implementation considerations. It is non-normative and omitted from the IR.
-- `logic` is an ordered, normative block on a function, interface, or screen.
-  Each line is either a quoted instruction or one checked reference followed
-  by a quoted instruction. Conditions, comparisons, HTTP requests, events,
-  errors, and every other operator stay inside those strings.
+- `logic` is normative on a function, interface, or screen. One instruction can
+  use `logic "..."`; a block contains ordered quoted instructions or checked
+  references followed by quoted instructions. Conditions, comparisons, HTTP
+  requests, events, errors, and every other operator stay inside strings.
 - `function` is a named callable capability with an optional `input` and one
   `output`. A function may describe computation, an HTTP request, encryption,
   persistence, or another operation when invocation and output are the useful
@@ -147,7 +147,7 @@ Introduces:
 - prompt-only `context` notes on any node;
 - nested child blocks;
 - declaration identifiers;
-- strings and scalar properties;
+- strings;
 - comments;
 - the first formatter and IR export.
 
@@ -233,7 +233,7 @@ Build a counter that a visitor can increment and reset.
 
 Introduces:
 
-- `logic` blocks on functions, interfaces, and screens;
+- inline and block `logic` on functions, interfaces, and screens;
 - ordered, normative natural-language instructions retained in the IR;
 - optional checked references on logic instructions;
 - conditions, arithmetic, events, HTTP operations, and errors expressed inside

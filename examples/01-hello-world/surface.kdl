@@ -2,7 +2,6 @@
 
 surface "0.1"
 
-// The first Surface application.
 application "helloWorld" {
     purpose "Display a greeting."
 }
@@ -11,6 +10,6 @@ interface "helloWorld" {
     context "Render a user interface with the title My app and the exact text: Hello, world!"
 }
 
-screen "home" route="/" {
+screen "home" {
     use (interface)"helloWorld"
 }

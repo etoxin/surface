@@ -12,7 +12,6 @@
   "screens": [
     {
       "id": "home",
-      "route": "/",
       "interface": "helloWorld"
     }
   ]

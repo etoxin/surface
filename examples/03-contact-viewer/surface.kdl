@@ -39,12 +39,14 @@ interface "contactViewer" {
     }
 }
 
-screen "home" route="/" {
+screen "home" {
     logic {
+        "Use / as this screen's URL path."
         (screen)"contact" "Open this screen."
     }
 }
 
-screen "contact" route="/contacts" {
+screen "contact" {
     use (interface)"contactViewer"
+    logic "Use /contacts as this screen's URL path."
 }

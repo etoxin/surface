@@ -14,7 +14,7 @@ interface "helloWorld" {
 use lower camel case. Interface IDs are unique among interfaces.
 
 An interface has no properties. Add [`context`](./node_context.md) to describe
-what users should see and add an optional [`logic`](./node_logic.md) block for
+what users should see and add an optional [`logic`](./node_logic.md) node for
 ordered interactions and reactions. The implementing person or LLM chooses
 suitable text, layout, inputs, buttons, selectors, accessibility, and
 responsive behaviour.
@@ -32,13 +32,14 @@ interface "contactViewer" {
 
 Surface does not define section, title, text, field, input, button, selector,
 component, or other UI nodes. Interface children are limited to `context` and
-at most one `logic` block.
+at most one `logic` node.
 
 A screen renders an interface through a checked reference:
 
 ```kdl
-screen "contact" route="/contacts" {
+screen "contact" {
     use (interface)"contactViewer"
+    logic "Use /contacts as this screen's URL path."
 }
 ```
 

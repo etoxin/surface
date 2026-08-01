@@ -5,7 +5,9 @@
   "legacy-marker.kdl": "SURF-VERSION-002",
   "empty-screen.kdl": "SURF-CHILD-003",
   "invalid-context.kdl": "SURF-ARG-002",
+  "invalid-inline-logic.kdl": "SURF-ARG-002",
   "invalid-interface-child.kdl": "SURF-CHILD-002",
+  "legacy-screen-route.kdl": "SURF-PROP-003",
   "unknown-node.kdl": "SURF-NODE-001",
   "invalid-kdl.kdl": "SURF-KDL-002"
 }

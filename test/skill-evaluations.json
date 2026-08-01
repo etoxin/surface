@@ -8,7 +8,7 @@
       "acceptance": [
         "The result is valid Surface 0.1 KDL with exactly one application and at least one screen.",
         "A top-level interface uses context for presentation and one logic block for the ordered initial value, increment, reset, and visible updates.",
-        "The / screen uses the interface with use (interface), and the reference resolves.",
+        "The screen uses the interface with use (interface), and inline logic describes / as its URL path.",
         "No collection or function is added solely for interface-local state.",
         "Every condition and arithmetic operation remains inside a logic instruction string; no structured operator node is introduced.",
         "No actor, behaviour, event, scenario, numeric field, state, action, button, or other unreleased node is introduced."
@@ -26,10 +26,11 @@
     },
     {
       "id": "diagnose",
-      "prompt": "Diagnose a Click Counter Surface file that declares a top-level behaviour, uses (number) for a counter field, and places a button child inside an interface.",
+      "prompt": "Diagnose a Click Counter Surface file that declares a top-level behaviour, uses (number) for a counter field, places a button child inside an interface, and sets route=\"/\" on its screen.",
       "acceptance": [
-        "The response identifies all three unsupported Surface constructs.",
-        "It explains that behaviour declarations and numeric field types are unreleased and interfaces accept context children plus at most one logic block.",
+        "The response identifies all four unsupported Surface constructs.",
+        "It explains that behaviour declarations and numeric field types are unreleased and interfaces accept context children plus at most one logic node.",
+        "It replaces the legacy screen route property with inline logic describing the URL path.",
         "It replaces the intended counter interaction with interface logic rather than speculative syntax.",
         "The response distinguishes valid KDL from valid Surface.",
         "Every suggested correction uses only released syntax."
