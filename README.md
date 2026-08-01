@@ -12,16 +12,45 @@ capabilities, interfaces, screens, technology choices, context, and ordered logi
 
 surface "0.1"
 
-application "helloWorld" {
-    purpose "Display a greeting."
+application "todo" {
+    purpose "Keep a small list of tasks."
 }
 
-interface "helloWorld" {
-    context "Render a user interface with the title My app and the exact text: Hello, world!"
+collection "todo" {
+    (string)"text"
+    (boolean)"completed"
+}
+
+(array)value "todos" variable {
+    context (collection)"todo" "Contain the current todos."
+}
+
+function "createTodo" {
+    collection "todoInput" {
+        (string)"text"
+    }
+
+    input (collection)"todoInput"
+    output (collection)"todo"
+
+    logic {
+        (collection)"todoInput" "Trim the text and output null if it is empty."
+        (collection)"todo" "Otherwise, output a todo with that text and completed set to false."
+    }
+}
+
+interface "todoList" {
+    context (value)"todos" (function)"createTodo" "Render a text input, an Add button, and the current todos."
+
+    logic {
+        (value)"todos" "Start with this value empty."
+        (function)"createTodo" "When Add is activated, call this function and append its output when it is not null."
+        (collection)"todo" "Let the user toggle each todo between complete and incomplete."
+    }
 }
 
 screen "home" {
-    use (interface)"helloWorld"
+    use (interface)"todoList"
 }
 ```
 
