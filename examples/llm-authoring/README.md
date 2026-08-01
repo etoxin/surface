@@ -19,15 +19,23 @@ Select Codex, Claude Code, or both. Then open the selected agent in this directo
 For Codex, start the prompt with `$surface`. For Claude Code, use `/surface`:
 
 ```text
-Create surface.kdl for a browser-based temperature converter.
+Create surface.kdl for a small Twitter-style social application.
 
-People enter a temperature, choose whether the input is Celsius or Fahrenheit,
-and see the converted value in the other unit. Reject missing or non-numeric
-input with a clear validation message.
+People can create an account, sign in, publish short text posts, follow other
+people, and view a home timeline containing their posts and posts from people
+they follow. They can like and reply to posts, open a person's profile, and see
+useful empty, loading, validation, and error states.
 
-Use HTML, CSS, and TypeScript. Use Pico CSS 2.1.1 as the design system. The app
-does not need persistence or a server. Keep the specification as small as the
-requirements allow, then check and format it with surf.
+Use Node.js for the server, React with TypeScript for the browser interface,
+Vite for development and packaging, and SQLite for persistent data. Keep the
+client synchronized with the server so new posts, replies, likes, and timeline
+changes appear live without refreshing the page. Use an HTTP API and WebSockets
+for the live-update transport.
+
+Protect authenticated operations, store passwords securely, validate all
+input, and prevent users from changing another person's content. Keep the
+specification no larger than these requirements need, then check and format it
+with surf.
 ```
 
 The LLM should create `surface.kdl`, use only frozen Surface 0.1 syntax, and correct any
