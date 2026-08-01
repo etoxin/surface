@@ -1,6 +1,6 @@
 # Surface
 
-Surface is a small KDL format for describing an application without prescribing its
+Surface is a small [KDL](https://kdl.dev/) format for describing an application without prescribing its
 implementation. It gives humans and LLMs a shared, checked product specification: data,
 capabilities, interfaces, screens, technology choices, context, and ordered logic.
 
