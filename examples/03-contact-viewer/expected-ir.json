@@ -46,8 +46,7 @@
         "entity": "contactLookup"
       },
       "returns": {
-        "entity": "contact",
-        "missing": null
+        "entity": "contact"
       }
     }
   ],

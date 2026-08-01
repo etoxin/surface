@@ -42,7 +42,6 @@ export interface SurfaceQueryIr {
   };
   returns: {
     entity: string;
-    missing: null;
   };
 }
 
@@ -78,7 +77,7 @@ export interface SurfaceParseResult extends KdlParseResult {
 type DiagnosticDraft = Omit<DiagnosticInput, "file">;
 type AddDiagnostic = (diagnostic: DiagnosticDraft) => void;
 type PrimitiveType = "string" | "boolean";
-type PropertyType = "string" | "boolean" | "null";
+type PropertyType = "string" | "boolean";
 
 const IDENTIFIER_PATTERN = /^[a-z][A-Za-z0-9]*$/;
 const PRIMITIVE_TYPES = new Set<PrimitiveType>(["string", "boolean"]);
@@ -514,7 +513,7 @@ function validateQuery(node: Node, add: AddDiagnostic): void {
       message: `${declaration} must contain exactly one returns child node.`,
       element: returnsNodes[1] ?? node,
       declaration,
-      suggestion: 'Add returns (entity)"entityId" missing=#null exactly once.',
+      suggestion: 'Add returns (entity)"entityId" exactly once.',
     });
   }
 
@@ -551,14 +550,7 @@ function validateReturns(
 ): void {
   const subject = `${declaration}.returns`;
   validateReferenceNode(node, "entity", subject, declaration, add);
-  validateProperties(
-    node,
-    ["missing"],
-    subject,
-    add,
-    ["missing"],
-    { missing: "null" },
-  );
+  validateProperties(node, [], subject, add);
   validateOnlyContextChildren(node, subject, add);
 }
 
@@ -1006,8 +998,6 @@ function isPropertyType(value: Primitive, expected: PropertyType): boolean {
       return typeof value === "string";
     case "boolean":
       return typeof value === "boolean";
-    case "null":
-      return value === null;
   }
 }
 
@@ -1017,8 +1007,6 @@ function propertyTypeDescription(type: PropertyType): string {
       return "a string";
     case "boolean":
       return "a Boolean";
-    case "null":
-      return "null";
   }
 }
 
@@ -1028,8 +1016,6 @@ function propertyTypeExample(name: string, type: PropertyType): string {
       return `${name}="..."`;
     case "boolean":
       return `${name}=#true or ${name}=#false`;
-    case "null":
-      return `${name}=#null`;
   }
 }
 
@@ -1412,10 +1398,6 @@ function buildIr(document: Document): SurfaceIr {
               returnsNode.getArgument(0),
               "return entity",
             ),
-            missing: expectNull(
-              returnsNode.getProperty("missing"),
-              "return missing",
-            ),
           },
         };
       }),
@@ -1520,16 +1502,6 @@ function expectPrimitiveType(
     throw new Error(`Validated ${subject} is not a primitive type.`);
   }
   return type as PrimitiveType;
-}
-
-function expectNull(
-  value: Primitive | undefined,
-  subject: string,
-): null {
-  if (value !== null) {
-    throw new Error(`Validated ${subject} is not null.`);
-  }
-  return null;
 }
 
 function optionalString(

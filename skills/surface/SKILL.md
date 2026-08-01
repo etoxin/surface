@@ -55,7 +55,8 @@ query "contactById" {
         (string)"id"
     }
     input (entity)"contactLookup"
-    returns (entity)"contact" missing=#null
+    returns (entity)"contact"
+    context "If there is no contact, return null."
 }
 ```
 
@@ -76,13 +77,13 @@ Treat fields as required when `optional` is absent. Do not write `required` or
 `generated`, give `optional` a value, or repeat it. Reject the earlier
 `field "name" type="string"` syntax.
 
-A query returns one entity or `#null`. Give it:
+A query returns one entity reference. Give it:
 
 - one quoted identifier;
 - no properties;
 - zero or more private `entity` declarations;
 - zero or one `input (entity)"<entity>"` child;
-- exactly one `returns (entity)"<entity>" missing=#null` child.
+- exactly one `returns (entity)"<entity>"` child.
 
 Allow `input` and `returns` to reference either a private entity in their query
 or a global top-level entity. Keep private entity IDs unique within the query
@@ -92,7 +93,8 @@ entities from other queries.
 Use private entities for query-specific request or response shapes. Use global
 entities for data shapes shared across queries. For a web screen, populate the
 fields of the input entity from same-named URL query parameters. Explain how
-the query transforms input into output with `context`.
+the query transforms input into output with `context`. Use another `context`
+node to describe missing-result behavior, such as returning null.
 
 Treat a type annotation on a string value as a checked reference to a
 declaration visible in the current scope. Require the annotation and verify
@@ -172,9 +174,9 @@ Add zero or more `context` children to any Surface node except another
 states, and text. Each context contains exactly one quoted prompt string and
 has no properties or children.
 
-Use context as guidance for interpreting or implementing its parent. Preserve
-it when editing and formatting, but do not treat it as application behavior or
-include it in the semantic JSON IR.
+Use context as unstructured guidance for interpreting or implementing its
+parent. Preserve it when editing and formatting, and omit it from the semantic
+JSON IR.
 
 Identifiers must match `[a-z][A-Za-z0-9]*` and should use lower camel case.
 
@@ -192,7 +194,6 @@ Check all of the following:
 - Global and private entity fields have valid unique names and supported types.
 - Entity fields are required by default; only optional fields use the bare
   `optional` modifier.
-- Null properties use `#null`, not a quoted string.
 - Private entity IDs do not collide with global entity IDs.
 - Annotated entity and query references have the required type, visibility,
   and target.

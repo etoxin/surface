@@ -329,9 +329,10 @@ query "contactById" {
     input (entity)"contactLookup" {
         context "Input guidance."
     }
-    returns (entity)"contact" missing=#null {
+    returns (entity)"contact" {
         context "Return guidance."
     }
+    context "Return null when no contact matches."
 }
 screen "contact" {
     use (query)"contactById" {
@@ -372,7 +373,8 @@ query "getMessage" {
         (string)"text"
     }
     input (entity)"lookup"
-    returns (entity)"message" missing=#null
+    returns (entity)"message"
+    context "Return null when no message matches."
 }
 screen "message" {
     use (query)"getMessage"
@@ -396,7 +398,7 @@ screen "message" {
       fields: [{ name: "text", type: "string" }],
     }],
     input: { entity: "lookup" },
-    returns: { entity: "message", missing: null },
+    returns: { entity: "message" },
   });
   assertEquals(result.ir.screens[0].sections[0].fields, ["text"]);
 });
@@ -410,7 +412,8 @@ query "getHello" {
     entity "hello" {
         (string)"message"
     }
-    returns (entity)"hello" missing=#null
+    returns (entity)"hello"
+    context "Return null when no greeting is available."
 }
 screen "hello" {
     use (query)"getHello"
@@ -437,7 +440,8 @@ query "searchMessages" {
     entity "filters" { (string)"term" optional }
     entity "result" { (string)"message" }
     input (entity)"filters"
-    returns (entity)"result" missing=#null
+    returns (entity)"result"
+    context "Return null when no message matches."
 }
 screen "results" {
     use (query)"searchMessages"
@@ -595,7 +599,8 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /\(string\)"id"/);
   assertMatch(skill, /entity "contactLookup"/);
   assertMatch(skill, /input \(entity\)"contactLookup"/);
-  assertMatch(skill, /returns \(entity\)"contact" missing=#null/);
+  assertMatch(skill, /returns \(entity\)"contact"/);
+  assertMatch(skill, /If there is no contact, return null\./);
   assertMatch(skill, /use \(query\)"contactById"/);
   assertMatch(skill, /state "notFound"/);
   assertMatch(metadata, /default_prompt: "Use \$surface /);

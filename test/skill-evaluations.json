@@ -12,7 +12,7 @@
         "The contact entity declares fields as typed child nodes using only (string) and (boolean).",
         "Required fields have no modifier, and only email uses the bare optional modifier.",
         "The query declares a private entity containing a string id field and references it with input (entity).",
-        "The query references the global contact with returns (entity)\"contact\" and missing=#null.",
+        "The query references the global contact with returns (entity)\"contact\" and uses context to say that no match returns null.",
         "The screen uses use (query)\"contactById\", and all references resolve.",
         "The screen contains exactly one empty and one notFound state.",
         "The result does not introduce syntax from a later rung."

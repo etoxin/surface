@@ -23,7 +23,9 @@ query "contactById" {
     }
 
     input (entity)"contactLookup"
-    returns (entity)"contact" missing=#null
+    returns (entity)"contact"
+
+    context "If there is no contact, return null."
 }
 
 screen "contact" route="/contacts" {

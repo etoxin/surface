@@ -7,7 +7,7 @@
   "invalid-field-modifier.kdl": "SURF-ARG-003",
   "duplicate-field-modifier.kdl": "SURF-ARG-004",
   "unsupported-type.kdl": "SURF-TYPE-001",
-  "invalid-null.kdl": "SURF-PROP-004",
+  "legacy-return-missing-property.kdl": "SURF-PROP-003",
   "missing-reference-annotation.kdl": "SURF-REF-003",
   "wrong-reference-type.kdl": "SURF-REF-003",
   "legacy-screen-query.kdl": "SURF-PROP-003",

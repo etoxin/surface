@@ -10,7 +10,7 @@ query "contactById" {
         (string)"id"
     }
     input (entity)"contact"
-    returns (entity)"contact" missing=#null
+    returns (entity)"contact"
 }
 screen "contact" {
     section "Contact" { text "Display a contact." }

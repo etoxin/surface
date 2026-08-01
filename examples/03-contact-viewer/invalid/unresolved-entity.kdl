@@ -3,7 +3,7 @@
 surface "0.1"
 application "contactViewer" { purpose "Display a contact." }
 query "contactById" {
-    returns (entity)"missingContact" missing=#null
+    returns (entity)"missingContact"
 }
 screen "contact" {
     section "Contact" { text "Display a contact." }

@@ -2,9 +2,10 @@
 
 ## Lookup
 
-A rung-3 query accepts zero or one entity-shaped input and returns one entity or
-`#null`. `contactById` declares a private `contactLookup` input entity and returns the
-global `contact` entity. Context explains that the input ID matches the contact ID.
+A rung-3 query accepts zero or one entity-shaped input and returns one entity.
+`contactById` declares a private `contactLookup` input entity and returns the global
+`contact` entity. Context explains that the input ID matches the contact ID and that a
+failed lookup returns null.
 
 Cross-declaration references use annotated strings. The query returns
 `(entity)"contact"`, and the screen declares `use (query)"contactById"`. Surface checks

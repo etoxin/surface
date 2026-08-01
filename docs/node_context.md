@@ -10,9 +10,9 @@ section "Home" {
 }
 ```
 
-Context is guidance only. It does not add visible text, behavior, or data to
-the application. If users should see some text, use a `title` or `text`
-instead.
+Context is unstructured prompt guidance. It is omitted from the semantic JSON
+IR, but an implementer can use it to decide application behavior. If users
+should see some text, use a `title` or `text` instead.
 
 ## Where Context Can Go
 

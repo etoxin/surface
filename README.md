@@ -64,7 +64,7 @@ Read the guides in this order:
 | `(<type>)"<name>" [optional]` | Declares a required-by-default entity field using a node annotation |
 | `query "<id>"` | Uses private/global entity references for structured input and output |
 | `input (entity)"<entity>"` | Optionally declares one structured query input |
-| `returns (entity)"<entity>" missing=#null` | Returns a checked entity reference or `#null` |
+| `returns (entity)"<entity>"` | Returns a checked entity reference |
 | `screen "<id>" [route="<route>"]` | At least one; contains uses, sections, and queried-screen states |
 | `use (query)"<query>"` | Gives a screen one checked query reference |
 | `section "<name>"` | Contains an optional `title` and one or more `text` or `field` nodes |
@@ -84,11 +84,12 @@ Additional rules:
 - Entity field node annotations are currently `string` or `boolean`.
 - Entity fields are required by default. The bare `optional` modifier marks the
   only alternative.
-- The KDL 2 null literal is `#null`.
 - A type annotation on a string marks a checked reference to a declaration
   visible in the current scope.
 - Query `input` and `returns` can reference private entities in that query or
   global entities. Private entity IDs cannot shadow global entity IDs.
+- Use repeatable `context` nodes to describe behavior such as returning null
+  when no entity matches.
 - Screen `use` nodes reference global queries. All annotated references must
   resolve to the declared type.
 - Local projected field references must also resolve.

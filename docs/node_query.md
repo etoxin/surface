@@ -5,12 +5,16 @@ up a contact by its ID:
 
 ```kdl
 query "contactById" {
+    context "Find the contact whose id equals the id input."
+
     entity "contactLookup" {
         (string)"id"
     }
 
     input (entity)"contactLookup"
-    returns (entity)"contact" missing=#null
+    returns (entity)"contact"
+
+    context "If there is no contact, return null."
 }
 ```
 
@@ -62,18 +66,24 @@ screen's `empty` state; optional fields can be absent.
 Every query has exactly one `returns` node:
 
 ```kdl
-returns (entity)"contact" missing=#null
+returns (entity)"contact"
 ```
 
 `(entity)"contact"` is a checked reference to a visible entity. It can target
 a private entity in this query or a global entity in the Surface file. The
 annotation identifies the expected declaration type; Surface reports an error
 if the entity does not exist or the annotation is missing or different.
-`missing=#null` says the query returns no entity when the lookup finds
-nothing. Use the KDL 2 null literal `#null`, without quotes.
 
-The missing result activates the screen's `notFound` state. A screen needs an
-`empty` state only when its query input entity has at least one required field.
+Use [`context`](./node_context.md) to describe what happens when no entity is
+found:
+
+```kdl
+context "If there is no contact, return null."
+```
+
+Queried screens include a `notFound` state for a missing result. A screen needs
+an `empty` state only when its query input entity has at least one required
+field.
 
 Queries, inputs, and returns can all contain prompt-only
 [`context`](./node_context.md).

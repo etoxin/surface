@@ -8,7 +8,7 @@ entity "contact" {
 query "contactById" {
     entity "contactLookup" { (string)"id" }
     input (entity)"contactLookup"
-    returns (entity)"contact" missing=#null
+    returns (entity)"contact"
 }
 screen "contact" {
     use (entity)"contact"

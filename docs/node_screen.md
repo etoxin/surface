@@ -176,7 +176,7 @@ state "notFound" {
 ```
 
 The `empty` state appears when a required field on the query's input entity is
-absent. The `notFound` state appears when the query returns `#null`.
+absent. The `notFound` state appears when the query finds no entity.
 
 States contain one or more ordinary sections and can contain prompt-only
 context. Their sections use static titles and text; they cannot refer to
