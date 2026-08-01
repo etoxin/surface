@@ -131,6 +131,8 @@ mise run typecheck
 mise run test
 mise run surf check examples/01-hello-world/surface.kdl
 mise run surf export examples/03-contact-viewer/surface.kdl --format json
+mise run surf reference examples/03-contact-viewer/surface.kdl --list
+mise run surf reference examples/03-contact-viewer/surface.kdl screen.contact
 ```
 
 Run `mise tasks` to see every task. `mise run verify` checks formatting, linting,
@@ -146,7 +148,13 @@ surf parse <file.kdl>
 surf check <file.kdl>
 surf format <file.kdl>
 surf export <file.kdl> --format json
+surf reference <file.kdl> <selector|--list>
 ```
+
+`surf reference <file.kdl> --list` returns every declaration selector and its
+canonical typed reference. Pass a selector such as `screen.contact` to print only
+`(screen)"contact"`. Private entities use their query scope, for example
+`query.contactById.entity.contactLookup`.
 
 ## Rung 1
 

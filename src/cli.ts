@@ -4,7 +4,13 @@ import { resolve } from "node:path";
 
 import { type Diagnostic, formatDiagnostic } from "./diagnostics.ts";
 import { formatSurface } from "./formatter.ts";
-import { parseKdl, parseSurface } from "./surface.ts";
+import { parseKdl, parseSurface, type SurfaceIr } from "./surface.ts";
+
+interface SurfaceReference {
+  selector: string;
+  reference: string;
+  scope?: string;
+}
 
 export async function main(args: string[]): Promise<number> {
   const [command, ...arguments_] = args;
@@ -33,6 +39,8 @@ export async function main(args: string[]): Promise<number> {
       return await runFormat(source, file, fileArgument);
     case "export":
       return runExport(source, fileArgument, arguments_.slice(1));
+    case "reference":
+      return runReference(source, fileArgument, arguments_.slice(1));
     default:
       console.error(`Unknown command ${command}.`);
       printHelp();
@@ -105,6 +113,77 @@ function runExport(source: string, file: string, args: string[]): number {
   return 0;
 }
 
+function runReference(source: string, file: string, args: string[]): number {
+  const result = parseSurface(source, file);
+  if (printDiagnostics(result.diagnostics)) {
+    return 1;
+  }
+  if (result.ir === null) {
+    console.error(`Could not read Surface references from ${file}.`);
+    return 1;
+  }
+
+  const references = collectReferences(result.ir);
+  const selector = args[0];
+  if (args.length !== 1 || selector === undefined) {
+    console.error(
+      `Usage: surf reference <file.kdl> <selector|--list>`,
+    );
+    return 1;
+  }
+  if (selector === "--list") {
+    console.log(JSON.stringify(references, null, 2));
+    return 0;
+  }
+
+  const match = references.find((reference) => reference.selector === selector);
+  if (match === undefined) {
+    console.error(
+      `Unknown declaration selector ${selector}. Run surf reference ${file} --list to see available references.`,
+    );
+    return 1;
+  }
+
+  console.log(match.reference);
+  return 0;
+}
+
+function collectReferences(ir: SurfaceIr): SurfaceReference[] {
+  const references: SurfaceReference[] = [{
+    selector: `application.${ir.application.id}`,
+    reference: `(application)"${ir.application.id}"`,
+  }];
+
+  for (const entity of ir.entities ?? []) {
+    references.push({
+      selector: `entity.${entity.id}`,
+      reference: `(entity)"${entity.id}"`,
+    });
+  }
+  for (const query of ir.queries ?? []) {
+    const querySelector = `query.${query.id}`;
+    references.push({
+      selector: querySelector,
+      reference: `(query)"${query.id}"`,
+    });
+    for (const entity of query.entities ?? []) {
+      references.push({
+        selector: `${querySelector}.entity.${entity.id}`,
+        reference: `(entity)"${entity.id}"`,
+        scope: querySelector,
+      });
+    }
+  }
+  for (const screen of ir.screens) {
+    references.push({
+      selector: `screen.${screen.id}`,
+      reference: `(screen)"${screen.id}"`,
+    });
+  }
+
+  return references;
+}
+
 function printDiagnostics(diagnostics: Diagnostic[]): boolean {
   if (diagnostics.length === 0) {
     return false;
@@ -119,7 +198,8 @@ function printHelp(): void {
   surf parse <file.kdl>
   surf check <file.kdl>
   surf format <file.kdl>
-  surf export <file.kdl> --format json`);
+  surf export <file.kdl> --format json
+  surf reference <file.kdl> <selector|--list>`);
 }
 
 if (import.meta.main) {

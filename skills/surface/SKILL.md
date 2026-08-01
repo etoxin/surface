@@ -17,9 +17,12 @@ constructs from future roadmap applications.
 3. Preserve comments, declaration order, unrelated content, and quoted strings
    when editing.
 4. Use only the nodes and properties supported below.
-5. Run `surf check` after editing when the repository toolchain is available.
-6. Run `surf format` only when the document already passes validation.
-7. Report requests outside the current Surface scope instead of inventing
+5. Run `surf reference surface.kdl --list` before adding a reference when the
+   repository toolchain is available. Use its selector output instead of
+   guessing declaration types or IDs.
+6. Run `surf check` after editing when the repository toolchain is available.
+7. Run `surf format` only when the document already passes validation.
+8. Report requests outside the current Surface scope instead of inventing
    syntax.
 
 ## Complete Released Syntax
@@ -248,7 +251,13 @@ surf parse surface.kdl
 surf check surface.kdl
 surf format surface.kdl
 surf export surface.kdl --format json
+surf reference surface.kdl --list
+surf reference surface.kdl screen.contact
 ```
+
+The list form returns declaration selectors with canonical typed references.
+The selector form prints only the reference for direct insertion. Use a scoped
+selector such as `query.contactById.entity.contactLookup` for a private entity.
 
 ## Current Limits
 

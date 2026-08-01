@@ -550,6 +550,52 @@ Deno.test("CLI check and export succeed for the valid example", () => {
   );
 });
 
+Deno.test("CLI reference lists and returns canonical checked references", () => {
+  const specification = join(contactExampleRoot, "surface.kdl");
+  const listed = runCli(["reference", specification, "--list"]);
+  assertEquals(listed.code, 0, decoder.decode(listed.stderr));
+  const references = JSON.parse(decoder.decode(listed.stdout));
+  assert(
+    references.some(
+      ({ selector, reference }: { selector: string; reference: string }) =>
+        selector === "screen.contact" && reference === '(screen)"contact"',
+    ),
+  );
+  assert(
+    references.some(
+      (
+        { selector, reference, scope }: {
+          selector: string;
+          reference: string;
+          scope?: string;
+        },
+      ) =>
+        selector === "query.contactById.entity.contactLookup" &&
+        reference === '(entity)"contactLookup"' &&
+        scope === "query.contactById",
+    ),
+  );
+
+  const selected = runCli(["reference", specification, "screen.contact"]);
+  assertEquals(selected.code, 0, decoder.decode(selected.stderr));
+  assertEquals(decoder.decode(selected.stdout).trim(), '(screen)"contact"');
+
+  const privateEntity = runCli([
+    "reference",
+    specification,
+    "query.contactById.entity.contactLookup",
+  ]);
+  assertEquals(privateEntity.code, 0, decoder.decode(privateEntity.stderr));
+  assertEquals(
+    decoder.decode(privateEntity.stdout).trim(),
+    '(entity)"contactLookup"',
+  );
+
+  const unknown = runCli(["reference", specification, "screen.missing"]);
+  assertEquals(unknown.code, 1);
+  assertMatch(decoder.decode(unknown.stderr), /Unknown declaration selector/);
+});
+
 Deno.test("CLI check fails with a structured diagnostic for invalid Surface", () => {
   const specification = join(
     exampleRoot,

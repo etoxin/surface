@@ -68,6 +68,13 @@ applications, entities, queries, and screens. Context inside a query can also
 reference that query's private entities. Every reference must be visible in
 the current scope and have the annotated declaration type.
 
+Use the CLI to discover or retrieve the exact reference syntax:
+
+```sh
+surf reference surface.kdl --list
+surf reference surface.kdl screen.contact
+```
+
 Several references can share one prompt:
 
 ```kdl

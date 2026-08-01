@@ -16,7 +16,7 @@ entity "contact" {
 }
 
 query "contactById" {
-    context "Find the contact whose id equals the id input."
+    context (entity)"contactLookup" (entity)"contact" "Find the contact whose id equals the lookup id."
 
     entity "contactLookup" {
         (string)"id"
@@ -25,7 +25,7 @@ query "contactById" {
     input (entity)"contactLookup"
     returns (entity)"contact"
 
-    context "If there is no contact, return null."
+    context (entity)"contact" "If there is no contact, return null."
 }
 
 screen "home" route="/" {
@@ -33,7 +33,7 @@ screen "home" route="/" {
 }
 
 screen "contact" route="/contacts" {
-    context "Read the id input from the URL query parameter named id."
+    context (query)"contactById" "Read its id input from the URL query parameter named id."
     use (query)"contactById"
 
     section "Contact" {
