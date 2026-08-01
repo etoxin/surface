@@ -50,6 +50,11 @@ mise run surf reference surface.kdl --list
 mise run surf reference surface.kdl interface.contactViewer
 ```
 
+`--list` returns the available selectors and typed reference literals. Passing
+a selector returns the complete KDL declaration, including its children. This
+lets a person or LLM retrieve one relevant declaration without loading the
+entire specification.
+
 The last argument is exactly one unannotated prompt string. Any earlier
 arguments are annotated string references. A context node has no properties or
 children, and a parent may contain several context nodes.

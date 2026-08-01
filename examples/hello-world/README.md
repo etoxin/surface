@@ -8,15 +8,16 @@ reference.
 
 ## Build the Application
 
+Ensure you have built Surface and installed `surf` for your user, then run:
+
 ```sh
-mise run examples-prepare
-cd examples/hello-world
+surf init
 ```
 
-Open your agent in this directory and invoke the build workflow:
+Select your LLM tool. Open your agent in this directory and invoke the build workflow:
 
 ```text
-Codex:       $surf-build
+Codex:       $surf-build or Surface Build
 Claude Code: /surf:build
 ```
 

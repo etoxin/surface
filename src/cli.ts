@@ -2,6 +2,8 @@
 
 import { resolve } from "node:path";
 
+import { type Document, format, type Node } from "@bgotink/kdl";
+
 import { type Diagnostic, formatDiagnostic } from "./diagnostics.ts";
 import { formatSurface } from "./formatter.ts";
 import {
@@ -10,12 +12,13 @@ import {
   installAgentSupport,
   selectAgents,
 } from "./init.ts";
-import { parseKdl, parseSurface, type SurfaceIr } from "./surface.ts";
+import { parseKdl, parseSurface } from "./surface.ts";
 
 interface SurfaceReference {
   selector: string;
   reference: string;
   scope?: string;
+  declaration: Node;
 }
 
 export async function main(args: string[]): Promise<number> {
@@ -175,12 +178,12 @@ function runReference(source: string, file: string, args: string[]): number {
   if (printDiagnostics(result.diagnostics)) {
     return 1;
   }
-  if (result.ir === null) {
+  if (result.ir === null || result.document === null) {
     console.error(`Could not read Surface references from ${file}.`);
     return 1;
   }
 
-  const references = collectReferences(result.ir);
+  const references = collectReferences(result.document);
   const selector = args[0];
   if (args.length !== 1 || selector === undefined) {
     console.error(
@@ -189,7 +192,7 @@ function runReference(source: string, file: string, args: string[]): number {
     return 1;
   }
   if (selector === "--list") {
-    console.log(JSON.stringify(references, null, 2));
+    console.log(JSON.stringify(references.map(referenceListing), null, 2));
     return 0;
   }
 
@@ -201,56 +204,78 @@ function runReference(source: string, file: string, args: string[]): number {
     return 1;
   }
 
-  console.log(match.reference);
+  console.log(formatDeclaration(match.declaration));
   return 0;
 }
 
-function collectReferences(ir: SurfaceIr): SurfaceReference[] {
-  const references: SurfaceReference[] = [{
-    selector: `application.${ir.application.id}`,
-    reference: `(application)"${ir.application.id}"`,
-  }];
+function collectReferences(document: Document): SurfaceReference[] {
+  const references: SurfaceReference[] = [];
 
-  for (const value of ir.values ?? []) {
+  for (const node of document.nodes) {
+    const type = node.getName();
+    const id = node.getArgument(0);
+    if (
+      typeof id !== "string" ||
+      !["application", "collection", "function", "interface", "screen", "value"]
+        .includes(type)
+    ) {
+      continue;
+    }
+
+    const selector = `${type}.${id}`;
     references.push({
-      selector: `value.${value.id}`,
-      reference: `(value)"${value.id}"`,
+      selector,
+      reference: `(${type})"${id}"`,
+      declaration: node,
     });
-  }
-  for (const collection of ir.collections ?? []) {
-    references.push({
-      selector: `collection.${collection.id}`,
-      reference: `(collection)"${collection.id}"`,
-    });
-  }
-  for (const functionNode of ir.functions ?? []) {
-    const functionSelector = `function.${functionNode.id}`;
-    references.push({
-      selector: functionSelector,
-      reference: `(function)"${functionNode.id}"`,
-    });
-    for (const collection of functionNode.collections ?? []) {
+
+    if (type !== "function") {
+      continue;
+    }
+
+    for (const child of node.children?.nodes ?? []) {
+      const childId = child.getArgument(0);
+      if (child.getName() !== "collection" || typeof childId !== "string") {
+        continue;
+      }
       references.push({
-        selector: `${functionSelector}.collection.${collection.id}`,
-        reference: `(collection)"${collection.id}"`,
-        scope: functionSelector,
+        selector: `${selector}.collection.${childId}`,
+        reference: `(collection)"${childId}"`,
+        scope: selector,
+        declaration: child,
       });
     }
   }
-  for (const interfaceNode of ir.interfaces ?? []) {
-    references.push({
-      selector: `interface.${interfaceNode.id}`,
-      reference: `(interface)"${interfaceNode.id}"`,
-    });
-  }
-  for (const screen of ir.screens) {
-    references.push({
-      selector: `screen.${screen.id}`,
-      reference: `(screen)"${screen.id}"`,
-    });
-  }
 
   return references;
+}
+
+function referenceListing(
+  reference: SurfaceReference,
+): Omit<SurfaceReference, "declaration"> {
+  return {
+    selector: reference.selector,
+    reference: reference.reference,
+    ...(reference.scope === undefined ? {} : { scope: reference.scope }),
+  };
+}
+
+function formatDeclaration(node: Node): string {
+  const lines = format(node).replaceAll("\r\n", "\n").split("\n");
+  while (lines[0]?.trim() === "") {
+    lines.shift();
+  }
+  while (lines.at(-1)?.trim() === "") {
+    lines.pop();
+  }
+
+  const indentation = Math.min(
+    ...lines
+      .filter((line) => line.trim() !== "")
+      .map((line) => line.match(/^[ \t]*/u)?.[0].length ?? 0),
+  );
+
+  return lines.map((line) => line.slice(indentation)).join("\n");
 }
 
 function printDiagnostics(diagnostics: Diagnostic[]): boolean {

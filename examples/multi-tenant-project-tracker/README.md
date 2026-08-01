@@ -8,15 +8,16 @@ authorization, and non-enumerating failures. Its browser stack pins Pico CSS 2.1
 
 ## Build the Application
 
+Ensure you have built Surface and installed `surf` for your user, then run:
+
 ```sh
-mise run examples-prepare
-cd examples/multi-tenant-project-tracker
+surf init
 ```
 
-Open your agent in this directory and invoke the build workflow:
+Select your LLM tool. Open your agent in this directory and invoke the build workflow:
 
 ```text
-Codex:       $surf-build
+Codex:       $surf-build or Surface Build
 Claude Code: /surf:build
 ```
 

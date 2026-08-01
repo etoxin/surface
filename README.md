@@ -100,9 +100,10 @@ review generated applications before using them.
 
 ## Examples
 
-Four examples cover the small language from first use through platform-scale tests:
+Five examples cover the workflow from first use through platform-scale tests:
 
 - [Hello World](./examples/hello-world/README.md)
+- [Create a Specification with an LLM](./examples/llm-authoring/README.md)
 - [Todo List](./examples/todo-list/README.md)
 - [Online Checkout](./examples/online-checkout/README.md)
 - [Multi-tenant Project Tracker](./examples/multi-tenant-project-tracker/README.md)
@@ -110,17 +111,17 @@ Four examples cover the small language from first use through platform-scale tes
 Online Checkout and Multi-tenant Project Tracker pin Pico CSS 2.1.1 in their application
 stacks and test the frozen grammar at platform scale.
 
-Prepare the examples as agent workspaces:
+Each example is its own agent workspace. Enter one and initialize it with the installed
+CLI:
 
 ```sh
-mise run examples-prepare
 cd examples/todo-list
+surf init
 ```
 
-The task installs the language skill and build workflow inside every example. Open the
-agent in an example directory, then run `$surf-build` in Codex or `/surf:build` in
-Claude Code. Both build `surface.kdl` into `build/`; generated build directories are
-ignored by Git.
+Select Codex, Claude Code, or both, then open that agent in the example directory. Run
+`$surf-build` in Codex or `/surf:build` in Claude Code. Both build `surface.kdl` into
+`build/`; generated build directories are ignored by Git.
 
 ## CLI
 
@@ -167,6 +168,9 @@ surf check <file.kdl>
 surf format <file.kdl>
 surf reference <file.kdl> <selector|--list>
 ```
+
+`reference --list` discovers selectors and typed reference literals. Passing a selector
+prints its complete KDL declaration for focused human or LLM context.
 
 Run `mise tasks` to see the available tasks. The complete repository check is
 `mise run verify`.

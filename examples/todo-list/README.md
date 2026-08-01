@@ -8,15 +8,13 @@ logic.
 
 ## Build the Application
 
-Ensure you have built surface and added it to your user.
+Ensure you have built Surface and installed `surf` for your user, then run:
 
-```bash
+```sh
 surf init
 ```
 
-Select your LLM tool.
-
-Open your agent in this directory and invoke the build workflow:
+Select your LLM tool. Open your agent in this directory and invoke the build workflow:
 
 ```text
 Codex:       $surf-build or Surface Build

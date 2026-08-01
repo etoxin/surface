@@ -437,6 +437,10 @@ surf reference surface.kdl --list
 surf reference surface.kdl interface.contactViewer
 ```
 
+`--list` prints selectors and their typed reference literals. Passing one selector
+prints that declaration's complete KDL, so use it to load only the relevant part of a
+large specification.
+
 Private collection selectors include their function scope, such as
 `function.contactById.collection.contactLookup`.
 

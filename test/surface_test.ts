@@ -881,7 +881,7 @@ Deno.test("CLI init can install Claude and Codex together", async () => {
   }
 });
 
-Deno.test("CLI reference lists and resolves canonical checked references", () => {
+Deno.test("CLI reference lists references and retrieves complete declarations", () => {
   const specification = join(todoExampleRoot, "surface.kdl");
   const listed = runCli(["reference", specification, "--list"]);
   assertEquals(listed.code, 0, decoder.decode(listed.stderr));
@@ -907,7 +907,11 @@ Deno.test("CLI reference lists and resolves canonical checked references", () =>
   assertEquals(selectedValue.code, 0, decoder.decode(selectedValue.stderr));
   assertEquals(
     decoder.decode(selectedValue.stdout).trim(),
-    '(value)"todoStatus"',
+    `(enum)value "todoStatus" {
+    "open"
+    "completed"
+    "archived"
+}`,
   );
   assert(
     references.some(
@@ -947,7 +951,33 @@ Deno.test("CLI reference lists and resolves canonical checked references", () =>
 
   const selected = runCli(["reference", specification, "screen.home"]);
   assertEquals(selected.code, 0, decoder.decode(selected.stderr));
-  assertEquals(decoder.decode(selected.stdout).trim(), '(screen)"home"');
+  assertEquals(
+    decoder.decode(selected.stdout).trim(),
+    `screen "home" {
+    use (interface)"todoList"
+    logic "Use / as this screen's URL path."
+}`,
+  );
+
+  const selectedCollection = runCli([
+    "reference",
+    specification,
+    "collection.todo",
+  ]);
+  assertEquals(
+    selectedCollection.code,
+    0,
+    decoder.decode(selectedCollection.stderr),
+  );
+  assertMatch(
+    decoder.decode(selectedCollection.stdout),
+    /^collection "todo" \{/,
+  );
+  assertMatch(
+    decoder.decode(selectedCollection.stdout),
+    /[ ]{4}\(enum\)"status" \(value\)"todoStatus"/,
+  );
+  assertMatch(decoder.decode(selectedCollection.stdout), /\n\}\n$/);
 
   const selectedFunction = runCli([
     "reference",
@@ -955,9 +985,17 @@ Deno.test("CLI reference lists and resolves canonical checked references", () =>
     "function.createTodo",
   ]);
   assertEquals(selectedFunction.code, 0, decoder.decode(selectedFunction.stderr));
-  assertEquals(
-    decoder.decode(selectedFunction.stdout).trim(),
-    '(function)"createTodo"',
+  assertMatch(
+    decoder.decode(selectedFunction.stdout),
+    /^function "createTodo" \{/,
+  );
+  assertMatch(
+    decoder.decode(selectedFunction.stdout),
+    /[ ]{4}collection "todoInput" \{/,
+  );
+  assertMatch(
+    decoder.decode(selectedFunction.stdout),
+    /[ ]{4}output \(collection\)"todo"/,
   );
 
   const privateCollection = runCli([
@@ -968,7 +1006,14 @@ Deno.test("CLI reference lists and resolves canonical checked references", () =>
   assertEquals(privateCollection.code, 0, decoder.decode(privateCollection.stderr));
   assertEquals(
     decoder.decode(privateCollection.stdout).trim(),
-    '(collection)"todoInput"',
+    `collection "todoInput" {
+    (string)"text"
+    (date)"dueDate" optional
+    (number)"priority" optional
+    (array)"tags" optional {
+        context "Contain string labels."
+    }
+}`,
   );
 
   const unknown = runCli(["reference", specification, "screen.missing"]);

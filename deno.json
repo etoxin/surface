@@ -2,9 +2,8 @@
   "tasks": {
     "surf": "deno run --allow-read --allow-write src/cli.ts",
     "build": "deno run --allow-run --allow-write src/build_cli.ts",
-    "examples-prepare": "deno run --allow-read=skills,examples --allow-write=examples src/prepare_examples.ts",
     "test": "deno test --allow-read --allow-write --allow-run test/",
-    "typecheck": "deno check src/build_cli.ts src/cli.ts src/diagnostics.ts src/formatter.ts src/init.ts src/prepare_examples.ts src/surface.ts test/surface_test.ts",
+    "typecheck": "deno check src/build_cli.ts src/cli.ts src/diagnostics.ts src/formatter.ts src/init.ts src/surface.ts test/surface_test.ts",
     "verify": "deno fmt --check && deno lint && deno task typecheck && deno task test",
     "check": "deno task verify"
   },
