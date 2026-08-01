@@ -8,6 +8,14 @@ logic.
 
 ## Build the Application
 
+Ensure you have built surface and added it to your user.
+
+```bash
+surf init
+```
+
+Select your LLM tool.
+
 Open your agent in this directory and invoke the build workflow:
 
 ```text

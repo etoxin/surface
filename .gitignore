@@ -1,6 +1,7 @@
 .idea
 node_modules/
 coverage/
+/build/
 examples/*/.agents/skills/surface/
 examples/*/.agents/skills/surf-build/
 examples/*/.claude/commands/surf:build.md

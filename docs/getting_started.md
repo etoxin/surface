@@ -1,8 +1,7 @@
 # Getting Started
 
 This guide checks a Surface specification and uses it to build a small application.
-Surface is currently tested from this repository; there is not yet a packaged CLI
-release.
+Surface does not yet publish packaged CLI releases, so build the executable locally.
 
 ## Install
 
@@ -13,9 +12,23 @@ git clone https://github.com/etoxin/surface-lang.git
 cd surface-lang
 mise install
 mise run verify
+mise run build
 ```
 
 `mise` installs Deno and exposes the repository tasks. Run `mise tasks` to list them.
+The build produces a native executable for the current platform at `build/surf`.
+
+### Install on macOS
+
+Install the executable for your user without `sudo`:
+
+```sh
+install -d "$HOME/.local/bin"
+install -m 755 build/surf "$HOME/.local/bin/surf"
+```
+
+Add `export PATH="$HOME/.local/bin:$PATH"` to `~/.zshrc`, then open a new terminal and
+run `surf --help`. This installation path currently supports macOS only.
 
 ## Read the Smallest Example
 
@@ -44,22 +57,31 @@ without prescribing HTML or controls. The screen places that interface in the ap
 
 ## Use the CLI
 
+In a project directory, install the Surface build workflows:
+
+```sh
+surf init
+```
+
+Select Codex, Claude Code, or both. In a non-interactive script, pass `--codex`,
+`--claude`, or both. The command also adds `/build/` to the project's `.gitignore`.
+
 Check the specification:
 
 ```sh
-mise run surf check examples/hello-world/surface.kdl
+surf check examples/hello-world/surface.kdl
 ```
 
 Format a valid file in place:
 
 ```sh
-mise run surf format examples/hello-world/surface.kdl
+surf format examples/hello-world/surface.kdl
 ```
 
 List the references that context and logic can use:
 
 ```sh
-mise run surf reference examples/todo-list/surface.kdl --list
+surf reference examples/todo-list/surface.kdl --list
 ```
 
 ## Write Your Own Specification
@@ -80,7 +102,7 @@ errors even when they are valid KDL.
 
 ## Build the Application
 
-Surface does not compile to source code. Follow [Generating applications](./generating_applications.md)
-to prepare an example workspace and give the checked specification to an LLM. Generated
-applications belong in the ignored `build/` directory. Review and test the result as
-ordinary application code.
+Surface does not compile to source code. Follow
+[Generating applications](./generating_applications.md) to prepare an example workspace
+and give the checked specification to an LLM. Generated applications belong in the
+ignored `build/` directory. Review and test the result as ordinary application code.

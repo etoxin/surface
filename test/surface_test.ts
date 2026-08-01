@@ -803,6 +803,84 @@ Deno.test("CLI check and export succeed for the valid example", () => {
   );
 });
 
+Deno.test("CLI init installs Codex support without replacing gitignore", async () => {
+  const projectRoot = await Deno.makeTempDir({ prefix: "surface-init-codex-" });
+
+  try {
+    await Deno.writeTextFile(join(projectRoot, ".gitignore"), "coverage/\n");
+
+    const initialized = runCli(["init", "--codex"], projectRoot);
+    assertEquals(initialized.code, 0, decoder.decode(initialized.stderr));
+    assertMatch(decoder.decode(initialized.stdout), /Initialized Surface for Codex/);
+    assertMatch(decoder.decode(initialized.stdout), /Codex: \$surf-build/);
+
+    const surfaceSkill = await Deno.readTextFile(
+      join(projectRoot, ".agents", "skills", "surface", "SKILL.md"),
+    );
+    const buildMetadata = await Deno.readTextFile(
+      join(
+        projectRoot,
+        ".agents",
+        "skills",
+        "surf-build",
+        "agents",
+        "openai.yaml",
+      ),
+    );
+    assertMatch(surfaceSkill, /^---\nname: surface/m);
+    assertMatch(buildMetadata, /short_description: "Build surface\.kdl"/);
+    assertEquals(
+      await Deno.readTextFile(join(projectRoot, ".gitignore")),
+      "coverage/\n/build/\n",
+    );
+    assertEquals(
+      await pathExists(join(projectRoot, ".claude")),
+      false,
+    );
+
+    const repeated = runCli(["init", "--codex"], projectRoot);
+    assertEquals(repeated.code, 0, decoder.decode(repeated.stderr));
+    assertEquals(
+      await Deno.readTextFile(join(projectRoot, ".gitignore")),
+      "coverage/\n/build/\n",
+    );
+  } finally {
+    await Deno.remove(projectRoot, { recursive: true });
+  }
+});
+
+Deno.test("CLI init can install Claude and Codex together", async () => {
+  const projectRoot = await Deno.makeTempDir({ prefix: "surface-init-both-" });
+
+  try {
+    const initialized = runCli(
+      ["init", "--codex", "--claude"],
+      projectRoot,
+    );
+    assertEquals(initialized.code, 0, decoder.decode(initialized.stderr));
+    assertMatch(
+      decoder.decode(initialized.stdout),
+      /Initialized Surface for Codex and Claude Code/,
+    );
+    assert(
+      await pathExists(
+        join(projectRoot, ".agents", "skills", "surf-build", "SKILL.md"),
+      ),
+    );
+
+    const claudeCommand = await Deno.readTextFile(
+      join(projectRoot, ".claude", "commands", "surf:build.md"),
+    );
+    assertMatch(claudeCommand, /^---\nname: surf-build/m);
+    assertEquals(
+      await Deno.readTextFile(join(projectRoot, ".gitignore")),
+      "/build/\n",
+    );
+  } finally {
+    await Deno.remove(projectRoot, { recursive: true });
+  }
+});
+
 Deno.test("CLI reference lists and resolves canonical checked references", () => {
   const specification = join(todoExampleRoot, "surface.kdl");
   const listed = runCli(["reference", specification, "--list"]);
@@ -1032,19 +1110,37 @@ Deno.test("the repository contains no JavaScript source files", async () => {
   assertEquals(javascript, []);
 });
 
-function runCli(arguments_: string[]): Deno.CommandOutput {
+function runCli(
+  arguments_: string[],
+  cwd = repositoryRoot,
+): Deno.CommandOutput {
   return new Deno.Command(Deno.execPath(), {
     args: [
       "run",
       "--quiet",
+      "--config",
+      join(repositoryRoot, "deno.json"),
       "--allow-read",
       "--allow-write",
       cli,
       ...arguments_,
     ],
+    cwd,
     stdout: "piped",
     stderr: "piped",
   }).outputSync();
+}
+
+async function pathExists(path: string): Promise<boolean> {
+  try {
+    await Deno.stat(path);
+    return true;
+  } catch (error) {
+    if (error instanceof Deno.errors.NotFound) {
+      return false;
+    }
+    throw error;
+  }
 }
 
 async function collectFiles(directory: string): Promise<string[]> {

@@ -4,6 +4,12 @@ import { resolve } from "node:path";
 
 import { type Diagnostic, formatDiagnostic } from "./diagnostics.ts";
 import { formatSurface } from "./formatter.ts";
+import {
+  type Agent,
+  ensureBuildIgnored,
+  installAgentSupport,
+  selectAgents,
+} from "./init.ts";
 import { parseKdl, parseSurface, type SurfaceIr } from "./surface.ts";
 
 interface SurfaceReference {
@@ -18,6 +24,10 @@ export async function main(args: string[]): Promise<number> {
   if (!command || command === "help" || command === "--help") {
     printHelp();
     return command ? 0 : 1;
+  }
+
+  if (command === "init") {
+    return await runInit(arguments_);
   }
 
   const fileArgument = arguments_[0];
@@ -46,6 +56,53 @@ export async function main(args: string[]): Promise<number> {
       printHelp();
       return 1;
   }
+}
+
+async function runInit(args: string[]): Promise<number> {
+  if (args.includes("--help")) {
+    printInitHelp();
+    return 0;
+  }
+
+  const unknown = args.find((argument) =>
+    argument !== "--codex" && argument !== "--claude"
+  );
+  if (unknown !== undefined) {
+    console.error(`Unknown init option ${unknown}.`);
+    printInitHelp();
+    return 1;
+  }
+
+  let agents: Agent[] = [];
+  if (args.includes("--codex")) {
+    agents.push("codex");
+  }
+  if (args.includes("--claude")) {
+    agents.push("claude");
+  }
+  if (agents.length === 0) {
+    agents = await selectAgents();
+  }
+
+  const projectRoot = Deno.cwd();
+  const installed = await installAgentSupport(projectRoot, agents);
+  const updatedIgnore = await ensureBuildIgnored(projectRoot);
+  const labels = agents.map((agent) => agent === "codex" ? "Codex" : "Claude Code");
+
+  console.log(`Initialized Surface for ${labels.join(" and ")}.`);
+  console.log(`Installed ${installed.length} agent files.`);
+  if (updatedIgnore) {
+    console.log("Added /build/ to .gitignore.");
+  }
+  console.log("Build surface.kdl with:");
+  if (agents.includes("codex")) {
+    console.log("  Codex: $surf-build");
+  }
+  if (agents.includes("claude")) {
+    console.log("  Claude Code: /surf:build");
+  }
+
+  return 0;
 }
 
 function runParse(source: string, file: string): number {
@@ -207,11 +264,22 @@ function printDiagnostics(diagnostics: Diagnostic[]): boolean {
 
 function printHelp(): void {
   console.log(`Usage:
+  surf init [--codex] [--claude]
   surf parse <file.kdl>
   surf check <file.kdl>
   surf format <file.kdl>
   surf export <file.kdl> --format json
   surf reference <file.kdl> <selector|--list>`);
+}
+
+function printInitHelp(): void {
+  console.log(`Usage:
+  surf init
+  surf init --codex
+  surf init --claude
+  surf init --codex --claude
+
+Without flags, init opens an interactive multi-select.`);
 }
 
 if (import.meta.main) {

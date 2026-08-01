@@ -21,8 +21,9 @@ Do not provide an existing implementation when you want an independent generatio
 Use $surf-build.
 ```
 
-Claude Code users can run `/surf:build` instead. The preparation task installs both
-agent-specific entry points with the same workflow.
+Claude Code users can run `/surf:build` instead. Run `surf init` in the project and
+select one or both agents to install their project-local entry points with the same
+workflow.
 
 The implementation may use any architecture compatible with the declared stack. Surface
 aims for consistent products and behavior, not identical source code.

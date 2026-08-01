@@ -41,6 +41,11 @@ depends = ["deps"]
 raw_args = true
 run = "deno task surf"
 
+[tasks.build]
+description = "Build a local Surface executable for this platform"
+depends = ["deps"]
+run = "deno task build"
+
 [tasks."examples-prepare"]
 description = "Copy the Surface skill into every example workspace"
 run = "deno task examples-prepare"
