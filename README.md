@@ -37,8 +37,8 @@ Install [mise](https://mise.jdx.dev/), then run:
 git clone https://github.com/etoxin/surface-lang.git
 cd surface-lang
 mise install
-mise run surf check examples/01-hello-world/surface.kdl
-mise run surf export examples/01-hello-world/surface.kdl --format json
+mise run surf check examples/hello-world/surface.kdl
+mise run surf export examples/hello-world/surface.kdl --format json
 mise run verify
 ```
 
@@ -69,17 +69,15 @@ version control and review generated applications before using them.
 
 ## Examples and Evidence
 
-Five examples cover the small language from first use through platform-scale tests:
+Four examples cover the small language from first use through platform-scale tests:
 
-1. [Hello World](./examples/01-hello-world/README.md)
-2. [Todo List](./examples/02-todo-list/README.md)
-3. [Design Consistency](./examples/03-design-consistency/README.md)
-4. [Online Checkout](./examples/04-online-checkout/README.md)
-5. [Multi-tenant Project Tracker](./examples/05-multi-tenant-project-tracker/README.md)
+- [Hello World](./examples/hello-world/README.md)
+- [Todo List](./examples/todo-list/README.md)
+- [Online Checkout](./examples/online-checkout/README.md)
+- [Multi-tenant Project Tracker](./examples/multi-tenant-project-tracker/README.md)
 
-Examples 3–5 pin a design system in their application stack. The design-consistency
-example contains coordinated and independent builds, contract reports, and 48
-screenshots. The final two examples test the same frozen grammar at platform scale.
+Online Checkout and Multi-tenant Project Tracker pin Pico CSS 2.1.1 in their
+application stacks and test the frozen grammar at platform scale.
 
 ## CLI
 
@@ -91,8 +89,8 @@ mise run surf export <file.kdl> --format json
 mise run surf reference <file.kdl> <selector|--list>
 ```
 
-Run `mise tasks` to see every example and benchmark task. The complete repository check
-is `mise run verify`.
+Run `mise tasks` to see every example task. The complete repository check is
+`mise run verify`.
 
 Surface 0.1 is frozen. Bug fixes, diagnostics, formatting, documentation, and tooling may
 improve, but new valid syntax belongs to a later format version.

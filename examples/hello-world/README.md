@@ -10,8 +10,8 @@ reference.
 - [`invalid/`](./invalid/) contains diagnostic examples.
 
 ```sh
-mise run surf check examples/01-hello-world/surface.kdl
-mise run surf export examples/01-hello-world/surface.kdl --format json
+mise run surf check examples/hello-world/surface.kdl
+mise run surf export examples/hello-world/surface.kdl --format json
 ```
 
 Open `app/index.html` directly in a browser to view the implementation.

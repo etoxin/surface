@@ -11,7 +11,7 @@ ordered interaction logic.
 - [`invalid/`](./invalid/) contains focused diagnostic examples.
 
 ```sh
-mise run surf check examples/02-todo-list/surface.kdl
+mise run surf check examples/todo-list/surface.kdl
 mise run todo-list
 ```
 

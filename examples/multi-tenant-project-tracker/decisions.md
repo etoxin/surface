@@ -7,7 +7,7 @@ repository root, run:
 
 ```sh
 deno run --allow-net --allow-read \
-  examples/05-multi-tenant-project-tracker/app/server.ts
+  examples/multi-tenant-project-tracker/app/server.ts
 ```
 
 Open `http://localhost:8007/`. Importing `server.ts` does not start a listener;
@@ -16,8 +16,8 @@ with:
 
 ```sh
 deno test --allow-read \
-  examples/05-multi-tenant-project-tracker/app/domain_test.ts \
-  examples/05-multi-tenant-project-tracker/app/server_test.ts
+  examples/multi-tenant-project-tracker/app/domain_test.ts \
+  examples/multi-tenant-project-tracker/app/server_test.ts
 ```
 
 The Surface production stack names PostgreSQL and OIDC. This runnable example uses

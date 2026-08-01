@@ -42,56 +42,16 @@ raw_args = true
 run = "deno task surf"
 
 [tasks."todo-list"]
-description = "Serve example 2, Todo List, on port 8003"
+description = "Serve the Todo List example on port 8003"
 depends = ["deps"]
 run = "deno task todo-list"
 
-[tasks."design-consistency"]
-description = "Check the coordinated builds for example 3"
-depends = ["deps"]
-run = "deno task design-consistency"
-
-[tasks."design-independent"]
-description = "Measure the independently generated builds for example 3"
-depends = ["deps"]
-run = "deno task design-independent"
-
-[tasks."design-browser-install"]
-description = "Install the pinned Chromium browser for visual benchmarks"
-depends = ["deps"]
-run = "deno task design-browser-install"
-
-[tasks."design-visual"]
-description = "Capture and compare the coordinated example-3 screenshots"
-depends = ["design-browser-install"]
-run = "deno task design-visual"
-
-[tasks."design-independent-visual"]
-description = "Capture and compare the independent example-3 screenshots"
-depends = ["design-browser-install", "design-independent"]
-run = "deno task design-independent-visual"
-
-[tasks."design-build-1"]
-description = "Run coordinated design build 1 on port 8020"
-depends = ["deps"]
-run = "deno task design-build-1"
-
-[tasks."design-build-2"]
-description = "Run coordinated design build 2 on port 8021"
-depends = ["deps"]
-run = "deno task design-build-2"
-
-[tasks."design-build-3"]
-description = "Run coordinated design build 3 on port 8022"
-depends = ["deps"]
-run = "deno task design-build-3"
-
 [tasks."online-checkout"]
-description = "Run example 4, Online Checkout, on port 8006"
+description = "Run the Online Checkout example on port 8006"
 depends = ["deps"]
 run = "deno task online-checkout"
 
 [tasks."multi-tenant-project-tracker"]
-description = "Run example 5, Multi-tenant Project Tracker, on port 8007"
+description = "Run the Multi-tenant Project Tracker example on port 8007"
 depends = ["deps"]
 run = "deno task multi-tenant-project-tracker"

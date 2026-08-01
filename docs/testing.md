@@ -33,13 +33,9 @@ implementations should be allowed to differ internally.
 ```sh
 mise run verify
 mise run todo-list
-mise run design-independent
-mise run design-independent-visual
 INVENTORY_API_TOKEN=development PAYMENT_API_TOKEN=development mise run online-checkout
 mise run multi-tenant-project-tracker
 ```
-
-The visual task downloads its pinned Playwright Chromium browser on first use.
 
 ## Useful Test Reports
 

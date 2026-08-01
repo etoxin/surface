@@ -13,7 +13,7 @@ log them.
 INVENTORY_API_TOKEN=local-inventory \
 PAYMENT_API_TOKEN=local-payment \
 deno run --allow-env --allow-net --allow-read \
-  examples/04-online-checkout/app/server.ts
+  examples/online-checkout/app/server.ts
 ```
 
 Open <http://localhost:8006/checkout>. The UI and API state lasts for the process

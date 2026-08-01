@@ -10,20 +10,15 @@ import { formatSurface } from "../src/formatter.ts";
 import { parseKdl, parseSurface } from "../src/surface.ts";
 
 const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const exampleRoot = join(repositoryRoot, "examples", "01-hello-world");
+const exampleRoot = join(repositoryRoot, "examples", "hello-world");
 const todoExampleRoot = join(
   repositoryRoot,
   "examples",
-  "02-todo-list",
-);
-const designExampleRoot = join(
-  repositoryRoot,
-  "examples",
-  "03-design-consistency",
+  "todo-list",
 );
 const candidateExampleDirectories = [
-  "04-online-checkout",
-  "05-multi-tenant-project-tracker",
+  "online-checkout",
+  "multi-tenant-project-tracker",
 ];
 const cli = join(repositoryRoot, "src", "cli.ts");
 const decoder = new TextDecoder();
@@ -44,19 +39,6 @@ Deno.test("the Todo List specification exports the reviewed IR", async () => {
   const source = await Deno.readTextFile(join(todoExampleRoot, "surface.kdl"));
   const expected = JSON.parse(
     await Deno.readTextFile(join(todoExampleRoot, "expected-ir.json")),
-  );
-
-  const result = parseSurface(source, "surface.kdl");
-
-  assertEquals(result.diagnostics, []);
-  assertEquals(result.ir, expected);
-  assertEquals(formatSurface(source, "surface.kdl").output, source);
-});
-
-Deno.test("the Design Consistency specification exports the reviewed IR", async () => {
-  const source = await Deno.readTextFile(join(designExampleRoot, "surface.kdl"));
-  const expected = JSON.parse(
-    await Deno.readTextFile(join(designExampleRoot, "expected-ir.json")),
   );
 
   const result = parseSurface(source, "surface.kdl");
@@ -157,31 +139,6 @@ Deno.test(
       if (entry.isFile && entry.name.endsWith(".kdl")) {
         fixtures.push(entry.name);
       }
-    }
-    assertEquals(Object.keys(expected).sort(), fixtures.sort());
-
-    for (const [file, code] of Object.entries(expected)) {
-      const source = await Deno.readTextFile(join(invalidRoot, file));
-      const result = parseSurface(source, file);
-      assert(
-        result.diagnostics.some((diagnostic) => diagnostic.code === code),
-        `${file} should report ${code}`,
-      );
-      assertEquals(result.ir, null);
-    }
-  },
-);
-
-Deno.test(
-  "the Design Consistency invalid fixtures report their expected diagnostics",
-  async () => {
-    const invalidRoot = join(designExampleRoot, "invalid");
-    const expected = JSON.parse(
-      await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
-    );
-    const fixtures = [];
-    for await (const entry of Deno.readDir(invalidRoot)) {
-      if (entry.isFile && entry.name.endsWith(".kdl")) fixtures.push(entry.name);
     }
     assertEquals(Object.keys(expected).sort(), fixtures.sort());
 

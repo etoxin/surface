@@ -19,7 +19,7 @@ mise run verify
 
 ## Read the Smallest Example
 
-Open [`examples/01-hello-world/surface.kdl`](../examples/01-hello-world/surface.kdl):
+Open [`examples/hello-world/surface.kdl`](../examples/hello-world/surface.kdl):
 
 ```kdl
 /- kdl-version 2
@@ -47,25 +47,25 @@ without prescribing HTML or controls. The screen places that interface in the ap
 Check the specification:
 
 ```sh
-mise run surf check examples/01-hello-world/surface.kdl
+mise run surf check examples/hello-world/surface.kdl
 ```
 
 Format a valid file in place:
 
 ```sh
-mise run surf format examples/01-hello-world/surface.kdl
+mise run surf format examples/hello-world/surface.kdl
 ```
 
 List the references that context and logic can use:
 
 ```sh
-mise run surf reference examples/02-todo-list/surface.kdl --list
+mise run surf reference examples/todo-list/surface.kdl --list
 ```
 
 Export the reduced semantic representation:
 
 ```sh
-mise run surf export examples/02-todo-list/surface.kdl --format json
+mise run surf export examples/todo-list/surface.kdl --format json
 ```
 
 The reduced JSON is useful for tools and comparisons, but it deliberately omits context.

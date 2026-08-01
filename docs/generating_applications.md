@@ -48,9 +48,9 @@ stack "web" {
 }
 ```
 
-Name exact components or root classes in context when that choice matters. The
-independent design benchmark showed that a design-system name gives strong visual
-convergence, but ambiguous component wording still produces visible differences.
+Name exact components or root classes in context when that choice matters. A pinned
+design system narrows the visual choices, while ambiguous component wording can still
+produce visible differences.
 
 ## Independent Generations
 
@@ -61,7 +61,3 @@ To measure reproducibility:
 3. prevent generators from reading one another's output;
 4. record model, tool versions, repairs, assumptions, and source hashes;
 5. run the same behavioral and visual tests against every output.
-
-See the [Design Consistency benchmark](../examples/03-design-consistency/benchmark.md)
-for a complete example with coordinated builds, isolated builds, screenshots, and
-machine-readable reports.
