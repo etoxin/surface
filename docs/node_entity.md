@@ -5,10 +5,10 @@ Contact Viewer needs a contact:
 
 ```kdl
 entity "contact" {
-    field "id" type="string" generated
-    field "name" type="string"
-    field "email" type="string" optional
-    field "active" type="boolean"
+    (string)"id" required generated
+    (string)"name" required
+    (string)"email" optional
+    (boolean)"active" required
 }
 ```
 
@@ -17,7 +17,7 @@ entity "contact" {
 `"contact"` is the entity ID. It starts with a lowercase letter and should
 use lower camel case. Each entity needs a different ID.
 
-An entity contains one or more `field` nodes and can contain prompt-only
+An entity contains one or more typed field nodes and can contain prompt-only
 [`context`](./node_context.md). It has no properties.
 
 ## Field
@@ -25,42 +25,47 @@ An entity contains one or more `field` nodes and can contain prompt-only
 A field describes one value on the entity:
 
 ```kdl
-field "name" type="string"
+(string)"name" required
 ```
 
-`"name"` is the field name. Field names use the same lower-camel-case rule as
-declaration IDs and must be unique within their entity.
+`(string)` is a KDL node annotation that declares the field's primitive type.
+`"name"` is the field's node name. Field names use the same lower-camel-case
+rule as declaration IDs and must be unique within their entity.
 
-Every field needs a `type`. Surface currently supports:
+Every field needs one of these node annotations:
 
-- `type="string"` for text;
-- `type="boolean"` for true-or-false values.
+- `(string)` for text;
+- `(boolean)` for true-or-false values.
 
 Numbers are not supported yet.
 
 ## Field Modifiers
 
-Add the bare `generated` modifier when the application creates a field value
+Every field must contain exactly one cardinality modifier:
+
+- `required` means the entity must have a value;
+- `optional` means the entity can omit the value.
+
+Add `generated` after the cardinality when the application creates the value
 rather than asking a user or external source to provide it:
 
 ```kdl
-field "id" type="string" generated
+(string)"id" required generated
 ```
 
-Add the bare `optional` modifier when an entity can exist without the field:
+An optional field looks like:
 
 ```kdl
-field "email" type="string" optional
+(string)"email" optional
 ```
 
-Fields are required unless they include `optional`. A field can use both
-modifiers when needed. Modifiers appear after the properties and do not take a
-value; forms such as `generated=#true` and `optional=#true` are invalid.
+Write modifiers as bare words without values. Do not combine `required` and
+`optional`, repeat a modifier, or use forms such as `generated=#true`.
 
 A field can also contain prompt-only context:
 
 ```kdl
-field "email" type="string" optional {
+(string)"email" optional {
     context "Use this address only to display contact details."
 }
 ```

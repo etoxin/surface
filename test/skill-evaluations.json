@@ -9,8 +9,8 @@
         "The result is valid Surface 0.1 KDL.",
         "The result contains exactly one application and at least one screen.",
         "The application has no version property.",
-        "The contact entity uses only string and boolean field types.",
-        "Generated and optional are bare field modifiers without values.",
+        "The contact entity declares fields as typed child nodes using only (string) and (boolean).",
+        "Every field uses exactly one required or optional modifier, and generated is a bare modifier.",
         "The lookup input and id field are both strings.",
         "The query uses returns (entity)\"contact\" with missing=#null.",
         "The screen uses use (query)\"contactById\", and all references resolve.",
@@ -22,7 +22,7 @@
       "id": "modify",
       "prompt": "Add an optional string phone field to a valid Contact Viewer entity and display it after email. Preserve its comments, context, query, states, and unrelated content.",
       "acceptance": [
-        "The entity adds exactly one field named phone with type string and the bare optional modifier.",
+        "The entity adds exactly one (string) phone field with the bare optional modifier.",
         "The normal screen section adds field phone immediately after field email.",
         "The lookup query and both screen states remain unchanged.",
         "The existing comment, context node, and unrelated content are preserved.",
@@ -31,7 +31,7 @@
     },
     {
       "id": "diagnose",
-      "prompt": "Diagnose a Contact Viewer that uses the old generated=#true property, omits the entity annotation on returns, repeats a field name, has a by field with no matching input, projects an undeclared phone field, and is missing its notFound state.",
+      "prompt": "Diagnose a Contact Viewer whose id field has no required or optional modifier, whose returns value omits the entity annotation, that repeats a field name, has a by field with no matching input, projects an undeclared phone field, and is missing its notFound state.",
       "acceptance": [
         "The response identifies all six validation problems.",
         "The response distinguishes valid KDL from valid Surface.",

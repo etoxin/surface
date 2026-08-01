@@ -1,6 +1,9 @@
 {
-  "missing-field-type.kdl": "SURF-PROP-001",
-  "invalid-boolean.kdl": "SURF-PROP-003",
+  "missing-field-type.kdl": "SURF-TYPE-002",
+  "missing-field-cardinality.kdl": "SURF-ARG-005",
+  "conflicting-field-cardinality.kdl": "SURF-ARG-005",
+  "legacy-field-syntax.kdl": "SURF-TYPE-002",
+  "legacy-generated-property.kdl": "SURF-PROP-003",
   "invalid-field-modifier.kdl": "SURF-ARG-003",
   "duplicate-field-modifier.kdl": "SURF-ARG-004",
   "unsupported-type.kdl": "SURF-TYPE-001",

@@ -34,7 +34,7 @@ Surface file
 ├── application
 │   └── purpose
 ├── entity
-│   └── field
+│   └── typed field
 ├── query
 │   ├── input
 │   └── returns

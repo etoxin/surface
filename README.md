@@ -60,8 +60,8 @@ Read the guides in this order:
 | `surface "0.1"` | First semantic node; exactly one |
 | `application "<id>"` | Exactly one; contains one `purpose` |
 | `purpose "<text>"` | Child of `application`; exactly one string |
-| `entity "<id>"` | Declares one or more typed `field` nodes |
-| `field "<name>" type="<type>" [generated] [optional]` | Declares entity data with optional bare modifiers |
+| `entity "<id>"` | Declares one or more typed field nodes |
+| `(<type>)"<name>" required\|optional [generated]` | Declares an entity field using a node annotation |
 | `query "<id>" by="<field>"` | Looks up one entity using `input` and `returns` children |
 | `input "<name>" type="<type>"` | Declares a query input |
 | `returns (entity)"<entity>" missing=#null` | Returns a checked entity reference or `#null` |
@@ -81,9 +81,10 @@ Additional rules:
   lower camel case.
 - Declaration identifiers and nested field/input names are unique within their
   type and scope.
-- Field and input types are currently `string` or `boolean`.
-- Field modifiers `generated` and `optional` are bare words. Required fields
-  omit `optional`.
+- Entity field node annotations and input types are currently `string` or
+  `boolean`.
+- Every entity field uses exactly one bare `required` or `optional` modifier.
+  The independent `generated` modifier is also bare.
 - The KDL 2 null literal is `#null`.
 - A type annotation on a string marks a checked reference to a top-level
   declaration of that type.

@@ -15,13 +15,13 @@ names. For this example, `/contacts?id=ada` supplies the `id` input.
 
 ## Display
 
-A `field` inside an entity declares data. A `field` inside a normal screen section
-refers to a field on the entity returned by the screen's query. State sections contain
-static titles and text because no entity is available.
+A typed child node inside an entity declares data. A `field` inside a normal screen
+section refers to a field on the entity returned by the screen's query. State sections
+contain static titles and text because no entity is available.
 
-Entity field types remain properties because a type has a value. Boolean-like field
-traits are bare modifiers: `generated` and `optional`. Required is the default, so it
-needs no modifier.
+Entity fields use KDL node annotations for their primitive types. Every field states
+`required` or `optional` explicitly, and `generated` is an independent bare modifier.
+Context remains a child node so it stays repeatable and can contain multiline prompts.
 
 The example stores two contacts in memory. Storage and seed data are implementation
 choices and are not part of Surface yet.

@@ -44,10 +44,10 @@ Declare read-only data and a single-entity lookup when needed:
 
 ```kdl
 entity "contact" {
-    field "id" type="string" generated
-    field "name" type="string"
-    field "email" type="string" optional
-    field "active" type="boolean"
+    (string)"id" required generated
+    (string)"name" required
+    (string)"email" optional
+    (boolean)"active" required
 }
 
 query "contactById" by="id" {
@@ -62,16 +62,16 @@ An application has exactly:
 - no properties;
 - one `purpose` child containing one quoted string.
 
-An entity has one quoted identifier, no properties, and one or more `field`
+An entity has one quoted identifier, no properties, and one or more typed field
 children. Give every field:
 
-- one quoted lower-camel-case name unique within the entity;
-- required `type="string"` or `type="boolean"`;
-- optional bare `generated` modifier;
-- optional bare `optional` modifier. Omit it for a required field.
+- a `(string)` or `(boolean)` node annotation;
+- a quoted lower-camel-case node name unique within the entity;
+- exactly one bare `required` or `optional` modifier;
+- an optional bare `generated` modifier after the cardinality.
 
-Put modifiers after the `type` property. Do not give them values: reject old
-forms such as `generated=#true` and `optional=#true`.
+Do not give modifiers values, combine `required` and `optional`, or repeat a
+modifier. Reject the earlier `field "name" type="string"` syntax.
 
 A query is a single-entity lookup. Give it:
 
@@ -84,11 +84,15 @@ A query is a single-entity lookup. Give it:
 Resolve `by` to both an input on the query and a field on the returned entity.
 Require those types to match.
 
-Treat a type annotation on a string as a checked reference to a top-level
+Treat a type annotation on a string value as a checked reference to a top-level
 Surface declaration of that type. Require the annotation and verify both the
 target ID and its declaration type. Rung 3 supports `(entity)` on `returns`
-arguments and `(query)` on screen `use` arguments. Reject annotations in all
-other positions.
+arguments and `(query)` on screen `use` arguments.
+
+Distinguish those value annotations from the node annotations that declare
+entity field types: `(string)"name" required` is a field node, while
+`(entity)"contact"` following `returns` is a reference value. Reject
+annotations in all other positions.
 
 Declare at least one screen. A queried screen looks like:
 
@@ -137,9 +141,8 @@ A section has:
 - one or more ordered `text` or `field` children.
 
 Use `field "<name>"` in a normal section to project a field from the entity
-returned by the screen query. Require that reference to resolve. Continue to
-use `field "<name>" type="..." [generated] [optional]` only inside an entity
-declaration.
+returned by the screen query. Require that reference to resolve. Do not use
+`field` for declarations inside an entity; use typed child nodes there.
 Do not mix `text` and field references in the same section.
 
 Build a static FAQ with repeated sections: use each section name as the
@@ -175,8 +178,9 @@ Check all of the following:
 - Declaration identifiers are valid and unique within their type.
 - Required arguments, properties, and children are present exactly as defined.
 - Entity fields and query inputs have valid unique names and supported types.
-- Field modifiers use the bare words `generated` and `optional`; required is
-  implicit. Null properties use `#null`, not a quoted string.
+- Every entity field has exactly one `required` or `optional` modifier; only
+  entity fields may also use `generated`. All modifiers are bare words.
+- Null properties use `#null`, not a quoted string.
 - Annotated entity and query references have the required type and resolve.
 - Lookup fields/inputs and projected fields resolve.
 - Lookup input and entity-field types match.
@@ -184,8 +188,8 @@ Check all of the following:
   state.
 - Every section contains at least one text or field node.
 - Properties are not duplicated.
-- No unsupported top-level nodes, child nodes, properties, reference types, or
-  misplaced type annotations appear.
+- No unsupported top-level nodes, child nodes, properties, field/reference
+  types, or misplaced annotations appear.
 
 When reporting a problem, include its location, the violated rule, and a
 specific valid correction.

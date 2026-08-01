@@ -86,7 +86,7 @@ type PropertyType = "string" | "boolean" | "null";
 
 const IDENTIFIER_PATTERN = /^[a-z][A-Za-z0-9]*$/;
 const PRIMITIVE_TYPES = new Set<PrimitiveType>(["string", "boolean"]);
-const FIELD_MODIFIERS = new Set(["generated", "optional"]);
+const FIELD_MODIFIERS = new Set(["required", "optional", "generated"]);
 const TOP_LEVEL_NODES = new Set([
   "surface",
   "application",
@@ -326,21 +326,10 @@ function validateEntity(node: Node, add: AddDiagnostic): void {
   validateProperties(node, [], declaration, add);
 
   const children = node.children?.nodes ?? [];
-  const fields = children.filter((child) => child.getName() === "field");
+  const fields = children.filter(isEntityFieldNode);
   for (const child of children) {
-    if (child.getName() === "context") {
+    if (!isEntityFieldNode(child)) {
       validateContextNode(child, declaration, add);
-      continue;
-    }
-
-    if (child.getName() !== "field") {
-      add({
-        code: "SURF-CHILD-002",
-        message: `Unknown child node ${child.getName()} in ${declaration}.`,
-        element: child,
-        declaration,
-        suggestion: "Use only field and context child nodes in an entity.",
-      });
     }
   }
 
@@ -350,15 +339,19 @@ function validateEntity(node: Node, add: AddDiagnostic): void {
       message: `${declaration} must contain at least one field child node.`,
       element: node,
       declaration,
-      suggestion: 'Add a field such as field "id" type="string".',
+      suggestion: 'Add a field such as (string)"id" required.',
     });
   }
 
-  const identities = new Set<string>();
+  const fieldNames = new Set<string>();
   for (const field of fields) {
     validateFieldDeclaration(field, declaration, add);
-    validateIdentity(field, identities, add);
+    validateFieldIdentity(field, fieldNames, declaration, add);
   }
+}
+
+function isEntityFieldNode(node: Node): boolean {
+  return node.getTag() !== null || node.getName() !== "context";
 }
 
 function validateFieldDeclaration(
@@ -366,55 +359,59 @@ function validateFieldDeclaration(
   declaration: string,
   add: AddDiagnostic,
 ): void {
-  const subject = `${declaration}.field`;
-  validateNoTag(node, add, declaration);
-  validateFieldArguments(node, subject, add);
-  validateProperties(node, ["type"], subject, add, ["type"]);
+  const name = node.getName();
+  const subject = `${declaration}.field.${name}`;
+
+  if (!IDENTIFIER_PATTERN.test(name)) {
+    add({
+      code: "SURF-ID-001",
+      message: `Invalid field identifier ${name}.`,
+      element: node,
+      declaration: subject,
+      suggestion: "Use lower camel case beginning with a lowercase ASCII letter.",
+    });
+  }
+
+  validateFieldType(node, subject, declaration, add);
+  validateFieldModifiers(node, subject, add);
+  validateProperties(node, [], subject, add);
   validateOnlyContextChildren(node, subject, add);
-  validatePrimitiveType(node, subject, declaration, add);
 }
 
-function validateFieldArguments(
+function validateFieldType(
+  node: Node,
+  subject: string,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const type = node.getTag();
+  if (type === null) {
+    add({
+      code: "SURF-TYPE-002",
+      message: `${subject} is missing its primitive node type.`,
+      element: node,
+      declaration,
+      suggestion: `Annotate the field node as (string) or (boolean).`,
+    });
+  } else if (!PRIMITIVE_TYPES.has(type as PrimitiveType)) {
+    add({
+      code: "SURF-TYPE-001",
+      message: `Unsupported primitive type ${type} on ${subject}.`,
+      element: node,
+      declaration,
+      suggestion: "Use (string) or (boolean).",
+    });
+  }
+}
+
+function validateFieldModifiers(
   node: Node,
   subject: string,
   add: AddDiagnostic,
 ): void {
   const arguments_ = node.getArguments();
-  if (arguments_.length < 1 || arguments_.length > 3) {
-    add({
-      code: "SURF-ARG-001",
-      message:
-        `${subject} must contain one name followed by at most one of each supported modifier.`,
-      element: node,
-      declaration: subject,
-      suggestion:
-        'Use field "name" type="string", optionally followed by generated and/or optional.',
-    });
-  }
-
-  const name = arguments_[0];
-  if (name !== undefined) {
-    if (typeof name !== "string") {
-      add({
-        code: "SURF-ARG-002",
-        message: `${subject} identifier must be a string.`,
-        element: node.getArgumentEntry(0),
-        declaration: subject,
-        suggestion: "Use one quoted lower-camel-case identifier.",
-      });
-    } else if (!IDENTIFIER_PATTERN.test(name)) {
-      add({
-        code: "SURF-ID-001",
-        message: `Invalid declaration identifier ${name}.`,
-        element: node.getArgumentEntry(0),
-        declaration: `${node.getName()}.${name}`,
-        suggestion: "Use lower camel case beginning with a lowercase ASCII letter.",
-      });
-    }
-  }
-
   const seen = new Set<string>();
-  for (let index = 1; index < arguments_.length; index++) {
+  for (let index = 0; index < arguments_.length; index++) {
     const modifier = arguments_[index];
     if (typeof modifier !== "string" || !FIELD_MODIFIERS.has(modifier)) {
       add({
@@ -422,7 +419,8 @@ function validateFieldArguments(
         message: `Unsupported field modifier ${String(modifier)} on ${subject}.`,
         element: node.getArgumentEntry(index),
         declaration: subject,
-        suggestion: "Use only the bare modifiers generated and optional.",
+        suggestion:
+          "Use exactly one of required or optional, plus generated when needed.",
       });
       continue;
     }
@@ -437,7 +435,49 @@ function validateFieldArguments(
       });
     }
     seen.add(modifier);
+
+    if (node.getArgumentEntry(index)?.getTag() !== null) {
+      add({
+        code: "SURF-TAG-001",
+        message: `Field modifier ${modifier} must not have a type annotation.`,
+        element: node.getArgumentEntry(index),
+        declaration: subject,
+        suggestion: `Write ${modifier} as a bare modifier.`,
+      });
+    }
   }
+
+  const cardinality = Number(seen.has("required")) +
+    Number(seen.has("optional"));
+  if (cardinality !== 1) {
+    add({
+      code: "SURF-ARG-005",
+      message:
+        `${subject} must contain exactly one of the required or optional modifiers.`,
+      element: node,
+      declaration: subject,
+      suggestion: "Add exactly one bare required or optional modifier.",
+    });
+  }
+}
+
+function validateFieldIdentity(
+  node: Node,
+  fieldNames: Set<string>,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const name = node.getName();
+  if (fieldNames.has(name)) {
+    add({
+      code: "SURF-ID-002",
+      message: `Duplicate declaration field.${name}.`,
+      element: node,
+      declaration: `${declaration}.field.${name}`,
+      suggestion: "Rename or remove one of the duplicate fields.",
+    });
+  }
+  fieldNames.add(name);
 }
 
 function validateQuery(node: Node, add: AddDiagnostic): void {
@@ -1205,8 +1245,10 @@ function validateQueryReferences(
     });
   }
 
+  const inputType = input?.getProperty("type");
+
   const field = entity?.children?.nodes.find(
-    (child) => child.getName() === "field" && child.getArgument(0) === by,
+    (child) => isEntityFieldNode(child) && child.getName() === by,
   );
   if (entity !== undefined && field === undefined) {
     add({
@@ -1214,12 +1256,13 @@ function validateQueryReferences(
       message: `${declaration} cannot resolve by="${by}" on entity.${entityId}.`,
       element: propertyEntry(query, "by"),
       declaration,
-      suggestion: `Add field "${by}" to entity "${entityId}" or change by.`,
+      suggestion: `Add (${
+        typeof inputType === "string" ? inputType : "string"
+      })"${by}" required to entity "${entityId}" or change by.`,
     });
   }
 
-  const inputType = input?.getProperty("type");
-  const fieldType = field?.getProperty("type");
+  const fieldType = field?.getTag();
   if (
     typeof inputType === "string" && typeof fieldType === "string" &&
     inputType !== fieldType
@@ -1291,9 +1334,8 @@ function validateScreenReferences(
 
   const fieldNames = new Set(
     (entity.children?.nodes ?? [])
-      .filter((child) => child.getName() === "field")
-      .map((field) => field.getArgument(0))
-      .filter((name): name is string => typeof name === "string"),
+      .filter(isEntityFieldNode)
+      .map((field) => field.getName()),
   );
   for (const field of fieldReferences) {
     const name = field.getArgument(0);
@@ -1356,14 +1398,14 @@ function buildIr(document: Document): SurfaceIr {
         const children = expectChildren(entity, "entity");
         return {
           id: expectString(entity.getArgument(0), "entity identifier"),
-          fields: children.findNodesByName("field").map((field) => {
-            const modifiers = new Set(field.getArguments().slice(1));
+          fields: children.nodes.filter(isEntityFieldNode).map((field) => {
+            const modifiers = new Set(field.getArguments());
             const generated = modifiers.has("generated") ? true : undefined;
             const optional = modifiers.has("optional") ? true : undefined;
             return {
-              name: expectString(field.getArgument(0), "field name"),
+              name: field.getName(),
               type: expectPrimitiveType(
-                field.getProperty("type"),
+                field.getTag() ?? undefined,
                 "field type",
               ),
               ...(generated === undefined ? {} : { generated }),
