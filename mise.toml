@@ -45,3 +45,8 @@ run = "deno run --allow-read --allow-write src/cli.ts"
 description = "Run the rung-3 Contact Viewer example"
 depends = ["deps"]
 run = "deno task contact-viewer"
+
+[tasks."click-counter"]
+description = "Run the rung-4 Click Counter example"
+depends = ["deps"]
+run = "deno task click-counter"

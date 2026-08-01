@@ -1,0 +1,19 @@
+{
+  "surfaceVersion": "0.1",
+  "application": {
+    "id": "clickCounter",
+    "purpose": "Let a visitor increment and reset a counter."
+  },
+  "interfaces": [
+    {
+      "id": "clickCounter"
+    }
+  ],
+  "screens": [
+    {
+      "id": "home",
+      "route": "/",
+      "interface": "clickCounter"
+    }
+  ]
+}

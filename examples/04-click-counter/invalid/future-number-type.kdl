@@ -1,0 +1,19 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "clickCounter" {
+    purpose "Reject an unreleased numeric field type."
+}
+
+collection "counter" {
+    (number)"value"
+}
+
+interface "clickCounter" {
+    context "Render a click counter."
+}
+
+screen "home" {
+    use (interface)"clickCounter"
+}

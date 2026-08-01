@@ -55,6 +55,6 @@ camel case, such as `contactViewer`. Purpose, routes, and context prompts are
 ordinary quoted strings.
 
 Surface currently supports applications, read-only collections,
-single-collection functions, intent-driven interfaces, and screens. The
-[roadmap](../roadmap.md) adds syntax only when another example application
-needs it.
+single-collection functions, intent-driven interfaces including local
+interaction, and screens. The [roadmap](../roadmap.md) adds syntax only when
+another example application needs it.

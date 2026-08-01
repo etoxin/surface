@@ -26,7 +26,7 @@ screen "home" route="/" {
 An `interface` describes what a user should see or do through prompt context.
 It does not prescribe sections, text nodes, buttons, inputs, or layout. A
 `screen` places one interface at an optional route. Screens may instead contain
-only context for non-visual behavior.
+only context for non-visual behaviour.
 
 ## Documentation
 
@@ -75,6 +75,7 @@ mise run surf format examples/01-hello-world/surface.kdl
 mise run surf export examples/03-contact-viewer/surface.kdl --format json
 mise run surf reference examples/03-contact-viewer/surface.kdl --list
 mise run contact-viewer
+mise run click-counter
 ```
 
 The direct equivalents are `deno task verify` and `deno task surf`. The CLI
@@ -87,11 +88,13 @@ private collections such as `function.contactById.collection.contactLookup`.
 - [Rung 1: Hello World](./examples/01-hello-world/surface.kdl)
 - [Rung 2: Static FAQ](./examples/02-static-faq/surface.kdl)
 - [Rung 3: Contact Viewer](./examples/03-contact-viewer/surface.kdl)
+- [Rung 4: Click Counter](./examples/04-click-counter/surface.kdl)
 - [LLM skill](./skills/surface/SKILL.md)
 
 Each rung includes expected JSON, invalid fixtures, a small implementation,
-human documentation, and updates to the LLM skill. Run the Contact Viewer and
-open `http://localhost:8000/contacts?id=ada`.
+human documentation, and updates to the LLM skill. The Contact Viewer runs at
+`http://localhost:8000/contacts?id=ada`; the Click Counter runs at
+`http://localhost:8001/`.
 
 Only the documented syntax is released. New syntax is added when a roadmap
 application demonstrates that it is necessary.

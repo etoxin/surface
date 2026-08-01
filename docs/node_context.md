@@ -8,7 +8,7 @@ interface "helloWorld" {
 }
 ```
 
-Context describes intent and behavior. It is preserved in the Surface source
+Context describes intent and behaviour. It is preserved in the Surface source
 but omitted from the reduced semantic JSON IR.
 
 ## Where Context Can Go

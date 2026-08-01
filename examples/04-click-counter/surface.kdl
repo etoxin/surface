@@ -1,0 +1,22 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "clickCounter" {
+    purpose "Let a visitor increment and reset a counter."
+}
+
+interface "clickCounter" {
+    context """
+        Render an accessible counter starting at 0.
+
+        Show the current value prominently.
+        Provide an action labelled Increment that increases the value by 1.
+        Provide an action labelled Reset that restores the value to 0.
+        Update the displayed value immediately after either action.
+        """
+}
+
+screen "home" route="/" {
+    use (interface)"clickCounter"
+}

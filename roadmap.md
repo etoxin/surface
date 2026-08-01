@@ -206,8 +206,9 @@ Introduces:
 - context that relates functions, collections, interfaces, and screens.
 
 This stage should establish field syntax and contextual reference resolution.
-Rung 3 supports only `string` and `boolean` primitive types; numeric values
-remain part of rung 4.
+Rung 3 supports only `string` and `boolean` primitive types. Numeric fields
+remain unreleased until an application cannot be described clearly without
+them.
 
 Delivered in:
 
@@ -224,23 +225,36 @@ Delivered in:
 
 ### 4. Click Counter
 
+**Status:** Complete
+
 Build a counter that a visitor can increment and reset.
 
-Introduces:
+Reuses:
 
-- `actor` declarations;
-- `behaviour` declarations for triggered reactions;
-- `event` declarations;
-- `scenario` declarations;
-- numeric values;
-- preconditions and effects;
-- emitted events;
-- behaviour errors;
-- observable state changes.
+- `application`, `interface`, and `screen` declarations;
+- multiline `context` for precise interactive intent;
+- an interface-local value and observable state changes;
+- implementation-level acceptance tests.
 
-This is the first application with mutation and acceptance behaviour. It should
-establish how a behaviour is triggered, how it invokes functions, and how its
-observable effects differ from function output and explanatory context.
+The interface context specifies an initial value of 0, a visible current value,
+an increment action, a reset action, and immediate visible updates. The example
+can be implemented and tested without modelling that local UI state as
+application data.
+
+Rung 4 introduces no new Surface syntax. `actor`, `behaviour`, `event`,
+`scenario`, numeric field types, structured state, preconditions, and effects
+remain unreleased until a later application demonstrates a concrete ambiguity
+or validation gap.
+
+Delivered in:
+
+- [`examples/04-click-counter/surface.kdl`](./examples/04-click-counter/surface.kdl);
+- [`examples/04-click-counter/expected-ir.json`](./examples/04-click-counter/expected-ir.json);
+- [`examples/04-click-counter/invalid/`](./examples/04-click-counter/invalid/);
+- [`examples/04-click-counter/app/server.ts`](./examples/04-click-counter/app/server.ts);
+- [Rung 4 decisions and acceptance scenarios](./examples/04-click-counter/decisions.md);
+- [Interface guide](./docs/node_interface.md);
+- [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
 
 ### 5. Todo List
 
@@ -506,10 +520,10 @@ specification rather than only a documentation format.
 | `screen` | 1. Hello World Page |
 | `collection` | 3. Contact Viewer |
 | `function` | 3. Contact Viewer |
-| `actor` | 4. Click Counter |
-| `behaviour` | 4. Click Counter |
-| `event` | 4. Click Counter |
-| `scenario` | 4. Click Counter |
+| `actor` | Not yet scheduled |
+| `behaviour` | Not yet scheduled |
+| `event` | Not yet scheduled |
+| `scenario` | Not yet scheduled |
 | `value` | 5. Todo List |
 | `enum` | 5. Todo List |
 | `workflow` | 5. Todo List |

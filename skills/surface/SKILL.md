@@ -5,7 +5,7 @@ description: Create, edit, review, format, and validate Surface 0.1 application 
 
 # Surface
 
-Use only the released syntax below. Do not invent structured UI or behavior
+Use only the released syntax below. Do not invent structured UI or behaviour
 nodes when prompt context can express the requirement.
 
 ## Workflow
@@ -129,6 +129,26 @@ children. Do not add `section`, `title`, `text`, `field`, `input`, `button`,
 `selector`, or component children. The implementing LLM or person chooses copy,
 layout, and controls consistent with the context.
 
+Describe local, unambiguous interaction through interface context rather than
+inventing state or behaviour syntax:
+
+```kdl
+interface "clickCounter" {
+    context """
+        Render an accessible counter starting at 0.
+        Show the current value prominently.
+        Provide an Increment action that increases the value by 1.
+        Provide a Reset action that restores the value to 0.
+        Update the displayed value immediately after either action.
+        """
+}
+```
+
+Do not add a collection or function solely to represent interface-local state.
+Do not invent `actor`, `behaviour`, `event`, `scenario`, `state`, `action`, or
+numeric field syntax. Use additional released declarations only when the
+application needs shared data or a separately callable capability.
+
 Declare at least one screen. A screen takes one ID, an optional quoted `route`,
 and either one interface use plus optional contexts or context alone:
 
@@ -144,7 +164,7 @@ screen "redirectHome" {
 
 `use` accepts exactly one checked `(interface)` reference. A screen cannot have
 multiple uses and cannot be empty. A context-only screen expresses non-visual
-behavior; do not invent `logic`, `redirect`, or UI-state nodes.
+behaviour; do not invent `logic`, `redirect`, or UI-state nodes.
 
 Identifiers match `[a-z][A-Za-z0-9]*`, are case-sensitive, and should use lower
 camel case. Declaration IDs are unique within their type. Field names are
@@ -214,7 +234,7 @@ Private collection selectors include their function scope, such as
 
 ## Current Limits
 
-Do not add actors, numeric field types, behaviors, events, policies, workflows,
+Do not add actors, numeric field types, behaviours, events, policies, workflows,
 components, scenarios, imports, executable logic, list-returning functions,
 filtering, sorting, structured UI elements, or code-generation directives. Add
 future syntax only when a later roadmap rung releases it.

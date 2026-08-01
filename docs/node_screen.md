@@ -50,6 +50,6 @@ screen "home" route="/" {
 }
 ```
 
-This describes non-visual behavior without introducing redirect or logic
+This describes non-visual behaviour without introducing redirect or logic
 syntax. A screen must either use an interface or contain at least one context;
 a completely empty screen is invalid.

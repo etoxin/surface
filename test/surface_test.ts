@@ -10,6 +10,11 @@ import {
   handleContactRequest,
   renderContactPage,
 } from "../examples/03-contact-viewer/app/server.ts";
+import {
+  handleCounterRequest,
+  parseCounterValue,
+  renderCounterPage,
+} from "../examples/04-click-counter/app/server.ts";
 import { formatSurface } from "../src/formatter.ts";
 import { parseKdl, parseSurface } from "../src/surface.ts";
 
@@ -20,6 +25,11 @@ const contactExampleRoot = join(
   repositoryRoot,
   "examples",
   "03-contact-viewer",
+);
+const counterExampleRoot = join(
+  repositoryRoot,
+  "examples",
+  "04-click-counter",
 );
 const cli = join(repositoryRoot, "src", "cli.ts");
 const decoder = new TextDecoder();
@@ -58,6 +68,19 @@ Deno.test("the Contact Viewer specification exports the reviewed IR", async () =
 
   assertEquals(result.diagnostics, []);
   assertEquals(result.ir, expected);
+});
+
+Deno.test("the Click Counter specification exports the reviewed IR", async () => {
+  const source = await Deno.readTextFile(join(counterExampleRoot, "surface.kdl"));
+  const expected = JSON.parse(
+    await Deno.readTextFile(join(counterExampleRoot, "expected-ir.json")),
+  );
+
+  const result = parseSurface(source, "surface.kdl");
+
+  assertEquals(result.diagnostics, []);
+  assertEquals(result.ir, expected);
+  assertEquals(formatSurface(source, "surface.kdl").output, source);
 });
 
 Deno.test("all invalid fixtures include their expected diagnostic", async () => {
@@ -139,6 +162,33 @@ Deno.test(
           ["SURF-REF-003"],
         );
       }
+      assertEquals(result.ir, null);
+    }
+  },
+);
+
+Deno.test(
+  "the Click Counter invalid fixtures report their expected diagnostics",
+  async () => {
+    const invalidRoot = join(counterExampleRoot, "invalid");
+    const expected = JSON.parse(
+      await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
+    );
+    const fixtures = [];
+    for await (const entry of Deno.readDir(invalidRoot)) {
+      if (entry.isFile && entry.name.endsWith(".kdl")) {
+        fixtures.push(entry.name);
+      }
+    }
+    assertEquals(Object.keys(expected).sort(), fixtures.sort());
+
+    for (const [file, code] of Object.entries(expected)) {
+      const source = await Deno.readTextFile(join(invalidRoot, file));
+      const result = parseSurface(source, file);
+      assert(
+        result.diagnostics.some((diagnostic) => diagnostic.code === code),
+        `${file} should report ${code}`,
+      );
       assertEquals(result.ir, null);
     }
   },
@@ -265,7 +315,7 @@ screen "home" {
   });
 });
 
-Deno.test("a context-only screen can describe non-visual route behavior", () => {
+Deno.test("a context-only screen can describe non-visual route behaviour", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
@@ -715,12 +765,41 @@ Deno.test("the Contact Viewer redirects its root URL to its declared route", asy
   assertEquals(unknown.status, 404);
 });
 
+Deno.test("the Click Counter implements its initial, increment, and reset states", async () => {
+  assertEquals(parseCounterValue(null), 0);
+  assertEquals(parseCounterValue("4"), 4);
+  assertEquals(parseCounterValue("-1"), 0);
+  assertEquals(parseCounterValue("4x"), 0);
+  assertEquals(parseCounterValue("9007199254740992"), 0);
+
+  const initial = renderCounterPage(0);
+  assertMatch(initial, /aria-label="Current count">0<\/output>/);
+  assertMatch(initial, /name="count" value="1">Increment<\/button>/);
+  assertMatch(initial, /name="count" value="0">Reset<\/button>/);
+
+  const incremented = await handleCounterRequest(
+    new Request("http://localhost:8001/?count=4"),
+  ).text();
+  assertMatch(incremented, /aria-label="Current count">4<\/output>/);
+  assertMatch(incremented, /name="count" value="5">Increment<\/button>/);
+
+  const reset = await handleCounterRequest(
+    new Request("http://localhost:8001/?count=0"),
+  ).text();
+  assertMatch(reset, /aria-label="Current count">0<\/output>/);
+
+  const unknown = handleCounterRequest(
+    new Request("http://localhost:8001/unknown"),
+  );
+  assertEquals(unknown.status, 404);
+});
+
 Deno.test("the skill defines all three required forward evaluations", async () => {
   const evaluations = JSON.parse(
     await Deno.readTextFile(join(repositoryRoot, "test", "skill-evaluations.json")),
   );
 
-  assertEquals(evaluations.rung, 3);
+  assertEquals(evaluations.rung, 4);
   assertEquals(
     evaluations.cases.map(({ id }: { id: string }) => id),
     ["create", "modify", "diagnose"],
@@ -749,6 +828,9 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /If there is no contact, produce null\./);
   assertMatch(skill, /interface "contactViewer"/);
   assertMatch(skill, /use \(interface\)"contactViewer"/);
+  assertMatch(skill, /interface "clickCounter"/);
+  assertMatch(skill, /Provide an Increment action/);
+  assertMatch(skill, /Provide a Reset action/);
   assertMatch(skill, /screen "home" route="\/"/);
   assertMatch(
     skill,
