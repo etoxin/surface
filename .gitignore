@@ -2,3 +2,7 @@
 node_modules/
 coverage/
 examples/*/.agents/skills/surface/
+examples/*/.agents/skills/surf-build/
+examples/*/.claude/commands/surf:build.md
+examples/*/.claude/skills/surface/
+examples/*/build/

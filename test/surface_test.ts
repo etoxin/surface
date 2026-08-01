@@ -947,36 +947,6 @@ use (interface)"helloWorld"
   }
 });
 
-Deno.test("the implemented page matches the Surface interface intent", async () => {
-  const html = await Deno.readTextFile(join(exampleRoot, "app", "index.html"));
-  assertMatch(html, /<h1>My app<\/h1>/);
-  assertMatch(html, /<p>Hello, world!<\/p>/);
-});
-
-Deno.test("the Todo List is a self-contained interactive HTML app", async () => {
-  const html = await Deno.readTextFile(
-    join(todoExampleRoot, "app", "index.html"),
-  );
-
-  assertMatch(html, /<!doctype html>/);
-  assertMatch(html, /const statuses = \["open", "completed", "archived"\]/);
-  assertMatch(html, /const createTodo =/);
-  assertMatch(html, /const completeTodo =/);
-  assertMatch(html, /const reopenTodo =/);
-  assertMatch(html, /const archiveTodo =/);
-  assertMatch(html, /value === "" \? null/);
-  assertMatch(html, /name="dueDate" type="date"/);
-  assertMatch(html, /name="priority" type="number"/);
-  assertMatch(html, /tags\.value\.split\(","\)/);
-  assertMatch(html, /priority: priority === "" \? 1 : Number\(priority\)/);
-  assertMatch(html, /Enter a task before adding it\./);
-  assertMatch(html, /id="open-count" aria-label="0 open"/);
-  assertMatch(html, /id="completed-count" aria-label="0 completed"/);
-  assertMatch(html, /id="archived-count" aria-label="0 archived"/);
-  assertMatch(html, /todos\.map/);
-  assertMatch(html, /text\.textContent = todo\.text/);
-});
-
 Deno.test("the skill defines all three required forward evaluations", async () => {
   const evaluations = JSON.parse(
     await Deno.readTextFile(join(repositoryRoot, "test", "skill-evaluations.json")),

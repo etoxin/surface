@@ -28,9 +28,6 @@ implementations should be allowed to differ internally.
 
 ```sh
 mise run verify
-mise run todo-list
-INVENTORY_API_TOKEN=development PAYMENT_API_TOKEN=development mise run online-checkout
-mise run multi-tenant-project-tracker
 ```
 
 ## Useful Test Reports

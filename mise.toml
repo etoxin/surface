@@ -44,23 +44,3 @@ run = "deno task surf"
 [tasks."examples-prepare"]
 description = "Copy the Surface skill into every example workspace"
 run = "deno task examples-prepare"
-
-[tasks."example-clean"]
-description = "Clear one example app for a fresh agent build"
-raw_args = true
-run = "deno task example-clean"
-
-[tasks."todo-list"]
-description = "Serve the Todo List example on port 8003"
-depends = ["deps"]
-run = "deno task todo-list"
-
-[tasks."online-checkout"]
-description = "Run the Online Checkout example on port 8006"
-depends = ["deps"]
-run = "deno task online-checkout"
-
-[tasks."multi-tenant-project-tracker"]
-description = "Run the Multi-tenant Project Tracker example on port 8007"
-depends = ["deps"]
-run = "deno task multi-tenant-project-tracker"

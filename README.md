@@ -71,8 +71,8 @@ mise run verify
 ```
 
 Start with [Getting started](./docs/getting_started.md) to write and implement your own
-specification. Surface is experimental, so keep the `.kdl` source and generated code in
-version control and review generated applications before using them.
+specification. Surface is experimental, so keep the `.kdl` source in version control and
+review generated applications before using them.
 
 ## Documentation
 
@@ -95,7 +95,7 @@ version control and review generated applications before using them.
 | [Context](./docs/node_context.md) | Prompt guidance and checked references |
 | [Logic](./docs/node_logic.md) | Ordered normative instructions |
 
-## Examples and Evidence
+## Examples
 
 Four examples cover the small language from first use through platform-scale tests:
 
@@ -107,6 +107,18 @@ Four examples cover the small language from first use through platform-scale tes
 Online Checkout and Multi-tenant Project Tracker pin Pico CSS 2.1.1 in their
 application stacks and test the frozen grammar at platform scale.
 
+Prepare the examples as agent workspaces:
+
+```sh
+mise run examples-prepare
+cd examples/todo-list
+```
+
+The task installs the language skill and build workflow inside every example. Open the
+agent in an example directory, then run `$surf-build` in Codex or `/surf:build` in Claude
+Code. Both build `surface.kdl` into `build/`; generated build directories are ignored by
+Git.
+
 ## CLI
 
 ```text
@@ -116,7 +128,7 @@ mise run surf format <file.kdl>
 mise run surf reference <file.kdl> <selector|--list>
 ```
 
-Run `mise tasks` to see every example task. The complete repository check is
+Run `mise tasks` to see the available tasks. The complete repository check is
 `mise run verify`.
 
 Surface 0.1 is frozen. Bug fixes, diagnostics, formatting, documentation, and tooling may

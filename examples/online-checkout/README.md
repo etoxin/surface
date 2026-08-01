@@ -1,17 +1,24 @@
 # Online Checkout
 
-This platform-scale example covers baskets, inventory reservations, payments,
+This platform-scale specification covers baskets, inventory reservations, payments,
 idempotency, receipts, asynchronous fulfillment, compensation, authorization, and
-failure handling. Its browser stack pins Pico CSS 2.1.1, served locally with the app.
+failure handling. Its browser stack pins Pico CSS 2.1.1.
 
 - [`surface.kdl`](./surface.kdl) is the source specification.
-- [`app/`](./app/) contains the Deno reference implementation and tests.
+
+## Build the Application
 
 ```sh
-INVENTORY_API_TOKEN=development \
-PAYMENT_API_TOKEN=development \
-mise run online-checkout
+mise run examples-prepare
+cd examples/online-checkout
 ```
 
-Open <http://localhost:8006/checkout>. This is a deterministic reference implementation,
-not a production payment system.
+Open your agent in this directory and invoke the build workflow:
+
+```text
+Codex:       $surf-build
+Claude Code: /surf:build
+```
+
+The generated `build/` directory is ignored by Git. Treat generated payment code as a
+prototype until it has received an independent security review.

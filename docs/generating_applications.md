@@ -10,7 +10,7 @@ Give the implementer:
 1. the complete `.kdl` source;
 2. [`skills/surface/SKILL.md`](../skills/surface/SKILL.md);
 3. any assets explicitly named by the specification;
-4. an empty output directory;
+4. an empty `build/` output directory;
 5. the acceptance command or observable result you expect.
 
 Do not provide an existing implementation when you want an independent generation.
@@ -18,16 +18,11 @@ Do not provide an existing implementation when you want an independent generatio
 ## Suggested Prompt
 
 ```text
-Read skills/surface/SKILL.md and path/to/surface.kdl completely.
-
-Implement the application in path/to/output/. Treat the Surface file as authoritative.
-Follow its stack, context, references, and ordered logic. Do not change the Surface file
-or invent Surface syntax. If the specification is insufficient, stop and report the
-smallest blocker instead of guessing.
-
-Test the observable behavior and report the commands you ran, assumptions you made, and
-any unresolved ambiguity.
+Use $surf-build.
 ```
+
+Claude Code users can run `/surf:build` instead. The preparation task installs both
+agent-specific entry points with the same workflow.
 
 The implementation may use any architecture compatible with the declared stack. Surface
 aims for consistent products and behavior, not identical source code.

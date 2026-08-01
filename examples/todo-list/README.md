@@ -1,15 +1,23 @@
 # Todo List
 
-This self-contained browser application demonstrates stacks, values, an enum, portable
-types, shared and private collections, functions, interface state, validation, and
-ordered interaction logic.
+This browser specification demonstrates stacks, values, an enum, portable types, shared
+and private collections, functions, interface state, validation, and ordered interaction
+logic.
 
 - [`surface.kdl`](./surface.kdl) is the source specification.
-- [`app/index.html`](./app/index.html) is one implementation with no build step.
+
+## Build the Application
 
 ```sh
-mise run surf check examples/todo-list/surface.kdl
-mise run todo-list
+mise run examples-prepare
+cd examples/todo-list
 ```
 
-Open <http://localhost:8003/> after starting the task.
+Open your agent in this directory and invoke the build workflow:
+
+```text
+Codex:       $surf-build
+Claude Code: /surf:build
+```
+
+The generated `build/` directory is ignored by Git.

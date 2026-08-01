@@ -81,5 +81,6 @@ errors even when they are valid KDL.
 ## Build the Application
 
 Surface does not compile to source code. Follow [Generating applications](./generating_applications.md)
-to give the checked specification and the included Surface skill to an LLM. Review and
-test the result as ordinary application code.
+to prepare an example workspace and give the checked specification to an LLM. Generated
+applications belong in the ignored `build/` directory. Review and test the result as
+ordinary application code.
