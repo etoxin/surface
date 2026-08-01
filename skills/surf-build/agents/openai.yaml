@@ -1,4 +1,4 @@
 interface:
   display_name: "Build Surface App"
-  short_description: "Build a checked Surface app into build/"
+  short_description: "Build surface.kdl"
   default_prompt: "Use $surf-build to implement surface.kdl in build/ and verify the result."

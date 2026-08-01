@@ -8,15 +8,10 @@ logic.
 
 ## Build the Application
 
-```sh
-mise run examples-prepare
-cd examples/todo-list
-```
-
 Open your agent in this directory and invoke the build workflow:
 
 ```text
-Codex:       $surf-build
+Codex:       $surf-build or Surface Build
 Claude Code: /surf:build
 ```
 
