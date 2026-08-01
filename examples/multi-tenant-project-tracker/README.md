@@ -7,7 +7,6 @@ the app.
 
 - [`surface.kdl`](./surface.kdl) is the source specification.
 - [`app/`](./app/) contains the Deno reference implementation and tests.
-- [`decisions.md`](./decisions.md) documents identities, seed data, and trust boundaries.
 
 ```sh
 mise run multi-tenant-project-tracker

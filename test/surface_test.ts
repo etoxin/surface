@@ -16,6 +16,12 @@ const todoExampleRoot = join(
   "examples",
   "todo-list",
 );
+const invalidFixturesRoot = join(
+  repositoryRoot,
+  "test",
+  "fixtures",
+  "invalid",
+);
 const exampleDirectories = [
   "hello-world",
   "todo-list",
@@ -79,7 +85,7 @@ screen "home" { context "Render home." }
 });
 
 Deno.test("all invalid fixtures include their expected diagnostic", async () => {
-  const invalidRoot = join(exampleRoot, "invalid");
+  const invalidRoot = join(invalidFixturesRoot, "hello-world");
   const expected = JSON.parse(
     await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
   );
@@ -105,7 +111,7 @@ Deno.test("all invalid fixtures include their expected diagnostic", async () => 
 Deno.test(
   "the Todo List invalid fixtures report their expected diagnostics",
   async () => {
-    const invalidRoot = join(todoExampleRoot, "invalid");
+    const invalidRoot = join(invalidFixturesRoot, "todo-list");
     const expected = JSON.parse(
       await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
     );
@@ -894,8 +900,8 @@ Deno.test("CLI reference lists and resolves canonical checked references", () =>
 
 Deno.test("CLI check fails with a structured diagnostic for invalid Surface", () => {
   const specification = join(
-    exampleRoot,
-    "invalid",
+    invalidFixturesRoot,
+    "hello-world",
     "missing-application.kdl",
   );
   const checked = runCli(["check", specification]);

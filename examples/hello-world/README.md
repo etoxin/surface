@@ -6,7 +6,6 @@ reference.
 
 - [`surface.kdl`](./surface.kdl) is the source specification.
 - [`app/index.html`](./app/index.html) is one intentionally small implementation.
-- [`invalid/`](./invalid/) contains diagnostic examples.
 
 ```sh
 mise run surf check examples/hello-world/surface.kdl

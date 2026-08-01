@@ -6,7 +6,6 @@ failure handling. Its browser stack pins Pico CSS 2.1.1, served locally with the
 
 - [`surface.kdl`](./surface.kdl) is the source specification.
 - [`app/`](./app/) contains the Deno reference implementation and tests.
-- [`decisions.md`](./decisions.md) documents its local adapters and safety boundaries.
 
 ```sh
 INVENTORY_API_TOKEN=development \
