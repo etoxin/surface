@@ -27,12 +27,12 @@ The main declarations are:
 Surface file
 ├── application
 │   └── purpose
-├── entity
+├── collection
 │   └── typed fields
 ├── function
-│   ├── private entity (optional)
+│   ├── private collection (optional)
 │   ├── input (optional)
-│   └── returns
+│   └── output
 ├── interface
 │   └── context
 └── screen
@@ -44,7 +44,7 @@ Read the guides in order:
 
 1. [Starting a Surface file](./node_surface.md)
 2. [Describing the application](./node_application.md)
-3. [Defining data](./node_entity.md)
+3. [Defining data](./node_collection.md)
 4. [Defining functions](./node_function.md)
 5. [Describing an interface](./node_interface.md)
 6. [Adding screens](./node_screen.md)
@@ -54,6 +54,7 @@ Declaration IDs and field names start with a lowercase letter and use lower
 camel case, such as `contactViewer`. Purpose, routes, and context prompts are
 ordinary quoted strings.
 
-Surface currently supports applications, read-only entities, single-entity
-functions, intent-driven interfaces, and screens. The [roadmap](../roadmap.md)
-adds syntax only when another example application needs it.
+Surface currently supports applications, read-only collections,
+single-collection functions, intent-driven interfaces, and screens. The
+[roadmap](../roadmap.md) adds syntax only when another example application
+needs it.

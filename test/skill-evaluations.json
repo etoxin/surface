@@ -8,9 +8,9 @@
       "acceptance": [
         "The result is valid Surface 0.1 KDL with exactly one application and at least one screen.",
         "The contact fields use only (string) and (boolean) node annotations; only email has bare optional.",
-        "The function declares and inputs a private lookup entity and returns the global contact through typed references.",
-        "The function context says that no match returns null.",
-        "A top-level interface contains only contexts that reference the function and entity and describe the requested UI behavior.",
+        "The function declares and inputs a private lookup collection and outputs the global contact through typed references.",
+        "The function context says that no match produces null.",
+        "A top-level interface contains only contexts that reference the function and collection and describe the requested UI behavior.",
         "The /contacts screen uses the interface with use (interface), and all references resolve.",
         "A context-only / screen describes the redirect with a checked (screen) reference.",
         "No section, title, text, UI field, state, logic, or redirect node is introduced."
@@ -18,9 +18,9 @@
     },
     {
       "id": "modify",
-      "prompt": "Starting from examples/03-contact-viewer/surface.kdl, add an optional string phone field to the Contact Viewer entity and update its interface intent so phone is displayed after email. Preserve comments, existing context, function structure, screens, and unrelated content.",
+      "prompt": "Starting from examples/03-contact-viewer/surface.kdl, add an optional string phone field to the Contact Viewer collection and update its interface intent so phone is displayed after email. Preserve comments, existing context, function structure, screens, and unrelated content.",
       "acceptance": [
-        "The entity adds exactly one (string) phone field with the bare optional modifier after email.",
+        "The collection adds exactly one (string) phone field with the bare optional modifier after email.",
         "The interface context is minimally updated to display phone after email without adding structured UI nodes.",
         "The function, screens, comments, existing context, and unrelated content are preserved.",
         "The result remains valid Surface 0.1 KDL."
@@ -28,7 +28,7 @@
     },
     {
       "id": "diagnose",
-      "prompt": "Diagnose a Contact Viewer whose id field uses the unsupported required modifier, whose returns value omits the entity annotation, whose private entity shadows a global entity, whose input references an undeclared entity, whose screen uses a function instead of an interface, and whose interface contains a section child.",
+      "prompt": "Diagnose a Contact Viewer whose id field uses the unsupported required modifier, whose output value omits the collection annotation, whose private collection shadows a global collection, whose input references an undeclared collection, whose screen uses a function instead of an interface, and whose interface contains a section child.",
       "acceptance": [
         "The response identifies all six Surface validation problems.",
         "It explains that use requires a checked interface reference and interfaces accept only context children.",

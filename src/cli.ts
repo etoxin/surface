@@ -154,10 +154,10 @@ function collectReferences(ir: SurfaceIr): SurfaceReference[] {
     reference: `(application)"${ir.application.id}"`,
   }];
 
-  for (const entity of ir.entities ?? []) {
+  for (const collection of ir.collections ?? []) {
     references.push({
-      selector: `entity.${entity.id}`,
-      reference: `(entity)"${entity.id}"`,
+      selector: `collection.${collection.id}`,
+      reference: `(collection)"${collection.id}"`,
     });
   }
   for (const functionNode of ir.functions ?? []) {
@@ -166,10 +166,10 @@ function collectReferences(ir: SurfaceIr): SurfaceReference[] {
       selector: functionSelector,
       reference: `(function)"${functionNode.id}"`,
     });
-    for (const entity of functionNode.entities ?? []) {
+    for (const collection of functionNode.collections ?? []) {
       references.push({
-        selector: `${functionSelector}.entity.${entity.id}`,
-        reference: `(entity)"${entity.id}"`,
+        selector: `${functionSelector}.collection.${collection.id}`,
+        reference: `(collection)"${collection.id}"`,
         scope: functionSelector,
       });
     }

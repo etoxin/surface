@@ -3,19 +3,15 @@
 surface "0.1"
 
 application "contactViewer" {
-    purpose "Reject the former query declaration."
+    purpose "Reject the former entity reference annotation."
 }
 
 collection "contact" {
     (string)"id"
 }
 
-query "contactById" {
-    output (collection)"contact"
-}
-
 interface "contactViewer" {
-    context "Render a contact."
+    context (entity)"contact" "Render a contact."
 }
 
 screen "contact" {

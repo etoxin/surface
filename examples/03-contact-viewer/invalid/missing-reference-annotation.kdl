@@ -2,13 +2,13 @@
 
 surface "0.1"
 application "contactViewer" { purpose "Display a contact." }
-entity "contact" {
+collection "contact" {
     (string)"id"
 }
 function "contactById" {
-    entity "contactLookup" { (string)"id" }
-    input (entity)"contactLookup"
-    returns "contact"
+    collection "contactLookup" { (string)"id" }
+    input (collection)"contactLookup"
+    output "contact"
 }
 screen "contact" {
     context "Render a contact."

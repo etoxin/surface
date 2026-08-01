@@ -22,7 +22,7 @@ Use typed references when the interface depends on declared data or functions:
 
 ```kdl
 interface "contactViewer" {
-    context (function)"contactById" (entity)"contact" "Render a user interface that finds and displays a contact."
+    context (function)"contactById" (collection)"contact" "Render a user interface that finds and displays a contact."
     context (function)"contactById" "When no contact matches, show that the contact was not found."
 }
 ```

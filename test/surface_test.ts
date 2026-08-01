@@ -305,11 +305,11 @@ surface "0.1" {
     context (application)"references" "Apply this application guidance."
 }
 application "references" { purpose "Exercise context references." }
-entity "contact" { (string)"id" }
+collection "contact" { (string)"id" }
 function "getContact" {
-    entity "lookup" { (string)"id" }
-    context (entity)"lookup" (entity)"contact" (interface)"contact" (screen)"contact" "Use these declarations together."
-    returns (entity)"contact"
+    collection "lookup" { (string)"id" }
+    context (collection)"lookup" (collection)"contact" (interface)"contact" (screen)"contact" "Use these declarations together."
+    output (collection)"contact"
 }
 screen "home" route="/" {
     context (function)"getContact" (interface)"contact" (screen)"contact" "Delegate to these declarations."
@@ -378,30 +378,30 @@ Deno.test("context is valid on rung-3 nodes and omitted from the IR", () => {
 
 surface "0.1"
 application "contextual" { purpose "Exercise rung-3 context." }
-entity "contact" {
-    context "Entity guidance."
+collection "contact" {
+    context "Collection guidance."
     (string)"id" {
         context "Field guidance."
     }
 }
 function "contactById" {
     context "Function guidance."
-    entity "contactLookup" {
-        context "Private entity guidance."
+    collection "contactLookup" {
+        context "Private collection guidance."
         (string)"id" {
             context "Private field guidance."
         }
     }
-    input (entity)"contactLookup" {
+    input (collection)"contactLookup" {
         context "Input guidance."
     }
-    returns (entity)"contact" {
-        context "Return guidance."
+    output (collection)"contact" {
+        context "Output guidance."
     }
-    context "Return null when no contact matches."
+    context "Produce null when no contact matches."
 }
 interface "contact" {
-    context (function)"contactById" (entity)"contact" "Interface guidance."
+    context (function)"contactById" (collection)"contact" "Interface guidance."
 }
 screen "contact" {
     use (interface)"contact" {
@@ -416,21 +416,21 @@ screen "contact" {
   assert(!JSON.stringify(result.ir).includes("guidance"));
 });
 
-Deno.test("function entity references resolve private and global scopes", () => {
+Deno.test("function collection references resolve private and global scopes", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
-application "scopedFunction" { purpose "Exercise scoped entities." }
-entity "lookup" {
+application "scopedFunction" { purpose "Exercise scoped collections." }
+collection "lookup" {
     (string)"id"
 }
 function "getMessage" {
-    entity "message" {
+    collection "message" {
         (string)"text"
     }
-    input (entity)"lookup"
-    returns (entity)"message"
-    context "Return null when no message matches."
+    input (collection)"lookup"
+    output (collection)"message"
+    context "Produce null when no message matches."
 }
 interface "message" {
     context (function)"getMessage" "Render the returned message text."
@@ -445,27 +445,27 @@ screen "message" {
   assert(result.ir !== null);
   assertEquals(result.ir.functions?.[0], {
     id: "getMessage",
-    entities: [{
+    collections: [{
       id: "message",
       fields: [{ name: "text", type: "string" }],
     }],
-    input: { entity: "lookup" },
-    returns: { entity: "message" },
+    input: { collection: "lookup" },
+    output: { collection: "message" },
   });
   assertEquals(result.ir.screens[0].interface, "message");
 });
 
-Deno.test("a function can return a private entity without an input", () => {
+Deno.test("a function can output a private collection without an input", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
 application "helloFunction" { purpose "Display a returned greeting." }
 function "getHello" {
-    entity "hello" {
+    collection "hello" {
         (string)"message"
     }
-    returns (entity)"hello"
-    context "Return null when no greeting is available."
+    output (collection)"hello"
+    context "Produce null when no greeting is available."
 }
 interface "hello" {
     context (function)"getHello" "Render the greeting message."
@@ -479,20 +479,20 @@ screen "hello" {
   assertEquals(result.diagnostics, []);
   assert(result.ir !== null);
   assertEquals(result.ir.functions?.[0].input, undefined);
-  assertEquals(result.ir.functions?.[0].returns.entity, "hello");
+  assertEquals(result.ir.functions?.[0].output.collection, "hello");
 });
 
-Deno.test("a function can use an optional-only input entity", () => {
+Deno.test("a function can use an optional-only input collection", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
 application "search" { purpose "Search messages." }
 function "searchMessages" {
-    entity "filters" { (string)"term" optional }
-    entity "result" { (string)"message" }
-    input (entity)"filters"
-    returns (entity)"result"
-    context "Return null when no message matches."
+    collection "filters" { (string)"term" optional }
+    collection "result" { (string)"message" }
+    input (collection)"filters"
+    output (collection)"result"
+    context "Produce null when no message matches."
 }
 interface "results" {
     context (function)"searchMessages" "Render matching messages or a no-results experience."
@@ -521,7 +521,7 @@ Deno.test("CLI check and export succeed for the valid example", () => {
   );
 });
 
-Deno.test("CLI reference lists and returns canonical checked references", () => {
+Deno.test("CLI reference lists and resolves canonical checked references", () => {
   const specification = join(contactExampleRoot, "surface.kdl");
   const listed = runCli(["reference", specification, "--list"]);
   assertEquals(listed.code, 0, decoder.decode(listed.stderr));
@@ -542,6 +542,13 @@ Deno.test("CLI reference lists and returns canonical checked references", () => 
   assert(
     references.some(
       ({ selector, reference }: { selector: string; reference: string }) =>
+        selector === "collection.contact" &&
+        reference === '(collection)"contact"',
+    ),
+  );
+  assert(
+    references.some(
+      ({ selector, reference }: { selector: string; reference: string }) =>
         selector === "function.contactById" &&
         reference === '(function)"contactById"',
     ),
@@ -555,8 +562,8 @@ Deno.test("CLI reference lists and returns canonical checked references", () => 
           scope?: string;
         },
       ) =>
-        selector === "function.contactById.entity.contactLookup" &&
-        reference === '(entity)"contactLookup"' &&
+        selector === "function.contactById.collection.contactLookup" &&
+        reference === '(collection)"contactLookup"' &&
         scope === "function.contactById",
     ),
   );
@@ -576,15 +583,15 @@ Deno.test("CLI reference lists and returns canonical checked references", () => 
     '(function)"contactById"',
   );
 
-  const privateEntity = runCli([
+  const privateCollection = runCli([
     "reference",
     specification,
-    "function.contactById.entity.contactLookup",
+    "function.contactById.collection.contactLookup",
   ]);
-  assertEquals(privateEntity.code, 0, decoder.decode(privateEntity.stderr));
+  assertEquals(privateCollection.code, 0, decoder.decode(privateCollection.stderr));
   assertEquals(
-    decoder.decode(privateEntity.stdout).trim(),
-    '(entity)"contactLookup"',
+    decoder.decode(privateCollection.stdout).trim(),
+    '(collection)"contactLookup"',
   );
 
   const unknown = runCli(["reference", specification, "screen.missing"]);
@@ -732,13 +739,14 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   );
   assertMatch(skill, /^---\nname: surface\ndescription: .+\n---/);
   assertMatch(skill, /surface "0\.1"/);
-  assertMatch(skill, /entity "contact"/);
+  assertMatch(skill, /collection "contact"/);
   assertMatch(skill, /\(string\)"id"/);
-  assertMatch(skill, /entity "contactLookup"/);
+  assertMatch(skill, /collection "contactLookup"/);
   assertMatch(skill, /function "contactById"/);
-  assertMatch(skill, /input \(entity\)"contactLookup"/);
-  assertMatch(skill, /returns \(entity\)"contact"/);
-  assertMatch(skill, /If there is no contact, return null\./);
+  assertMatch(skill, /input \(collection\)"contactLookup"/);
+  assertMatch(skill, /output \(collection\)"contact"/);
+  assert(!/\b(?:entity|returns)\b/.test(skill));
+  assertMatch(skill, /If there is no contact, produce null\./);
   assertMatch(skill, /interface "contactViewer"/);
   assertMatch(skill, /use \(interface\)"contactViewer"/);
   assertMatch(skill, /screen "home" route="\/"/);

@@ -1,6 +1,6 @@
 ---
 name: surface
-description: Create, edit, review, format, and validate Surface 0.1 application specifications written as KDL 2 files. Use for Surface files or repository work involving the released application, entity, function, interface, screen, and context syntax.
+description: Create, edit, review, format, and validate Surface 0.1 application specifications written as KDL 2 files. Use for Surface files or repository work involving the released application, collection, function, interface, screen, and context syntax.
 ---
 
 # Surface
@@ -32,7 +32,7 @@ application "contactViewer" {
     purpose "Display a contact selected by identifier."
 }
 
-entity "contact" {
+collection "contact" {
     (string)"id"
     (string)"name"
     (string)"email" optional
@@ -42,18 +42,18 @@ entity "contact" {
 function "contactById" {
     context "Find the contact whose id equals the id input."
 
-    entity "contactLookup" {
+    collection "contactLookup" {
         (string)"id"
     }
 
-    input (entity)"contactLookup"
-    returns (entity)"contact"
+    input (collection)"contactLookup"
+    output (collection)"contact"
 
-    context "If there is no contact, return null."
+    context "If there is no contact, produce null."
 }
 
 interface "contactViewer" {
-    context (function)"contactById" (entity)"contact" "Render a user interface that asks for a contact id and displays the matching contact's name, email, and active status."
+    context (function)"contactById" (collection)"contact" "Render a user interface that asks for a contact id and displays the matching contact's name, email, and active status."
     context (function)"contactById" "When no id is provided, ask the user to select a contact."
     context (function)"contactById" "When no contact matches, show that the contact was not found."
 }
@@ -80,10 +80,10 @@ application "helloWorld" {
 An application and purpose take one quoted string, have no properties, and may
 contain `context`. The application ID is not a display title.
 
-An entity takes one ID, has no properties, and contains one or more fields:
+A collection takes one ID, has no properties, and contains one or more fields:
 
 ```kdl
-entity "contact" {
+collection "contact" {
     (string)"name"
     (string)"email" optional
     (boolean)"active"
@@ -97,23 +97,23 @@ only modifier is bare `optional`; do not write `required`, `generated`, or
 
 A function is a named computation or capability. It may represent a database
 lookup, HTTP request, file read, calculation, or another implementation. The
-current syntax gives it one ID, no properties, zero or more private entities,
-zero or one structured input, and exactly one return entity:
+current syntax gives it one ID, no properties, zero or more private collections,
+zero or one structured input, and exactly one collection output:
 
 ```kdl
 function "contactById" {
-    entity "contactLookup" {
+    collection "contactLookup" {
         (string)"id"
     }
-    input (entity)"contactLookup"
-    returns (entity)"contact"
+    input (collection)"contactLookup"
+    output (collection)"contact"
 }
 ```
 
-`input` and `returns` may reference a private entity in their function or a
-global entity. Private IDs are unique in their function and cannot shadow global
-entity IDs. Other functions cannot see them. Use context to explain data
-sources, transformations, and missing results; Surface does not define
+`input` and `output` may reference a private collection in their function or a
+global collection. Private IDs are unique in their function and cannot shadow
+global collection IDs. Other functions cannot see them. Use context to explain
+data sources, transformations, and missing results; Surface does not define
 URL-to-input mapping.
 
 An interface describes visible or usable UI through intent, not widget syntax:
@@ -148,7 +148,7 @@ behavior; do not invent `logic`, `redirect`, or UI-state nodes.
 
 Identifiers match `[a-z][A-Za-z0-9]*`, are case-sensitive, and should use lower
 camel case. Declaration IDs are unique within their type. Field names are
-unique within their entity.
+unique within their collection.
 
 ## Context and References
 
@@ -156,22 +156,23 @@ Add repeatable `context` children to any supported node except another context:
 
 ```kdl
 context "Use accessible defaults."
-context (function)"contactById" (entity)"contact" "Display the returned contact."
+context (function)"contactById" (collection)"contact" "Display the returned contact."
 ```
 
 The last argument is exactly one unannotated prompt string. Earlier arguments,
 if present, are annotated string references. A type annotation on a string
 means that the string references another Surface declaration. Global
-`application`, `entity`, `interface`, `function`, and `screen` declarations may
-be referenced. A context inside a function may also reference that function's
-private entities. Verify every reference's visibility, ID, and annotation type.
+`application`, `collection`, `interface`, `function`, and `screen` declarations
+may be referenced. A context inside a function may also reference that
+function's private collections. Verify every reference's visibility, ID, and
+annotation type.
 
 Context has no properties or children. Preserve it in source and formatting;
 it is omitted from the reduced semantic JSON IR. Use KDL triple-quoted strings
 for multiline prompts, with content starting on the next line.
 
 Do not confuse value annotations with field node annotations:
-`(string)"name"` declares a field, while `(entity)"contact"` after `returns`
+`(string)"name"` declares a field, while `(collection)"contact"` after `output`
 is a checked reference.
 
 ## Validation Checklist
@@ -181,8 +182,8 @@ is a checked reference.
 - Exactly one application and at least one screen exist.
 - Required arguments and children occur exactly as specified.
 - IDs and field names are valid and unique in their scopes.
-- Entity fields use supported node annotations and only bare `optional`.
-- Private entities do not shadow globals.
+- Collection fields use supported node annotations and only bare `optional`.
+- Private collections do not shadow globals.
 - Every typed reference resolves with the correct type and visibility.
 - Every interface contains only context.
 - Every screen has one interface use or at least one context, never multiple
@@ -208,8 +209,8 @@ surf reference surface.kdl --list
 surf reference surface.kdl interface.contactViewer
 ```
 
-Private entity selectors include their function scope, such as
-`function.contactById.entity.contactLookup`.
+Private collection selectors include their function scope, such as
+`function.contactById.collection.contactLookup`.
 
 ## Current Limits
 

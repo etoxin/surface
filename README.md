@@ -33,7 +33,7 @@ only context for non-visual behavior.
 1. [Writing Surface](./docs/README.md)
 2. [Starting a Surface file](./docs/node_surface.md)
 3. [Describing the application](./docs/node_application.md)
-4. [Defining data](./docs/node_entity.md)
+4. [Defining data](./docs/node_collection.md)
 5. [Defining functions](./docs/node_function.md)
 6. [Describing an interface](./docs/node_interface.md)
 7. [Adding screens](./docs/node_screen.md)
@@ -44,11 +44,11 @@ only context for non-visual behavior.
 
 - A file starts with `/- kdl-version 2`, then one `surface "0.1"` and one
   `application` containing a `purpose`.
-- `entity` declares fields as `(string)"name"` or `(boolean)"active"`. Fields
+- `collection` declares fields as `(string)"name"` or `(boolean)"active"`. Fields
   are required by default; the only modifier is `optional`.
 - `function` describes a named capability. It currently has one
-  `returns (entity)"id"`, an optional structured `input`, and may declare
-  function-private entities.
+  `output (collection)"id"`, an optional structured `input`, and may declare
+  function-private collections.
 - `interface "id"` contains only universal `context` nodes.
 - `screen "id"` contains either one `use (interface)"id"` plus optional
   context, or context alone. Its `route` property is optional.
@@ -80,7 +80,7 @@ mise run contact-viewer
 The direct equivalents are `deno task verify` and `deno task surf`. The CLI
 supports `parse`, `check`, `format`, `export`, and `reference`. Reference
 selectors include `interface.contactViewer`, `screen.contact`, and scoped
-private entities such as `function.contactById.entity.contactLookup`.
+private collections such as `function.contactById.collection.contactLookup`.
 
 ## Examples
 

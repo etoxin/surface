@@ -4,7 +4,7 @@
     "id": "contactViewer",
     "purpose": "Display a contact selected by identifier."
   },
-  "entities": [
+  "collections": [
     {
       "id": "contact",
       "fields": [
@@ -31,7 +31,7 @@
   "functions": [
     {
       "id": "contactById",
-      "entities": [
+      "collections": [
         {
           "id": "contactLookup",
           "fields": [
@@ -43,10 +43,10 @@
         }
       ],
       "input": {
-        "entity": "contactLookup"
+        "collection": "contactLookup"
       },
-      "returns": {
-        "entity": "contact"
+      "output": {
+        "collection": "contact"
       }
     }
   ],

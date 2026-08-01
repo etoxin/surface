@@ -18,13 +18,13 @@ export interface SurfaceIr {
     id: string;
     purpose: string;
   };
-  entities?: SurfaceEntityIr[];
+  collections?: SurfaceCollectionIr[];
   functions?: SurfaceFunctionIr[];
   interfaces?: SurfaceInterfaceIr[];
   screens: SurfaceScreenIr[];
 }
 
-export interface SurfaceEntityIr {
+export interface SurfaceCollectionIr {
   id: string;
   fields: SurfaceFieldIr[];
 }
@@ -37,12 +37,12 @@ export interface SurfaceFieldIr {
 
 export interface SurfaceFunctionIr {
   id: string;
-  entities?: SurfaceEntityIr[];
+  collections?: SurfaceCollectionIr[];
   input?: {
-    entity: string;
+    collection: string;
   };
-  returns: {
-    entity: string;
+  output: {
+    collection: string;
   };
 }
 
@@ -75,7 +75,7 @@ const PRIMITIVE_TYPES = new Set<PrimitiveType>(["string", "boolean"]);
 const FIELD_MODIFIERS = new Set(["optional"]);
 const CONTEXT_REFERENCE_TYPES = new Set([
   "application",
-  "entity",
+  "collection",
   "interface",
   "function",
   "screen",
@@ -83,7 +83,7 @@ const CONTEXT_REFERENCE_TYPES = new Set([
 const TOP_LEVEL_NODES = new Set([
   "surface",
   "application",
-  "entity",
+  "collection",
   "interface",
   "function",
   "screen",
@@ -174,7 +174,7 @@ export function validateDocument(
         message: `Unknown top-level node ${name}.`,
         element: node,
         suggestion:
-          "Use only surface, application, entity, function, interface, and screen nodes in Surface 0.1.",
+          "Use only surface, application, collection, function, interface, and screen nodes in Surface 0.1.",
       });
     }
 
@@ -188,7 +188,7 @@ export function validateDocument(
   const applications = document.nodes.filter(
     (node) => node.getName() === "application",
   );
-  const entities = document.nodes.filter((node) => node.getName() === "entity");
+  const collections = document.nodes.filter((node) => node.getName() === "collection");
   const interfaces = document.nodes.filter(
     (node) => node.getName() === "interface",
   );
@@ -221,9 +221,9 @@ export function validateDocument(
     validateIdentity(application, identities, add);
   }
 
-  for (const entity of entities) {
-    validateEntity(entity, add);
-    validateIdentity(entity, identities, add);
+  for (const collection of collections) {
+    validateCollection(collection, add);
+    validateIdentity(collection, identities, add);
   }
 
   for (const functionNode of functions) {
@@ -244,7 +244,7 @@ export function validateDocument(
   validateReferences(
     versionNodes,
     applications,
-    entities,
+    collections,
     functions,
     interfaces,
     screens,
@@ -330,7 +330,7 @@ function validateApplication(node: Node, add: AddDiagnostic): void {
   }
 }
 
-function validateEntity(
+function validateCollection(
   node: Node,
   add: AddDiagnostic,
   parentDeclaration?: string,
@@ -338,14 +338,14 @@ function validateEntity(
   const id = node.getArgument(0);
   const declaration = parentDeclaration === undefined
     ? declarationName(node)
-    : `${parentDeclaration}.entity.${typeof id === "string" ? id : "?"}`;
+    : `${parentDeclaration}.collection.${typeof id === "string" ? id : "?"}`;
   validateArguments(node, 1, declaration, add, true);
   validateProperties(node, [], declaration, add);
 
   const children = node.children?.nodes ?? [];
-  const fields = children.filter(isEntityFieldNode);
+  const fields = children.filter(isCollectionFieldNode);
   for (const child of children) {
-    if (!isEntityFieldNode(child)) {
+    if (!isCollectionFieldNode(child)) {
       validateContextNode(child, declaration, add);
     }
   }
@@ -367,7 +367,7 @@ function validateEntity(
   }
 }
 
-function isEntityFieldNode(node: Node): boolean {
+function isCollectionFieldNode(node: Node): boolean {
   return node.getTag() !== null || node.getName() !== "context";
 }
 
@@ -489,9 +489,9 @@ function validateFunction(node: Node, add: AddDiagnostic): void {
   validateProperties(node, [], declaration, add);
 
   const children = node.children?.nodes ?? [];
-  const entities = children.filter((child) => child.getName() === "entity");
+  const collections = children.filter((child) => child.getName() === "collection");
   const inputs = children.filter((child) => child.getName() === "input");
-  const returnsNodes = children.filter((child) => child.getName() === "returns");
+  const outputNodes = children.filter((child) => child.getName() === "output");
   for (const child of children) {
     if (child.getName() === "context") {
       validateContextNode(child, declaration, add);
@@ -499,8 +499,8 @@ function validateFunction(node: Node, add: AddDiagnostic): void {
     }
 
     if (
-      child.getName() !== "entity" && child.getName() !== "input" &&
-      child.getName() !== "returns"
+      child.getName() !== "collection" && child.getName() !== "input" &&
+      child.getName() !== "output"
     ) {
       add({
         code: "SURF-CHILD-002",
@@ -508,7 +508,7 @@ function validateFunction(node: Node, add: AddDiagnostic): void {
         element: child,
         declaration,
         suggestion:
-          "Use entity, input, returns, and context child nodes in a function.",
+          "Use collection, input, output, and context child nodes in a function.",
       });
     }
   }
@@ -519,32 +519,32 @@ function validateFunction(node: Node, add: AddDiagnostic): void {
       message: `${declaration} may contain at most one input child node.`,
       element: inputs[1],
       declaration,
-      suggestion: "Keep no more than one typed entity input reference.",
+      suggestion: "Keep no more than one typed collection input reference.",
     });
   }
 
-  if (returnsNodes.length !== 1) {
+  if (outputNodes.length !== 1) {
     add({
       code: "SURF-CHILD-001",
-      message: `${declaration} must contain exactly one returns child node.`,
-      element: returnsNodes[1] ?? node,
+      message: `${declaration} must contain exactly one output child node.`,
+      element: outputNodes[1] ?? node,
       declaration,
-      suggestion: 'Add returns (entity)"entityId" exactly once.',
+      suggestion: 'Add output (collection)"collectionId" exactly once.',
     });
   }
 
   const localIdentities = new Set<string>();
-  for (const entity of entities) {
-    validateEntity(entity, add, declaration);
-    validateIdentity(entity, localIdentities, add);
+  for (const collection of collections) {
+    validateCollection(collection, add, declaration);
+    validateIdentity(collection, localIdentities, add);
   }
 
   for (const input of inputs) {
     validateInput(input, declaration, add);
   }
 
-  for (const returnsNode of returnsNodes) {
-    validateReturns(returnsNode, declaration, add);
+  for (const outputNode of outputNodes) {
+    validateOutput(outputNode, declaration, add);
   }
 }
 
@@ -554,18 +554,18 @@ function validateInput(
   add: AddDiagnostic,
 ): void {
   const subject = `${declaration}.input`;
-  validateReferenceNode(node, "entity", subject, declaration, add);
+  validateReferenceNode(node, "collection", subject, declaration, add);
   validateProperties(node, [], subject, add);
   validateOnlyContextChildren(node, subject, add);
 }
 
-function validateReturns(
+function validateOutput(
   node: Node,
   declaration: string,
   add: AddDiagnostic,
 ): void {
-  const subject = `${declaration}.returns`;
-  validateReferenceNode(node, "entity", subject, declaration, add);
+  const subject = `${declaration}.output`;
+  validateReferenceNode(node, "collection", subject, declaration, add);
   validateProperties(node, [], subject, add);
   validateOnlyContextChildren(node, subject, add);
 }
@@ -744,7 +744,7 @@ function validateContextNode(
         element: reference,
         declaration,
         suggestion:
-          "Use application, entity, interface, function, or screen references.",
+          "Use application, collection, interface, function, or screen references.",
       });
     }
   }
@@ -1039,15 +1039,15 @@ function validateIdentity(
 function validateReferences(
   surfaceNodes: Node[],
   applications: Node[],
-  entities: Node[],
+  collections: Node[],
   functions: Node[],
   interfaces: Node[],
   screens: Node[],
   add: AddDiagnostic,
 ): void {
-  const entitiesById = nodesByIdentifier(entities);
+  const collectionsById = nodesByIdentifier(collections);
   for (const functionNode of functions) {
-    validateFunctionReferences(functionNode, entitiesById, add);
+    validateFunctionReferences(functionNode, collectionsById, add);
   }
 
   for (const screen of screens) {
@@ -1056,7 +1056,7 @@ function validateReferences(
 
   const declarationsByType = new Map<string, Map<string, Node>>([
     ["application", nodesByIdentifier(applications)],
-    ["entity", entitiesById],
+    ["collection", collectionsById],
     ["interface", nodesByIdentifier(interfaces)],
     ["function", nodesByIdentifier(functions)],
     ["screen", nodesByIdentifier(screens)],
@@ -1065,22 +1065,24 @@ function validateReferences(
     const node of [
       ...surfaceNodes,
       ...applications,
-      ...entities,
+      ...collections,
       ...functions,
       ...interfaces,
       ...screens,
     ]
   ) {
-    const privateEntities = node.getName() === "function"
+    const privateCollections = node.getName() === "function"
       ? nodesByIdentifier(
-        (node.children?.nodes ?? []).filter((child) => child.getName() === "entity"),
+        (node.children?.nodes ?? []).filter((child) =>
+          child.getName() === "collection"
+        ),
       )
       : undefined;
     validateContextReferences(
       node,
       declarationName(node),
       declarationsByType,
-      privateEntities,
+      privateCollections,
       add,
     );
   }
@@ -1090,7 +1092,7 @@ function validateContextReferences(
   node: Node,
   declaration: string,
   declarationsByType: Map<string, Map<string, Node>>,
-  privateEntities: Map<string, Node> | undefined,
+  privateCollections: Map<string, Node> | undefined,
   add: AddDiagnostic,
 ): void {
   if (node.getName() === "context") {
@@ -1103,8 +1105,8 @@ function validateContextReferences(
       ) {
         continue;
       }
-      const resolved = type === "entity"
-        ? privateEntities?.get(id) ?? declarationsByType.get(type)?.get(id)
+      const resolved = type === "collection"
+        ? privateCollections?.get(id) ?? declarationsByType.get(type)?.get(id)
         : declarationsByType.get(type)?.get(id);
       if (resolved === undefined) {
         add({
@@ -1125,7 +1127,7 @@ function validateContextReferences(
       child,
       declaration,
       declarationsByType,
-      privateEntities,
+      privateCollections,
       add,
     );
   }
@@ -1133,44 +1135,45 @@ function validateContextReferences(
 
 function validateFunctionReferences(
   functionNode: Node,
-  entitiesById: Map<string, Node>,
+  collectionsById: Map<string, Node>,
   add: AddDiagnostic,
 ): void {
   const declaration = declarationName(functionNode);
   const children = functionNode.children?.nodes ?? [];
-  const localEntities = children.filter((child) => child.getName() === "entity");
-  const localEntitiesById = nodesByIdentifier(localEntities);
+  const localCollections = children.filter((child) => child.getName() === "collection");
+  const localCollectionsById = nodesByIdentifier(localCollections);
 
-  for (const entity of localEntities) {
-    const id = entity.getArgument(0);
-    if (typeof id === "string" && entitiesById.has(id)) {
+  for (const collection of localCollections) {
+    const id = collection.getArgument(0);
+    if (typeof id === "string" && collectionsById.has(id)) {
       add({
         code: "SURF-ID-003",
-        message: `${declaration} private entity ${id} conflicts with a global entity.`,
-        element: entity.getArgumentEntry(0),
+        message:
+          `${declaration} private collection ${id} conflicts with a global collection.`,
+        element: collection.getArgumentEntry(0),
         declaration,
-        suggestion: "Rename the private entity so its ID is unique.",
+        suggestion: "Rename the private collection so its ID is unique.",
       });
     }
   }
 
   const references = children.filter((child) =>
-    child.getName() === "input" || child.getName() === "returns"
+    child.getName() === "input" || child.getName() === "output"
   );
   for (const reference of references) {
-    const entityId = reference.getArgument(0);
+    const collectionId = reference.getArgument(0);
     if (
-      typeof entityId === "string" &&
-      !localEntitiesById.has(entityId) && !entitiesById.has(entityId)
+      typeof collectionId === "string" &&
+      !localCollectionsById.has(collectionId) && !collectionsById.has(collectionId)
     ) {
       add({
         code: "SURF-REF-001",
         message:
-          `Unresolved entity reference ${entityId} in ${declaration}.${reference.getName()}.`,
+          `Unresolved collection reference ${collectionId} in ${declaration}.${reference.getName()}.`,
         element: reference.getArgumentEntry(0),
         declaration,
         suggestion:
-          `Declare entity "${entityId}" globally or inside ${declaration}, or change the reference.`,
+          `Declare collection "${collectionId}" globally or inside ${declaration}, or change the reference.`,
       });
     }
   }
@@ -1229,7 +1232,7 @@ function buildIr(document: Document): SurfaceIr {
     applicationChildren.findNodeByName("purpose"),
     "application purpose",
   );
-  const entities = document.nodes.filter((node) => node.getName() === "entity");
+  const collections = document.nodes.filter((node) => node.getName() === "collection");
   const functions = document.nodes.filter((node) => node.getName() === "function");
   const interfaces = document.nodes.filter(
     (node) => node.getName() === "interface",
@@ -1242,35 +1245,35 @@ function buildIr(document: Document): SurfaceIr {
       id: expectString(application.getArgument(0), "application identifier"),
       purpose: expectString(purpose.getArgument(0), "application purpose"),
     },
-    ...(entities.length === 0 ? {} : {
-      entities: entities.map(buildEntityIr),
+    ...(collections.length === 0 ? {} : {
+      collections: collections.map(buildCollectionIr),
     }),
     ...(functions.length === 0 ? {} : {
       functions: functions.map((functionNode) => {
         const children = expectChildren(functionNode, "function");
-        const localEntities = children.findNodesByName("entity");
+        const localCollections = children.findNodesByName("collection");
         const inputNode = children.findNodeByName("input");
-        const returnsNode = expectNode(
-          children.findNodeByName("returns"),
-          "function returns",
+        const outputNode = expectNode(
+          children.findNodeByName("output"),
+          "function output",
         );
         return {
           id: expectString(functionNode.getArgument(0), "function identifier"),
-          ...(localEntities.length === 0 ? {} : {
-            entities: localEntities.map(buildEntityIr),
+          ...(localCollections.length === 0 ? {} : {
+            collections: localCollections.map(buildCollectionIr),
           }),
           ...(inputNode === undefined ? {} : {
             input: {
-              entity: expectString(
+              collection: expectString(
                 inputNode.getArgument(0),
-                "input entity",
+                "input collection",
               ),
             },
           }),
-          returns: {
-            entity: expectString(
-              returnsNode.getArgument(0),
-              "return entity",
+          output: {
+            collection: expectString(
+              outputNode.getArgument(0),
+              "output collection",
             ),
           },
         };
@@ -1300,11 +1303,11 @@ function buildIr(document: Document): SurfaceIr {
   };
 }
 
-function buildEntityIr(entity: Node): SurfaceEntityIr {
-  const children = expectChildren(entity, "entity");
+function buildCollectionIr(collection: Node): SurfaceCollectionIr {
+  const children = expectChildren(collection, "collection");
   return {
-    id: expectString(entity.getArgument(0), "entity identifier"),
-    fields: children.nodes.filter(isEntityFieldNode).map((field) => {
+    id: expectString(collection.getArgument(0), "collection identifier"),
+    fields: children.nodes.filter(isCollectionFieldNode).map((field) => {
       const modifiers = new Set(field.getArguments());
       const optional = modifiers.has("optional") ? true : undefined;
       return {

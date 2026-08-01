@@ -3,15 +3,11 @@
 surface "0.1"
 
 application "contactViewer" {
-    purpose "Reject the former query declaration."
+    purpose "Reject the former entity declaration."
 }
 
-collection "contact" {
+entity "contact" {
     (string)"id"
-}
-
-query "contactById" {
-    output (collection)"contact"
 }
 
 interface "contactViewer" {

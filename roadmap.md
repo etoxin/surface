@@ -178,14 +178,14 @@ Build a read-only page that displays a contact selected by identifier.
 
 Introduces:
 
-- `entity` declarations;
+- `collection` declarations;
 - `function` declarations for named capabilities;
 - primitive field types expressed as KDL node annotations;
 - the bare `optional` field modifier for fields that are not required;
 - Boolean and null values;
-- private function entities and structured entity input/output references;
+- private function collections and structured collection input/output references;
 - annotated references between top-level declarations;
-- context that relates functions, entities, interfaces, and screens.
+- context that relates functions, collections, interfaces, and screens.
 
 This stage should establish field syntax and contextual reference resolution.
 Rung 3 supports only `string` and `boolean` primitive types; numeric values
@@ -198,7 +198,7 @@ Delivered in:
 - [`examples/03-contact-viewer/invalid/`](./examples/03-contact-viewer/invalid/);
 - [`examples/03-contact-viewer/app/server.ts`](./examples/03-contact-viewer/app/server.ts);
 - [Rung 3 decisions and acceptance scenarios](./examples/03-contact-viewer/decisions.md);
-- [Entity guide](./docs/node_entity.md);
+- [Collection guide](./docs/node_collection.md);
 - [Function guide](./docs/node_function.md);
 - [Interface guide](./docs/node_interface.md);
 - [Screen guide](./docs/node_screen.md);
@@ -238,7 +238,7 @@ Introduces:
 - transition invariants;
 - reusable domain values.
 
-This stage should determine how workflows relate to entity fields and behavior
+This stage should determine how workflows relate to collection fields and behavior
 effects without duplicating the same fact.
 
 ### 6. Signup Form
@@ -389,7 +389,7 @@ order fulfillment.
 
 Exercises together:
 
-- multiple related entities;
+- multiple related collections;
 - payment and inventory integrations;
 - chained workflows;
 - asynchronous jobs;
@@ -479,7 +479,7 @@ specification rather than only a documentation format.
 | `application` | 1. Hello World Page |
 | `interface` | 1. Hello World Page |
 | `screen` | 1. Hello World Page |
-| `entity` | 3. Contact Viewer |
+| `collection` | 3. Contact Viewer |
 | `function` | 3. Contact Viewer |
 | `actor` | 4. Click Counter |
 | `behavior` | 4. Click Counter |

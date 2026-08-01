@@ -2,12 +2,8 @@
 
 surface "0.1"
 application "contactViewer" { purpose "Display a contact." }
-entity "contact" {
-    (string)"id"
-}
 function "contactById" {
-    input (entity)"missingLookup"
-    returns (entity)"contact"
+    output (collection)"missingContact"
 }
 screen "contact" {
     context "Render a contact."

@@ -2,7 +2,7 @@
 
 surface "0.1"
 application "contactViewer" { purpose "Display a contact." }
-entity "contact" {
+collection "contact" {
     (string)"id" required
 }
 screen "contact" {

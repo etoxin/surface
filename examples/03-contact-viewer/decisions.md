@@ -2,26 +2,26 @@
 
 ## Lookup
 
-`contactById` declares a private `contactLookup` input entity and returns the
-global `contact` entity. Typed string annotations make both references
-checkable. Context explains the lookup and says a failed lookup returns null.
+`contactById` declares a private `contactLookup` input collection and outputs
+the global `contact` collection. Typed string annotations make both references
+checkable. Context explains the lookup and says a failed lookup produces null.
 
-The example implementation maps `/contacts?id=ada` to the input entity's `id`
-field. That URL mapping is an implementation choice, not Surface syntax.
+The example implementation maps `/contacts?id=ada` to the input collection's
+`id` field. That URL mapping is an implementation choice, not Surface syntax.
 
 ## Interface and Screens
 
 `contactViewer` is an intent-driven interface. Its contexts reference the
-function and entity while describing the input, displayed contact fields, and
-missing input/result behavior. Surface leaves the exact controls, copy, and
+function and collection while describing the input, displayed contact fields,
+and missing input/result behavior. Surface leaves the exact controls, copy, and
 layout to the implementer.
 
 The `contact` screen uses that interface. The context-only `home` screen says
 that `/` redirects to the checked `(screen)"contact"` reference without adding
 structured redirect or logic syntax.
 
-Entity fields are required by default; only values that may be absent use the
-bare `optional` modifier. Storage and seed data are implementation choices.
+Collection fields are required by default; only values that may be absent use
+the bare `optional` modifier. Storage and seed data are implementation choices.
 
 ## Acceptance Scenarios
 

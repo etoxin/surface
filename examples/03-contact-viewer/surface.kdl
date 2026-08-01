@@ -6,7 +6,7 @@ application "contactViewer" {
     purpose "Display a contact selected by identifier."
 }
 
-entity "contact" {
+collection "contact" {
     (string)"id"
     (string)"name"
     (string)"email" optional {
@@ -16,20 +16,20 @@ entity "contact" {
 }
 
 function "contactById" {
-    context (entity)"contactLookup" (entity)"contact" "Find the contact whose id equals the lookup id."
+    context (collection)"contactLookup" (collection)"contact" "Find the contact whose id equals the lookup id."
 
-    entity "contactLookup" {
+    collection "contactLookup" {
         (string)"id"
     }
 
-    input (entity)"contactLookup"
-    returns (entity)"contact"
+    input (collection)"contactLookup"
+    output (collection)"contact"
 
-    context (entity)"contact" "If there is no contact, return null."
+    context (collection)"contact" "If there is no contact, produce null."
 }
 
 interface "contactViewer" {
-    context (function)"contactById" (entity)"contact" "Render a user interface that asks for a contact id and displays the matching contact's name, email, and active status."
+    context (function)"contactById" (collection)"contact" "Render a user interface that asks for a contact id and displays the matching contact's name, email, and active status."
     context (function)"contactById" "When no id is provided, ask the user to select a contact."
     context (function)"contactById" "When no contact matches, show that the contact was not found."
 }

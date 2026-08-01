@@ -14,8 +14,8 @@ but omitted from the reduced semantic JSON IR.
 ## Where Context Can Go
 
 Context is universal. It can be added to `surface`, `application`, `purpose`,
-entities and their fields, functions and their private entities, `input`,
-`returns`, `interface`, `screen`, and `use`.
+collections and their fields, functions and their private collections, `input`,
+`output`, `interface`, `screen`, and `use`.
 
 Place it as close as possible to what it explains:
 
@@ -32,13 +32,14 @@ application "helloWorld" {
 Put typed references before the prompt when the guidance relates declarations:
 
 ```kdl
-context (function)"contactById" (entity)"contact" "Display the returned contact."
+context (function)"contactById" (collection)"contact" "Display the returned contact."
 ```
 
 A type annotation on a string means that the string references another Surface
-declaration. Context can reference global applications, entities, interfaces,
-functions, and screens. Context inside a function can also reference one of that
-function's private entities. Every reference is checked for visibility and type.
+declaration. Context can reference global applications, collections, interfaces,
+functions, and screens. Context inside a function can also reference one of
+that function's private collections. Every reference is checked for visibility
+and type.
 
 Use the CLI to discover exact references:
 
