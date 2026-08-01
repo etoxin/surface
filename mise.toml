@@ -41,6 +41,15 @@ depends = ["deps"]
 raw_args = true
 run = "deno task surf"
 
+[tasks."examples-prepare"]
+description = "Copy the Surface skill into every example workspace"
+run = "deno task examples-prepare"
+
+[tasks."example-clean"]
+description = "Clear one example app for a fresh agent build"
+raw_args = true
+run = "deno task example-clean"
+
 [tasks."todo-list"]
 description = "Serve the Todo List example on port 8003"
 depends = ["deps"]

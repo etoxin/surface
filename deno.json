@@ -1,11 +1,13 @@
 {
   "tasks": {
     "surf": "deno run --allow-read --allow-write src/cli.ts",
+    "examples-prepare": "deno run --allow-read=skills/surface,examples --allow-write=examples src/example_workspaces.ts install-skills",
+    "example-clean": "deno run --allow-read=examples --allow-write=examples src/example_workspaces.ts clean",
     "todo-list": "deno eval 'const html = await Deno.readTextFile(\"examples/todo-list/app/index.html\"); console.log(\"Todo List: http://localhost:8003/\"); Deno.serve({ port: 8003 }, (request) => new URL(request.url).pathname === \"/\" ? new Response(html, { headers: { \"content-type\": \"text/html; charset=utf-8\" } }) : new Response(\"Not found\", { status: 404 }));'",
     "online-checkout": "deno run --allow-net --allow-read --allow-env=INVENTORY_API_TOKEN,PAYMENT_API_TOKEN examples/online-checkout/app/server.ts",
     "multi-tenant-project-tracker": "deno run --allow-net --allow-read examples/multi-tenant-project-tracker/app/server.ts",
     "test": "deno test --allow-read --allow-write --allow-run",
-    "typecheck": "deno check src/cli.ts src/diagnostics.ts src/formatter.ts src/surface.ts examples/online-checkout/app/domain.ts examples/online-checkout/app/domain_test.ts examples/online-checkout/app/server.ts examples/online-checkout/app/server_test.ts examples/online-checkout/app/test_helpers.ts examples/multi-tenant-project-tracker/app/domain.ts examples/multi-tenant-project-tracker/app/domain_test.ts examples/multi-tenant-project-tracker/app/server.ts examples/multi-tenant-project-tracker/app/server_test.ts test/surface_test.ts",
+    "typecheck": "deno check src/cli.ts src/diagnostics.ts src/example_workspaces.ts src/formatter.ts src/surface.ts examples/online-checkout/app/domain.ts examples/online-checkout/app/domain_test.ts examples/online-checkout/app/server.ts examples/online-checkout/app/server_test.ts examples/online-checkout/app/test_helpers.ts examples/multi-tenant-project-tracker/app/domain.ts examples/multi-tenant-project-tracker/app/domain_test.ts examples/multi-tenant-project-tracker/app/server.ts examples/multi-tenant-project-tracker/app/server_test.ts test/surface_test.ts",
     "verify": "deno fmt --check && deno lint && deno task typecheck && deno task test",
     "check": "deno task verify"
   },
