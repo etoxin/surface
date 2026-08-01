@@ -16,50 +16,25 @@ const todoExampleRoot = join(
   "examples",
   "todo-list",
 );
-const candidateExampleDirectories = [
+const exampleDirectories = [
+  "hello-world",
+  "todo-list",
   "online-checkout",
   "multi-tenant-project-tracker",
 ];
 const cli = join(repositoryRoot, "src", "cli.ts");
 const decoder = new TextDecoder();
 
-Deno.test("the Hello World specification exports the reviewed IR", async () => {
-  const source = await Deno.readTextFile(join(exampleRoot, "surface.kdl"));
-  const expected = JSON.parse(
-    await Deno.readTextFile(join(exampleRoot, "expected-ir.json")),
-  );
-
-  const result = parseSurface(source, "surface.kdl");
-
-  assertEquals(result.diagnostics, []);
-  assertEquals(result.ir, expected);
-});
-
-Deno.test("the Todo List specification exports the reviewed IR", async () => {
-  const source = await Deno.readTextFile(join(todoExampleRoot, "surface.kdl"));
-  const expected = JSON.parse(
-    await Deno.readTextFile(join(todoExampleRoot, "expected-ir.json")),
-  );
-
-  const result = parseSurface(source, "surface.kdl");
-
-  assertEquals(result.diagnostics, []);
-  assertEquals(result.ir, expected);
-  assertEquals(formatSurface(source, "surface.kdl").output, source);
-});
-
-Deno.test("candidate specifications export their reviewed IR", async () => {
-  for (const directory of candidateExampleDirectories) {
+Deno.test("example specifications are valid and canonically formatted", async () => {
+  for (const directory of exampleDirectories) {
     const root = join(repositoryRoot, "examples", directory);
     const source = await Deno.readTextFile(join(root, "surface.kdl"));
-    const expected = JSON.parse(
-      await Deno.readTextFile(join(root, "expected-ir.json")),
-    );
 
     const result = parseSurface(source, `${directory}/surface.kdl`);
 
     assertEquals(result.diagnostics, []);
-    assertEquals(result.ir, expected);
+    assert(result.ir !== null);
+    assertEquals(formatSurface(source, `${directory}/surface.kdl`).output, source);
   }
 });
 

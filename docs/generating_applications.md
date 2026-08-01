@@ -13,7 +13,6 @@ Give the implementer:
 4. an empty output directory;
 5. the acceptance command or observable result you expect.
 
-Do not use the reduced JSON export as the only input because it omits prompt context.
 Do not provide an existing implementation when you want an independent generation.
 
 ## Suggested Prompt

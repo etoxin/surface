@@ -62,15 +62,6 @@ List the references that context and logic can use:
 mise run surf reference examples/todo-list/surface.kdl --list
 ```
 
-Export the reduced semantic representation:
-
-```sh
-mise run surf export examples/todo-list/surface.kdl --format json
-```
-
-The reduced JSON is useful for tools and comparisons, but it deliberately omits context.
-Use the original `.kdl` source—not only the JSON export—when implementing an app.
-
 ## Write Your Own Specification
 
 Copy Hello World to a new `.kdl` file and change one concern at a time:

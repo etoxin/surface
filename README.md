@@ -67,7 +67,6 @@ git clone https://github.com/etoxin/surface-lang.git
 cd surface-lang
 mise install
 mise run surf check examples/hello-world/surface.kdl
-mise run surf export examples/hello-world/surface.kdl --format json
 mise run verify
 ```
 
@@ -114,7 +113,6 @@ application stacks and test the frozen grammar at platform scale.
 mise run surf parse <file.kdl>
 mise run surf check <file.kdl>
 mise run surf format <file.kdl>
-mise run surf export <file.kdl> --format json
 mise run surf reference <file.kdl> <selector|--list>
 ```
 

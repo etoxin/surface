@@ -8,11 +8,7 @@ Test the Surface specification and its implementation separately.
 mise run surf check path/to/surface.kdl
 mise run surf format path/to/surface.kdl
 mise run surf reference path/to/surface.kdl --list
-mise run surf export path/to/surface.kdl --format json
 ```
-
-Keep a reviewed JSON export when semantic drift matters. A changed export should reflect
-an intentional change to the checked structure; context-only edits do not appear there.
 
 ## Implementation Checks
 

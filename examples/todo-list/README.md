@@ -5,7 +5,6 @@ types, shared and private collections, functions, interface state, validation, a
 ordered interaction logic.
 
 - [`surface.kdl`](./surface.kdl) is the source specification.
-- [`expected-ir.json`](./expected-ir.json) is its reviewed semantic export.
 - [`app/index.html`](./app/index.html) is one implementation with no build step.
 - [`decisions.md`](./decisions.md) records implementation choices.
 - [`invalid/`](./invalid/) contains focused diagnostic examples.

@@ -6,7 +6,6 @@ and non-enumerating failures. Its browser stack pins Pico CSS 2.1.1, served loca
 the app.
 
 - [`surface.kdl`](./surface.kdl) is the source specification.
-- [`expected-ir.json`](./expected-ir.json) is its reviewed semantic export.
 - [`app/`](./app/) contains the Deno reference implementation and tests.
 - [`decisions.md`](./decisions.md) documents identities, seed data, and trust boundaries.
 

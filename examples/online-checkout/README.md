@@ -5,7 +5,6 @@ idempotency, receipts, asynchronous fulfillment, compensation, authorization, an
 failure handling. Its browser stack pins Pico CSS 2.1.1, served locally with the app.
 
 - [`surface.kdl`](./surface.kdl) is the source specification.
-- [`expected-ir.json`](./expected-ir.json) is its reviewed semantic export.
 - [`app/`](./app/) contains the Deno reference implementation and tests.
 - [`decisions.md`](./decisions.md) documents its local adapters and safety boundaries.
 
