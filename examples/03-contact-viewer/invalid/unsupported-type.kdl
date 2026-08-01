@@ -3,7 +3,7 @@
 surface "0.1"
 application "contactViewer" { purpose "Display a contact." }
 collection "contact" {
-    (number)"id"
+    (promise)"id"
 }
 screen "contact" {
     context "Render a contact."

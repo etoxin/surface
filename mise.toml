@@ -55,3 +55,8 @@ run = "deno task static-faq"
 description = "Run the rung-4 Click Counter example"
 depends = ["deps"]
 run = "deno task click-counter"
+
+[tasks."todo-list"]
+description = "Serve the rung-5 HTML Todo List example"
+depends = ["deps"]
+run = "deno task todo-list"

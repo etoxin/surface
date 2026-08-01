@@ -1,0 +1,7 @@
+{
+  "untyped-value.kdl": "SURF-TYPE-002",
+  "unresolved-enum.kdl": "SURF-REF-001",
+  "standalone-enum.kdl": "SURF-NODE-001",
+  "future-workflow.kdl": "SURF-NODE-001",
+  "structured-interface-state.kdl": "SURF-CHILD-002"
+}

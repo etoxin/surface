@@ -65,3 +65,28 @@ interface "clickCounter" {
 Do not add collections, functions, or speculative behaviour and event syntax
 solely to represent interface-local state. Keep conditions, arithmetic, event
 wording, and other operators inside the logic instruction strings.
+
+## Local Application State
+
+Use interface logic for state that belongs to one interactive experience. When
+the application also has a shared data contract and separately callable
+operations, reference their collection and functions while leaving list-level
+state in the interface:
+
+```kdl
+interface "todoList" {
+    context (collection)"todo" (function)"createTodo" (function)"completeTodo" "Render accessible Open, Completed, and Archived task groups."
+    logic {
+        "Start with no tasks."
+        (function)"createTodo" "When Add task is activated, call this function with the entered text."
+        (function)"completeTodo" "When Complete is activated, replace that task with this function's output."
+        "After every change, update all task groups and counts."
+    }
+}
+```
+
+Collections and functions do not themselves prescribe persistence or a list
+container. Those implementation choices remain behind the interface logic.
+Use a typed `value` when state needs a reusable name outside the interface.
+Do not add `workflow`, `state`, or `transition` nodes unless a later Surface
+version explicitly releases them.

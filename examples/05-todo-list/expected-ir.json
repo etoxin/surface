@@ -1,0 +1,272 @@
+{
+  "surfaceVersion": "0.1",
+  "application": {
+    "id": "todoList",
+    "purpose": "Manage personal tasks as open, completed, or archived."
+  },
+  "values": [
+    {
+      "id": "defaultPriority",
+      "type": "number",
+      "kind": "constant",
+      "initial": 1
+    },
+    {
+      "id": "todos",
+      "type": "array",
+      "kind": "variable"
+    },
+    {
+      "id": "todoStatus",
+      "type": "enum",
+      "kind": "constant",
+      "values": [
+        "open",
+        "completed",
+        "archived"
+      ]
+    }
+  ],
+  "collections": [
+    {
+      "id": "todo",
+      "fields": [
+        {
+          "name": "id",
+          "type": "string"
+        },
+        {
+          "name": "text",
+          "type": "string"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "value": "todoStatus"
+        },
+        {
+          "name": "dueDate",
+          "type": "date",
+          "optional": true
+        },
+        {
+          "name": "priority",
+          "type": "number"
+        },
+        {
+          "name": "tags",
+          "type": "array",
+          "optional": true
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "id": "createTodo",
+      "collections": [
+        {
+          "id": "todoInput",
+          "fields": [
+            {
+              "name": "text",
+              "type": "string"
+            },
+            {
+              "name": "dueDate",
+              "type": "date",
+              "optional": true
+            },
+            {
+              "name": "priority",
+              "type": "number",
+              "optional": true
+            },
+            {
+              "name": "tags",
+              "type": "array",
+              "optional": true
+            }
+          ]
+        }
+      ],
+      "input": {
+        "collection": "todoInput"
+      },
+      "output": {
+        "collection": "todo"
+      },
+      "logic": [
+        {
+          "instruction": "Trim the text.",
+          "reference": {
+            "type": "collection",
+            "id": "todoInput"
+          }
+        },
+        {
+          "instruction": "If the trimmed text is empty, output null."
+        },
+        {
+          "instruction": "If no priority is supplied, use this value.",
+          "reference": {
+            "type": "value",
+            "id": "defaultPriority"
+          }
+        },
+        {
+          "instruction": "If the trimmed text is not empty, output a new todo with a unique id, that text, an open status, and any supplied due date, priority, and tags.",
+          "reference": {
+            "type": "collection",
+            "id": "todo"
+          }
+        }
+      ]
+    },
+    {
+      "id": "completeTodo",
+      "input": {
+        "collection": "todo"
+      },
+      "output": {
+        "collection": "todo"
+      },
+      "logic": [
+        {
+          "instruction": "If its status is open, output it with a completed status.",
+          "reference": {
+            "type": "collection",
+            "id": "todo"
+          }
+        },
+        {
+          "instruction": "Otherwise, output it unchanged.",
+          "reference": {
+            "type": "collection",
+            "id": "todo"
+          }
+        }
+      ]
+    },
+    {
+      "id": "reopenTodo",
+      "input": {
+        "collection": "todo"
+      },
+      "output": {
+        "collection": "todo"
+      },
+      "logic": [
+        {
+          "instruction": "If its status is completed or archived, output it with an open status.",
+          "reference": {
+            "type": "collection",
+            "id": "todo"
+          }
+        },
+        {
+          "instruction": "Otherwise, output it unchanged.",
+          "reference": {
+            "type": "collection",
+            "id": "todo"
+          }
+        }
+      ]
+    },
+    {
+      "id": "archiveTodo",
+      "input": {
+        "collection": "todo"
+      },
+      "output": {
+        "collection": "todo"
+      },
+      "logic": [
+        {
+          "instruction": "If its status is completed, output it with an archived status.",
+          "reference": {
+            "type": "collection",
+            "id": "todo"
+          }
+        },
+        {
+          "instruction": "Otherwise, output it unchanged.",
+          "reference": {
+            "type": "collection",
+            "id": "todo"
+          }
+        }
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "todoList",
+      "logic": [
+        {
+          "instruction": "Start with this value empty.",
+          "reference": {
+            "type": "value",
+            "id": "todos"
+          }
+        },
+        {
+          "instruction": "When Add task is activated, call this function with the entered text.",
+          "reference": {
+            "type": "function",
+            "id": "createTodo"
+          }
+        },
+        {
+          "instruction": "If this function outputs null, show an error and do not add a task.",
+          "reference": {
+            "type": "function",
+            "id": "createTodo"
+          }
+        },
+        {
+          "instruction": "If this function outputs a todo, add it to the todos value.",
+          "reference": {
+            "type": "function",
+            "id": "createTodo"
+          }
+        },
+        {
+          "instruction": "When Complete is activated for an open task, replace that todo in the todos value with this function's output.",
+          "reference": {
+            "type": "function",
+            "id": "completeTodo"
+          }
+        },
+        {
+          "instruction": "When Reopen is activated for a completed or archived task, replace that todo in the todos value with this function's output.",
+          "reference": {
+            "type": "function",
+            "id": "reopenTodo"
+          }
+        },
+        {
+          "instruction": "When Archive is activated for a completed task, replace that todo in the todos value with this function's output.",
+          "reference": {
+            "type": "function",
+            "id": "archiveTodo"
+          }
+        },
+        {
+          "instruction": "After every change, display each task in exactly one group and update all group counts."
+        }
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "id": "home",
+      "interface": "todoList",
+      "logic": [
+        {
+          "instruction": "Use / as this screen's URL path."
+        }
+      ]
+    }
+  ]
+}

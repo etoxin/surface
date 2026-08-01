@@ -38,8 +38,8 @@ context (function)"contactById" (collection)"contact" "Display the returned cont
 ```
 
 A type annotation on a string means that the string references another Surface
-declaration. Context can reference global applications, collections, interfaces,
-functions, and screens. Context inside a function can also reference one of
+declaration. Context can reference global applications, values, collections,
+interfaces, functions, and screens. Context inside a function can also reference one of
 that function's private collections. Every reference is checked for visibility
 and type.
 

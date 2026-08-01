@@ -154,6 +154,12 @@ function collectReferences(ir: SurfaceIr): SurfaceReference[] {
     reference: `(application)"${ir.application.id}"`,
   }];
 
+  for (const value of ir.values ?? []) {
+    references.push({
+      selector: `value.${value.id}`,
+      reference: `(value)"${value.id}"`,
+    });
+  }
   for (const collection of ir.collections ?? []) {
     references.push({
       selector: `collection.${collection.id}`,

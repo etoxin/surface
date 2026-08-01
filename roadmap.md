@@ -213,10 +213,8 @@ Introduces:
 - checked declaration references from logic instructions;
 - context that relates functions, collections, interfaces, and screens.
 
-This stage should establish field syntax and contextual reference resolution.
-Rung 3 supports only `string` and `boolean` primitive types. Numeric fields
-remain unreleased until an application cannot be described clearly without
-them.
+This stage established field syntax and contextual reference resolution with
+only the `string` and `boolean` types. Rung 5 later expands that type set.
 
 Delivered in:
 
@@ -251,10 +249,9 @@ The interface logic specifies an initial value of 0, an increment action, a
 reset action, and immediate visible updates. The example can be implemented and
 tested without modelling that local UI state as application data.
 
-`actor`, `behaviour`, `event`, `scenario`, numeric field types, structured
-state, preconditions, and effects remain unreleased until a later application
-demonstrates a concrete ambiguity or validation gap that logic strings cannot
-cover.
+At this rung, `actor`, `behaviour`, `event`, `scenario`, numeric field types,
+structured state, preconditions, and effects remain unreleased. Rung 5 later
+adds portable numeric types when the Todo List needs them.
 
 Rung 4 introduces no new Surface syntax.
 
@@ -271,22 +268,50 @@ Delivered in:
 
 ### 5. Todo List
 
+**Status:** Complete
+
 Build a personal todo list with open, completed, and archived tasks.
 
 Introduces:
 
-- `value` declarations;
-- `enum` declarations;
-- `workflow` declarations;
-- default field values;
-- multiple behaviours and functions;
-- workflow states and transitions;
-- initial states;
-- transition invariants;
-- reusable domain values.
+- `value` declarations for constants and variables;
+- a broad set of portable types shared by values and collection fields;
+- the `enum` primitive with unique quoted options;
+- checked value references on enum fields;
+- values in the semantic IR and CLI reference output;
 
-This stage should determine how workflows relate to collection fields and
-behaviour effects without duplicating the same fact.
+Reuses:
+
+- a global `todo` collection as the shared task contract;
+- a private function input collection for new task text;
+- `createTodo`, `completeTodo`, `reopenTodo`, and `archiveTodo` functions;
+- checked function and collection references;
+- interface `context` for accessible presentation intent;
+- ordered interface `logic` for function invocation, errors, grouping, and counts;
+- inline screen `logic` for the root URL path;
+- implementation-level state and acceptance tests.
+
+The enum value makes valid statuses machine-checkable while functions keep
+their transitions in ordered logic. `workflow`, `state`, and `transition`
+declarations remain unreleased until an application needs workflow invariants
+that logic strings cannot express.
+
+Rung 5 adds values and the portable types required by this application.
+
+Delivered in:
+
+- [`examples/05-todo-list/surface.kdl`](./examples/05-todo-list/surface.kdl);
+- [`examples/05-todo-list/expected-ir.json`](./examples/05-todo-list/expected-ir.json);
+- [`examples/05-todo-list/invalid/`](./examples/05-todo-list/invalid/);
+- [`examples/05-todo-list/app/index.html`](./examples/05-todo-list/app/index.html);
+- [Rung 5 decisions and acceptance scenarios](./examples/05-todo-list/decisions.md);
+- [Portable type guide](./docs/primitives.md);
+- [Value and enum guide](./docs/node_value.md);
+- [Collection guide](./docs/node_collection.md);
+- [Function guide](./docs/node_function.md);
+- [Interface guide](./docs/node_interface.md);
+- [Logic guide](./docs/node_logic.md);
+- [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
 
 ### 6. Signup Form
 
@@ -537,8 +562,7 @@ specification rather than only a documentation format.
 | `event` | Not yet scheduled |
 | `scenario` | Not yet scheduled |
 | `value` | 5. Todo List |
-| `enum` | 5. Todo List |
-| `workflow` | 5. Todo List |
+| `workflow` | Not yet scheduled |
 | `component` | 6. Signup Form |
 | `requirement` | 6. Signup Form |
 | `policy` | 7. Private Notes |

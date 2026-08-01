@@ -1,0 +1,9 @@
+/- kdl-version 2
+
+surface "0.1"
+application "todoList" { purpose "Manage tasks." }
+interface "todoList" {
+    context "Render tasks."
+    state "tasks"
+}
+screen "home" { use (interface)"todoList" }

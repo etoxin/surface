@@ -38,8 +38,8 @@ one quoted argument:
 (collection)"contact" "If the value is greater than 10, keep it."
 ```
 
-The supported reference types are `application`, `collection`, `function`,
-`interface`, and `screen`. Logic in a function can also see that function's
+The supported reference types are `application`, `value`, `collection`,
+`function`, `interface`, and `screen`. Logic in a function can also see that function's
 private collections.
 
 ## Keep Operators in Strings

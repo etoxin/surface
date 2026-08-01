@@ -33,20 +33,25 @@ may instead contain context or logic for non-visual behaviour.
 1. [Writing Surface](./docs/README.md)
 2. [Starting a Surface file](./docs/node_surface.md)
 3. [Describing the application](./docs/node_application.md)
-4. [Defining data](./docs/node_collection.md)
-5. [Defining functions](./docs/node_function.md)
-6. [Describing an interface](./docs/node_interface.md)
-7. [Adding screens](./docs/node_screen.md)
-8. [Adding prompt context](./docs/node_context.md)
-9. [Adding ordered logic](./docs/node_logic.md)
-10. [Application roadmap](./roadmap.md)
+4. [Portable types](./docs/primitives.md)
+5. [Defining values and enums](./docs/node_value.md)
+6. [Defining data](./docs/node_collection.md)
+7. [Defining functions](./docs/node_function.md)
+8. [Describing an interface](./docs/node_interface.md)
+9. [Adding screens](./docs/node_screen.md)
+10. [Adding prompt context](./docs/node_context.md)
+11. [Adding ordered logic](./docs/node_logic.md)
+12. [Application roadmap](./roadmap.md)
 
 ## Current Syntax
 
 - A file starts with `/- kdl-version 2`, then one `surface "0.1"` and one
   `application` containing a `purpose`.
-- `collection` declares fields as `(string)"name"` or `(boolean)"active"`. Fields
-  are required by default; the only modifier is `optional`.
+- `(type)value "id"` declares a constant by default; a bare trailing `variable`
+  marks mutable state. `(enum)value` contains unique quoted options.
+- `collection` fields use the same portable type annotations as values. Fields
+  are required by default; the only modifier is `optional`. An `(enum)` field
+  has one checked `(value)"id"` reference.
 - `function` describes a named capability. It currently has one
   `output (collection)"id"`, an optional structured `input`, and may declare
   function-private collections and one optional `logic` node.
@@ -82,12 +87,14 @@ mise run surf reference examples/03-contact-viewer/surface.kdl --list
 mise run static-faq
 mise run contact-viewer
 mise run click-counter
+mise run todo-list
 ```
 
 The direct equivalents are `deno task verify` and `deno task surf`. The CLI
 supports `parse`, `check`, `format`, `export`, and `reference`. Reference
 selectors include `interface.contactViewer`, `screen.contact`, and scoped
 private collections such as `function.contactById.collection.contactLookup`.
+Values use selectors such as `value.todoStatus`.
 
 ## Examples
 
@@ -95,13 +102,15 @@ private collections such as `function.contactById.collection.contactLookup`.
 - [Rung 2: Static FAQ](./examples/02-static-faq/surface.kdl)
 - [Rung 3: Contact Viewer](./examples/03-contact-viewer/surface.kdl)
 - [Rung 4: Click Counter](./examples/04-click-counter/surface.kdl)
+- [Rung 5: Todo List](./examples/05-todo-list/surface.kdl)
 - [LLM skill](./skills/surface/SKILL.md)
 
 Each rung includes expected JSON, invalid fixtures, a small implementation,
 human documentation, and updates to the LLM skill. The Static FAQ runs at
 `http://localhost:8002/faq`; the Contact Viewer runs at
 `http://localhost:8000/contacts?id=ada`; the Click Counter runs at
-`http://localhost:8001/`.
+`http://localhost:8001/`; the self-contained Todo List HTML runs at
+`http://localhost:8003/` through its convenience task.
 
 Only the documented syntax is released. New syntax is added when a roadmap
 application demonstrates that it is necessary.

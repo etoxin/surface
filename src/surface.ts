@@ -18,10 +18,19 @@ export interface SurfaceIr {
     id: string;
     purpose: string;
   };
+  values?: SurfaceValueIr[];
   collections?: SurfaceCollectionIr[];
   functions?: SurfaceFunctionIr[];
   interfaces?: SurfaceInterfaceIr[];
   screens: SurfaceScreenIr[];
+}
+
+export interface SurfaceValueIr {
+  id: string;
+  type: PrimitiveType;
+  kind: "constant" | "variable";
+  initial?: Primitive;
+  values?: string[];
 }
 
 export interface SurfaceCollectionIr {
@@ -32,6 +41,7 @@ export interface SurfaceCollectionIr {
 export interface SurfaceFieldIr {
   name: string;
   type: PrimitiveType;
+  value?: string;
   optional?: boolean;
 }
 
@@ -77,11 +87,80 @@ export interface SurfaceParseResult extends KdlParseResult {
 
 type DiagnosticDraft = Omit<DiagnosticInput, "file">;
 type AddDiagnostic = (diagnostic: DiagnosticDraft) => void;
-type PrimitiveType = "string" | "boolean";
+type PrimitiveType =
+  | "any"
+  | "array"
+  | "bigint"
+  | "boolean"
+  | "bytes"
+  | "char"
+  | "date"
+  | "dateTime"
+  | "decimal"
+  | "duration"
+  | "enum"
+  | "float32"
+  | "float64"
+  | "int8"
+  | "int16"
+  | "int32"
+  | "int64"
+  | "integer"
+  | "json"
+  | "map"
+  | "number"
+  | "object"
+  | "regex"
+  | "set"
+  | "string"
+  | "time"
+  | "tuple"
+  | "uint8"
+  | "uint16"
+  | "uint32"
+  | "uint64"
+  | "unknown"
+  | "url"
+  | "uuid";
 type PropertyType = "string" | "boolean";
 
 const IDENTIFIER_PATTERN = /^[a-z][A-Za-z0-9]*$/;
-const PRIMITIVE_TYPES = new Set<PrimitiveType>(["string", "boolean"]);
+const PRIMITIVE_TYPES = new Set<PrimitiveType>([
+  "any",
+  "array",
+  "bigint",
+  "boolean",
+  "bytes",
+  "char",
+  "date",
+  "dateTime",
+  "decimal",
+  "duration",
+  "enum",
+  "float32",
+  "float64",
+  "int8",
+  "int16",
+  "int32",
+  "int64",
+  "integer",
+  "json",
+  "map",
+  "number",
+  "object",
+  "regex",
+  "set",
+  "string",
+  "time",
+  "tuple",
+  "uint8",
+  "uint16",
+  "uint32",
+  "uint64",
+  "unknown",
+  "url",
+  "uuid",
+]);
 const FIELD_MODIFIERS = new Set(["optional"]);
 const REFERENCE_TYPES = new Set([
   "application",
@@ -89,6 +168,7 @@ const REFERENCE_TYPES = new Set([
   "interface",
   "function",
   "screen",
+  "value",
 ]);
 const TOP_LEVEL_NODES = new Set([
   "surface",
@@ -97,6 +177,7 @@ const TOP_LEVEL_NODES = new Set([
   "interface",
   "function",
   "screen",
+  "value",
 ]);
 
 export function parseKdl(source: string, file = "surface.kdl"): KdlParseResult {
@@ -184,11 +265,13 @@ export function validateDocument(
         message: `Unknown top-level node ${name}.`,
         element: node,
         suggestion:
-          "Use only surface, application, collection, function, interface, and screen nodes in Surface 0.1.",
+          "Use only surface, application, value, collection, function, interface, and screen nodes in Surface 0.1.",
       });
     }
 
-    validateNoTag(node, add);
+    if (name !== "value") {
+      validateNoTag(node, add);
+    }
   }
 
   if (versionNodes.length > 0) {
@@ -199,6 +282,7 @@ export function validateDocument(
     (node) => node.getName() === "application",
   );
   const collections = document.nodes.filter((node) => node.getName() === "collection");
+  const values = document.nodes.filter((node) => node.getName() === "value");
   const interfaces = document.nodes.filter(
     (node) => node.getName() === "interface",
   );
@@ -231,6 +315,11 @@ export function validateDocument(
     validateIdentity(application, identities, add);
   }
 
+  for (const value of values) {
+    validateValue(value, add);
+    validateIdentity(value, identities, add);
+  }
+
   for (const collection of collections) {
     validateCollection(collection, add);
     validateIdentity(collection, identities, add);
@@ -254,6 +343,7 @@ export function validateDocument(
   validateReferences(
     versionNodes,
     applications,
+    values,
     collections,
     functions,
     interfaces,
@@ -340,6 +430,233 @@ function validateApplication(node: Node, add: AddDiagnostic): void {
   }
 }
 
+function validateValue(node: Node, add: AddDiagnostic): void {
+  const declaration = declarationName(node);
+  const entries = node.getArgumentEntries();
+  const idEntry = entries[0];
+  const id = idEntry?.getValue();
+  const type = node.getTag();
+
+  if (typeof id !== "string" || !IDENTIFIER_PATTERN.test(id)) {
+    add({
+      code: typeof id === "string" ? "SURF-ID-001" : "SURF-ARG-002",
+      message: `${declaration} must begin with one lower-camel-case string ID.`,
+      element: idEntry ?? node,
+      declaration,
+      suggestion:
+        'Use a declaration such as (string)value "applicationName" "Surface".',
+    });
+  }
+  if (idEntry?.getTag() !== null) {
+    add({
+      code: "SURF-TAG-001",
+      message: "The value ID must not have a type annotation.",
+      element: idEntry,
+      declaration,
+      suggestion: "Put the type annotation on the value node.",
+    });
+  }
+
+  if (type === null || !PRIMITIVE_TYPES.has(type as PrimitiveType)) {
+    add({
+      code: type === null ? "SURF-TYPE-002" : "SURF-TYPE-001",
+      message: type === null
+        ? `${declaration} is missing its value type.`
+        : `Unsupported value type ${type} on ${declaration}.`,
+      element: node,
+      declaration,
+      suggestion: 'Annotate the declaration, for example (string)value "name".',
+    });
+  }
+
+  const trailing = entries.slice(1);
+  const variableEntries = trailing.filter(isVariableModifier);
+  const initialEntries = trailing.filter((entry) => !isVariableModifier(entry));
+  if (variableEntries.length > 1) {
+    add({
+      code: "SURF-ARG-004",
+      message: `Duplicate variable modifier on ${declaration}.`,
+      element: variableEntries[1],
+      declaration,
+      suggestion: "Keep only one bare variable modifier.",
+    });
+  }
+  if (
+    variableEntries.length === 1 &&
+    entries.indexOf(variableEntries[0]) !== entries.length - 1
+  ) {
+    add({
+      code: "SURF-ARG-003",
+      message: `The variable modifier must be last on ${declaration}.`,
+      element: variableEntries[0],
+      declaration,
+      suggestion: "Move variable after the optional initial value.",
+    });
+  }
+  if (initialEntries.length > 1) {
+    add({
+      code: "SURF-ARG-001",
+      message: `${declaration} may contain at most one initial value.`,
+      element: initialEntries[1],
+      declaration,
+      suggestion: "Keep one initial KDL value or remove it.",
+    });
+  }
+
+  const initial = initialEntries[0];
+  if (initial !== undefined && initial.getTag() !== null) {
+    add({
+      code: "SURF-TAG-001",
+      message: `The initial value on ${declaration} must not have a type annotation.`,
+      element: initial,
+      declaration,
+      suggestion: "Keep the type annotation on the value node only.",
+    });
+  }
+  if (
+    initial !== undefined && type !== null &&
+    PRIMITIVE_TYPES.has(type as PrimitiveType) &&
+    !isCompatibleInitialValue(type as PrimitiveType, initial.getValue())
+  ) {
+    add({
+      code: "SURF-TYPE-001",
+      message: `The initial value on ${declaration} is incompatible with ${type}.`,
+      element: initial,
+      declaration,
+      suggestion:
+        "Use a compatible scalar initial value or describe initialization with context.",
+    });
+  }
+  if (type === "enum" && trailing.length > 0) {
+    add({
+      code: "SURF-ARG-003",
+      message: `${declaration} enum values belong in its child block.`,
+      element: trailing[0],
+      declaration,
+      suggestion: 'Use (enum)value "id" { "first" "second" }.',
+    });
+  }
+
+  validateProperties(node, [], declaration, add);
+  if (type === "enum") {
+    validateEnumValueChildren(node, declaration, add);
+  } else {
+    validateOnlyContextChildren(node, declaration, add);
+  }
+}
+
+function isVariableModifier(
+  entry: ReturnType<Node["getArgumentEntries"]>[number],
+): boolean {
+  return entry.getTag() === null && entry.getValue() === "variable" &&
+    entry.value.representation === "variable";
+}
+
+function isCompatibleInitialValue(type: PrimitiveType, value: Primitive): boolean {
+  if (["array", "map", "object", "set", "tuple"].includes(type)) {
+    return false;
+  }
+  if (type === "boolean") return typeof value === "boolean";
+  if (
+    [
+      "bigint",
+      "decimal",
+      "float32",
+      "float64",
+      "int8",
+      "int16",
+      "int32",
+      "int64",
+      "integer",
+      "number",
+      "uint8",
+      "uint16",
+      "uint32",
+      "uint64",
+    ].includes(type)
+  ) {
+    return typeof value === "number" || typeof value === "bigint";
+  }
+  if (type === "char") return typeof value === "string" && [...value].length === 1;
+  if (["any", "unknown"].includes(type)) return true;
+  return typeof value === "string";
+}
+
+function validateEnumValueChildren(
+  node: Node,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const children = node.children?.nodes ?? [];
+  const values = children.filter(isEnumValueNode);
+  for (const child of children) {
+    if (isEnumValueNode(child)) {
+      validateEnumValue(child, declaration, add);
+    } else if (child.getName() === "context") {
+      validateContextNode(child, declaration, add);
+    } else {
+      add({
+        code: "SURF-CHILD-002",
+        message: `Unknown child node ${child.getName()} in ${declaration}.`,
+        element: child,
+        declaration,
+        suggestion: 'Use quoted enum values such as "open" and optional context.',
+      });
+    }
+  }
+
+  if (values.length === 0) {
+    add({
+      code: "SURF-CHILD-003",
+      message: `${declaration} must contain at least one enum value.`,
+      element: node,
+      declaration,
+      suggestion: 'Add a quoted value such as "open".',
+    });
+  }
+
+  const seen = new Set<string>();
+  for (const value of values) {
+    const name = value.getName();
+    if (seen.has(name)) {
+      add({
+        code: "SURF-ID-002",
+        message: `Duplicate enum value ${name} in ${declaration}.`,
+        element: value,
+        declaration,
+        suggestion: "Keep each enum value only once.",
+      });
+    }
+    seen.add(name);
+  }
+}
+
+function isEnumValueNode(node: Node): boolean {
+  return isQuotedNodeName(node);
+}
+
+function validateEnumValue(
+  node: Node,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const subject = `${declaration}.value.${node.getName()}`;
+  validateNoTag(node, add, declaration);
+  validateArguments(node, 0, subject, add);
+  validateProperties(node, [], subject, add);
+  validateOnlyContextChildren(node, subject, add);
+
+  if (node.getName().length === 0) {
+    add({
+      code: "SURF-ARG-002",
+      message: `${declaration} contains an empty enum value.`,
+      element: node,
+      declaration,
+      suggestion: "Use a non-empty quoted enum value.",
+    });
+  }
+}
+
 function validateCollection(
   node: Node,
   add: AddDiagnostic,
@@ -400,7 +717,7 @@ function validateFieldDeclaration(
   }
 
   validateFieldType(node, subject, declaration, add);
-  validateFieldModifiers(node, subject, add);
+  validateFieldArguments(node, subject, declaration, add);
   validateProperties(node, [], subject, add);
   validateOnlyContextChildren(node, subject, add);
 }
@@ -418,7 +735,7 @@ function validateFieldType(
       message: `${subject} is missing its primitive node type.`,
       element: node,
       declaration,
-      suggestion: `Annotate the field node as (string) or (boolean).`,
+      suggestion: `Annotate the field node with a supported type such as (string).`,
     });
   } else if (!PRIMITIVE_TYPES.has(type as PrimitiveType)) {
     add({
@@ -426,51 +743,103 @@ function validateFieldType(
       message: `Unsupported primitive type ${type} on ${subject}.`,
       element: node,
       declaration,
-      suggestion: "Use (string) or (boolean).",
+      suggestion: "Use one of the documented portable field types.",
     });
   }
 }
 
-function validateFieldModifiers(
+function validateFieldArguments(
   node: Node,
   subject: string,
+  declaration: string,
   add: AddDiagnostic,
 ): void {
-  const arguments_ = node.getArguments();
-  const seen = new Set<string>();
-  for (let index = 0; index < arguments_.length; index++) {
-    const modifier = arguments_[index];
-    if (typeof modifier !== "string" || !FIELD_MODIFIERS.has(modifier)) {
+  const entries = node.getArgumentEntries();
+  const seenModifiers = new Set<string>();
+  let valueReferences = 0;
+
+  for (let index = 0; index < entries.length; index++) {
+    const entry = entries[index];
+    const value = entry.getValue();
+    const tag = entry.getTag();
+
+    if (tag === "value") {
+      valueReferences += 1;
+      if (node.getTag() !== "enum") {
+        add({
+          code: "SURF-TYPE-001",
+          message:
+            `Value constraints are supported only on enum fields such as ${subject}.`,
+          element: entry,
+          declaration,
+          suggestion: `Declare the field as (enum)"${node.getName()}" (value)"enumId".`,
+        });
+      }
+      if (typeof value !== "string" || !IDENTIFIER_PATTERN.test(value)) {
+        add({
+          code: "SURF-ARG-002",
+          message:
+            `The value reference on ${subject} must be a lower-camel-case string ID.`,
+          element: entry,
+          declaration,
+          suggestion: 'Use a checked reference such as (value)"todoStatus".',
+        });
+      }
+      if (valueReferences > 1) {
+        add({
+          code: "SURF-ARG-004",
+          message: `Duplicate value constraint on ${subject}.`,
+          element: entry,
+          declaration,
+          suggestion: "Keep only one value reference on the field.",
+        });
+      }
+      continue;
+    }
+
+    if (tag !== null) {
       add({
-        code: "SURF-ARG-003",
-        message: `Unsupported field modifier ${String(modifier)} on ${subject}.`,
-        element: node.getArgumentEntry(index),
-        declaration: subject,
-        suggestion: "Use only the bare optional modifier.",
+        code: "SURF-REF-003",
+        message: `${subject} expects a value reference but found ${tag}.`,
+        element: entry,
+        declaration,
+        suggestion: 'Use (value)"enumId" or remove the typed argument.',
       });
       continue;
     }
 
-    if (seen.has(modifier)) {
+    const modifier = value;
+    if (typeof modifier !== "string" || !FIELD_MODIFIERS.has(modifier)) {
+      add({
+        code: "SURF-ARG-003",
+        message: `Unsupported field modifier ${String(modifier)} on ${subject}.`,
+        element: entry,
+        declaration: subject,
+        suggestion: 'Use only optional or one (value)"enumId" reference.',
+      });
+      continue;
+    }
+
+    if (seenModifiers.has(modifier)) {
       add({
         code: "SURF-ARG-004",
         message: `Duplicate field modifier ${modifier} on ${subject}.`,
-        element: node.getArgumentEntry(index),
+        element: entry,
         declaration: subject,
         suggestion: `Keep only one ${modifier} modifier.`,
       });
     }
-    seen.add(modifier);
+    seenModifiers.add(modifier);
+  }
 
-    if (node.getArgumentEntry(index)?.getTag() !== null) {
-      add({
-        code: "SURF-TAG-001",
-        message: `Field modifier ${modifier} must not have a type annotation.`,
-        element: node.getArgumentEntry(index),
-        declaration: subject,
-        suggestion: `Write ${modifier} as a bare modifier.`,
-      });
-    }
+  if (node.getTag() === "enum" && valueReferences === 0) {
+    add({
+      code: "SURF-REF-003",
+      message: `${subject} must reference the enum value declaration it uses.`,
+      element: node,
+      declaration,
+      suggestion: `Add (value)"enumId" after (enum)"${node.getName()}".`,
+    });
   }
 }
 
@@ -635,7 +1004,7 @@ function validateLogicInstruction(
       element: node,
       declaration,
       suggestion:
-        "Use application, collection, interface, function, or screen references.",
+        "Use application, value, collection, interface, function, or screen references.",
     });
   }
 
@@ -904,7 +1273,7 @@ function validateContextNode(
         element: reference,
         declaration,
         suggestion:
-          "Use application, collection, interface, function, or screen references.",
+          "Use application, value, collection, interface, function, or screen references.",
       });
     }
   }
@@ -1199,6 +1568,7 @@ function validateIdentity(
 function validateReferences(
   surfaceNodes: Node[],
   applications: Node[],
+  values: Node[],
   collections: Node[],
   functions: Node[],
   interfaces: Node[],
@@ -1206,8 +1576,10 @@ function validateReferences(
   add: AddDiagnostic,
 ): void {
   const collectionsById = nodesByIdentifier(collections);
+  const valuesById = nodesByIdentifier(values);
   const declarationsByType = new Map<string, Map<string, Node>>([
     ["application", nodesByIdentifier(applications)],
+    ["value", valuesById],
     ["collection", collectionsById],
     ["interface", nodesByIdentifier(interfaces)],
     ["function", nodesByIdentifier(functions)],
@@ -1221,6 +1593,19 @@ function validateReferences(
     );
   }
 
+  for (const collection of collections) {
+    validateCollectionValueReferences(collection, valuesById, add);
+  }
+  for (const functionNode of functions) {
+    for (
+      const collection of (functionNode.children?.nodes ?? []).filter((child) =>
+        child.getName() === "collection"
+      )
+    ) {
+      validateCollectionValueReferences(collection, valuesById, add);
+    }
+  }
+
   for (const screen of screens) {
     validateScreenReferences(screen, nodesByIdentifier(interfaces), add);
   }
@@ -1229,6 +1614,7 @@ function validateReferences(
     const node of [
       ...surfaceNodes,
       ...applications,
+      ...values,
       ...collections,
       ...functions,
       ...interfaces,
@@ -1256,6 +1642,44 @@ function validateReferences(
       privateCollections,
       add,
     );
+  }
+}
+
+function validateCollectionValueReferences(
+  collection: Node,
+  valuesById: Map<string, Node>,
+  add: AddDiagnostic,
+): void {
+  const declaration = declarationName(collection);
+  for (
+    const field of (collection.children?.nodes ?? []).filter(isCollectionFieldNode)
+  ) {
+    for (const entry of field.getArgumentEntries()) {
+      if (entry.getTag() !== "value") continue;
+      const id = entry.getValue();
+      const resolved = typeof id === "string" ? valuesById.get(id) : undefined;
+      if (typeof id === "string" && resolved === undefined) {
+        add({
+          code: "SURF-REF-001",
+          message:
+            `Unresolved value reference ${id} on ${declaration}.field.${field.getName()}.`,
+          element: entry,
+          declaration,
+          suggestion: `Declare (enum)value "${id}" or change the field constraint.`,
+        });
+      } else if (resolved?.getTag() !== "enum") {
+        add({
+          code: "SURF-REF-003",
+          message:
+            `${declaration}.field.${field.getName()} must reference an enum value declaration.`,
+          element: entry,
+          declaration,
+          suggestion: `Change value "${
+            String(id)
+          }" to the enum type or reference another value.`,
+        });
+      }
+    }
   }
 }
 
@@ -1445,6 +1869,7 @@ function buildIr(document: Document): SurfaceIr {
     applicationChildren.findNodeByName("purpose"),
     "application purpose",
   );
+  const values = document.nodes.filter((node) => node.getName() === "value");
   const collections = document.nodes.filter((node) => node.getName() === "collection");
   const functions = document.nodes.filter((node) => node.getName() === "function");
   const interfaces = document.nodes.filter(
@@ -1458,6 +1883,24 @@ function buildIr(document: Document): SurfaceIr {
       id: expectString(application.getArgument(0), "application identifier"),
       purpose: expectString(purpose.getArgument(0), "application purpose"),
     },
+    ...(values.length === 0 ? {} : {
+      values: values.map((value) => {
+        const entries = value.getArgumentEntries();
+        const initial = entries.slice(1).find((entry) => !isVariableModifier(entry));
+        const type = expectPrimitiveType(value.getTag() ?? undefined, "value type");
+        return {
+          id: expectString(value.getArgument(0), "value identifier"),
+          type,
+          kind: entries.some(isVariableModifier) ? "variable" : "constant",
+          ...(initial === undefined ? {} : { initial: initial.getValue() }),
+          ...(type !== "enum" ? {} : {
+            values: expectChildren(value, "enum value").nodes
+              .filter(isEnumValueNode)
+              .map((enumValue) => enumValue.getName()),
+          }),
+        };
+      }),
+    }),
     ...(collections.length === 0 ? {} : {
       collections: collections.map(buildCollectionIr),
     }),
@@ -1556,12 +1999,16 @@ function buildCollectionIr(collection: Node): SurfaceCollectionIr {
     fields: children.nodes.filter(isCollectionFieldNode).map((field) => {
       const modifiers = new Set(field.getArguments());
       const optional = modifiers.has("optional") ? true : undefined;
+      const valueReference = field.getArgumentEntries().find((entry) =>
+        entry.getTag() === "value"
+      )?.getValue();
       return {
         name: field.getName(),
         type: expectPrimitiveType(
           field.getTag() ?? undefined,
           "field type",
         ),
+        ...(typeof valueReference === "string" ? { value: valueReference } : {}),
         ...(optional === undefined ? {} : { optional }),
       };
     }),

@@ -28,16 +28,12 @@ A field describes one value on the collection:
 (string)"name"
 ```
 
-`(string)` is a KDL node annotation that declares the field's primitive type.
+`(string)` is a KDL node annotation that declares the field's portable type.
 `"name"` is the field's node name. Field names use the same lower-camel-case
 rule as declaration IDs and must be unique within their collection.
 
-Every field needs one of these node annotations:
-
-- `(string)` for text;
-- `(boolean)` for true-or-false values.
-
-Numbers are not supported yet.
+Every field needs one supported annotation. See [Portable types](./primitives.md)
+for the complete set, including numbers, dates, arrays, objects, sets, and maps.
 
 ## Field Modifiers
 
@@ -60,3 +56,22 @@ A field can also contain prompt-only context:
     context "Use this address only to display contact details."
 }
 ```
+
+## Collections Shared by Functions
+
+A global collection can be the input and output contract for several functions.
+The Todo List uses one contract for every task operation:
+
+```kdl
+collection "todo" {
+    (string)"id"
+    (string)"text"
+    (enum)"status" (value)"todoStatus"
+    (date)"dueDate" optional
+    (number)"priority"
+    (array)"tags" optional
+}
+```
+
+The checked value reference restricts `status` to the options declared by the
+[`(enum)value`](./node_value.md).

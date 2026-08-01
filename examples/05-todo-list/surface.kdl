@@ -1,0 +1,110 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "todoList" {
+    purpose "Manage personal tasks as open, completed, or archived."
+}
+
+(number)value "defaultPriority" 1
+
+(array)value "todos" variable {
+    context (collection)"todo" "Contain the current todos in this application."
+}
+
+(enum)value "todoStatus" {
+    "open"
+    "completed"
+    "archived"
+}
+
+collection "todo" {
+    (string)"id" {
+        context "Assign a value that is unique among todos in this application."
+    }
+    (string)"text"
+    (enum)"status" (value)"todoStatus"
+    (date)"dueDate" optional
+    (number)"priority"
+    (array)"tags" optional {
+        context "Contain string labels."
+    }
+}
+
+function "createTodo" {
+    collection "todoInput" {
+        (string)"text"
+        (date)"dueDate" optional
+        (number)"priority" optional
+        (array)"tags" optional {
+            context "Contain string labels."
+        }
+    }
+
+    input (collection)"todoInput"
+    output (collection)"todo"
+
+    logic {
+        (collection)"todoInput" "Trim the text."
+        "If the trimmed text is empty, output null."
+        (value)"defaultPriority" "If no priority is supplied, use this value."
+        (collection)"todo" "If the trimmed text is not empty, output a new todo with a unique id, that text, an open status, and any supplied due date, priority, and tags."
+    }
+}
+
+function "completeTodo" {
+    input (collection)"todo"
+    output (collection)"todo"
+
+    logic {
+        (collection)"todo" "If its status is open, output it with a completed status."
+        (collection)"todo" "Otherwise, output it unchanged."
+    }
+}
+
+function "reopenTodo" {
+    input (collection)"todo"
+    output (collection)"todo"
+
+    logic {
+        (collection)"todo" "If its status is completed or archived, output it with an open status."
+        (collection)"todo" "Otherwise, output it unchanged."
+    }
+}
+
+function "archiveTodo" {
+    input (collection)"todo"
+    output (collection)"todo"
+
+    logic {
+        (collection)"todo" "If its status is completed, output it with an archived status."
+        (collection)"todo" "Otherwise, output it unchanged."
+    }
+}
+
+interface "todoList" {
+    context (value)"todos" (collection)"todo" (function)"createTodo" (function)"completeTodo" (function)"reopenTodo" (function)"archiveTodo" """
+        Render an accessible personal todo list.
+
+        Provide clearly labelled inputs for task text, an optional due date, an optional numeric priority, optional tags, and an Add task action.
+        Group every task under Open, Completed, or Archived and show the count for each group.
+        Keep task text readable and provide actions appropriate to each task's current group.
+        Show a helpful empty state when a group has no tasks.
+        """
+
+    logic {
+        (value)"todos" "Start with this value empty."
+        (function)"createTodo" "When Add task is activated, call this function with the entered text."
+        (function)"createTodo" "If this function outputs null, show an error and do not add a task."
+        (function)"createTodo" "If this function outputs a todo, add it to the todos value."
+        (function)"completeTodo" "When Complete is activated for an open task, replace that todo in the todos value with this function's output."
+        (function)"reopenTodo" "When Reopen is activated for a completed or archived task, replace that todo in the todos value with this function's output."
+        (function)"archiveTodo" "When Archive is activated for a completed task, replace that todo in the todos value with this function's output."
+        "After every change, display each task in exactly one group and update all group counts."
+    }
+}
+
+screen "home" {
+    use (interface)"todoList"
+    logic "Use / as this screen's URL path."
+}

@@ -1,0 +1,8 @@
+/- kdl-version 2
+
+surface "0.1"
+application "todoList" { purpose "Manage tasks." }
+collection "todo" {
+    (enum)"status" (value)"missingStatus"
+}
+screen "home" { context "Render tasks." }

@@ -1,0 +1,6 @@
+/- kdl-version 2
+
+surface "0.1"
+application "todoList" { purpose "Manage tasks." }
+value "taskStatus"
+screen "home" { context "Render tasks." }

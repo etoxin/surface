@@ -96,3 +96,25 @@ control-flow nodes.
 
 Function, input, and output nodes can all contain prompt-only
 [`context`](./node_context.md).
+
+## Small State Operations
+
+Several functions can share one global collection while defining different
+operations. For example, the Todo List makes completion independently callable:
+
+```kdl
+function "completeTodo" {
+    input (collection)"todo"
+    output (collection)"todo"
+
+    logic {
+        (collection)"todo" "If its status is open, output it with a completed status."
+        (collection)"todo" "Otherwise, output it unchanged."
+    }
+}
+```
+
+Creation uses a private input collection because callers provide only task text,
+while the function produces the complete global `todo` shape. Keep the current
+list in interface logic; declaring a collection describes its shape, not its
+storage or multiplicity.

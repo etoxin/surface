@@ -32,6 +32,11 @@ const counterExampleRoot = join(
   "examples",
   "04-click-counter",
 );
+const todoExampleRoot = join(
+  repositoryRoot,
+  "examples",
+  "05-todo-list",
+);
 const cli = join(repositoryRoot, "src", "cli.ts");
 const decoder = new TextDecoder();
 
@@ -75,6 +80,19 @@ Deno.test("the Click Counter specification exports the reviewed IR", async () =>
   const source = await Deno.readTextFile(join(counterExampleRoot, "surface.kdl"));
   const expected = JSON.parse(
     await Deno.readTextFile(join(counterExampleRoot, "expected-ir.json")),
+  );
+
+  const result = parseSurface(source, "surface.kdl");
+
+  assertEquals(result.diagnostics, []);
+  assertEquals(result.ir, expected);
+  assertEquals(formatSurface(source, "surface.kdl").output, source);
+});
+
+Deno.test("the Todo List specification exports the reviewed IR", async () => {
+  const source = await Deno.readTextFile(join(todoExampleRoot, "surface.kdl"));
+  const expected = JSON.parse(
+    await Deno.readTextFile(join(todoExampleRoot, "expected-ir.json")),
   );
 
   const result = parseSurface(source, "surface.kdl");
@@ -172,6 +190,33 @@ Deno.test(
   "the Click Counter invalid fixtures report their expected diagnostics",
   async () => {
     const invalidRoot = join(counterExampleRoot, "invalid");
+    const expected = JSON.parse(
+      await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
+    );
+    const fixtures = [];
+    for await (const entry of Deno.readDir(invalidRoot)) {
+      if (entry.isFile && entry.name.endsWith(".kdl")) {
+        fixtures.push(entry.name);
+      }
+    }
+    assertEquals(Object.keys(expected).sort(), fixtures.sort());
+
+    for (const [file, code] of Object.entries(expected)) {
+      const source = await Deno.readTextFile(join(invalidRoot, file));
+      const result = parseSurface(source, file);
+      assert(
+        result.diagnostics.some((diagnostic) => diagnostic.code === code),
+        `${file} should report ${code}`,
+      );
+      assertEquals(result.ir, null);
+    }
+  },
+);
+
+Deno.test(
+  "the Todo List invalid fixtures report their expected diagnostics",
+  async () => {
+    const invalidRoot = join(todoExampleRoot, "invalid");
     const expected = JSON.parse(
       await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
     );
@@ -416,6 +461,140 @@ screen "home" {
   assert(invalid.diagnostics.some(({ code }) => code === "SURF-REF-001"));
 });
 
+Deno.test("values and enum fields use checked value references", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1"
+application "valueExample" { purpose "Exercise value declarations." }
+(number)value "defaultPriority" 1
+(array)value "todos" variable
+(enum)value "todoStatus" {
+    context "The complete task lifecycle."
+    "open"
+    "completed" {
+        context "The task has been completed."
+    }
+    "archived"
+}
+collection "todo" {
+    (enum)"status" (value)"todoStatus" optional
+}
+interface "todos" {
+    context (value)"todoStatus" (value)"todos" (collection)"todo" "Render todos by status."
+}
+screen "home" { use (interface)"todos" }
+`;
+
+  const result = parseSurface(source, "values.kdl");
+  assertEquals(result.diagnostics, []);
+  assert(result.ir !== null);
+  assertEquals(result.ir.values, [
+    { id: "defaultPriority", type: "number", kind: "constant", initial: 1 },
+    { id: "todos", type: "array", kind: "variable" },
+    {
+      id: "todoStatus",
+      type: "enum",
+      kind: "constant",
+      values: ["open", "completed", "archived"],
+    },
+  ]);
+  assertEquals(result.ir.collections?.[0].fields, [{
+    name: "status",
+    type: "enum",
+    value: "todoStatus",
+    optional: true,
+  }]);
+
+  const unresolved = parseSurface(
+    `/- kdl-version 2
+surface "0.1"
+application "badEnum" { purpose "Reject a missing enum value." }
+collection "todo" { (enum)"status" (value)"missingStatus" }
+screen "home" { context "Render todos." }
+`,
+    "unresolved-enum-value.kdl",
+  );
+  assert(unresolved.diagnostics.some(({ code }) => code === "SURF-REF-001"));
+
+  const invalid = parseSurface(
+    `/- kdl-version 2
+surface "0.1"
+application "badEnum" { purpose "Reject malformed enums." }
+(enum)value "empty" {}
+(enum)value "duplicate" {
+    "same"
+    "same"
+}
+collection "todo" { (boolean)"status" (value)"duplicate" }
+screen "home" { context "Render todos." }
+`,
+    "invalid-enum.kdl",
+  );
+  assert(invalid.diagnostics.some(({ code }) => code === "SURF-CHILD-003"));
+  assert(invalid.diagnostics.some(({ code }) => code === "SURF-ID-002"));
+  assert(invalid.diagnostics.some(({ code }) => code === "SURF-TYPE-001"));
+});
+
+Deno.test("collections accept the complete portable type set", () => {
+  const types = [
+    "any",
+    "array",
+    "bigint",
+    "boolean",
+    "bytes",
+    "char",
+    "date",
+    "dateTime",
+    "decimal",
+    "duration",
+    "enum",
+    "float32",
+    "float64",
+    "int8",
+    "int16",
+    "int32",
+    "int64",
+    "integer",
+    "json",
+    "map",
+    "number",
+    "object",
+    "regex",
+    "set",
+    "string",
+    "time",
+    "tuple",
+    "uint8",
+    "uint16",
+    "uint32",
+    "uint64",
+    "unknown",
+    "url",
+    "uuid",
+  ];
+  const fields = types.map((type, index) =>
+    type === "enum"
+      ? `    (enum)"field${index}" (value)"options"`
+      : `    (${type})"field${index}"`
+  )
+    .join("\n");
+  const result = parseSurface(
+    `/- kdl-version 2
+surface "0.1"
+application "portableTypes" { purpose "Exercise portable types." }
+(enum)value "options" { "one" }
+collection "portable" {
+${fields}
+}
+screen "home" { context "Render the portable values." }
+`,
+    "portable-types.kdl",
+  );
+
+  assertEquals(result.diagnostics, []);
+  assertEquals(result.ir?.collections?.[0].fields.map(({ type }) => type), types);
+});
+
 Deno.test("context is valid on every Surface node and omitted from the IR", () => {
   const source = `/- kdl-version 2
 
@@ -653,6 +832,27 @@ Deno.test("CLI reference lists and resolves canonical checked references", () =>
         selector === "screen.contact" && reference === '(screen)"contact"',
     ),
   );
+
+  const todoSpecification = join(todoExampleRoot, "surface.kdl");
+  const todoListed = runCli(["reference", todoSpecification, "--list"]);
+  assertEquals(todoListed.code, 0, decoder.decode(todoListed.stderr));
+  assert(
+    JSON.parse(decoder.decode(todoListed.stdout)).some(
+      ({ selector, reference }: { selector: string; reference: string }) =>
+        selector === "value.todoStatus" &&
+        reference === '(value)"todoStatus"',
+    ),
+  );
+  const selectedValue = runCli([
+    "reference",
+    todoSpecification,
+    "value.todoStatus",
+  ]);
+  assertEquals(selectedValue.code, 0, decoder.decode(selectedValue.stderr));
+  assertEquals(
+    decoder.decode(selectedValue.stdout).trim(),
+    '(value)"todoStatus"',
+  );
   assert(
     references.some(
       ({ selector, reference }: { selector: string; reference: string }) =>
@@ -881,12 +1081,36 @@ Deno.test("the Click Counter implements its initial, increment, and reset states
   assertEquals(unknown.status, 404);
 });
 
+Deno.test("the Todo List is a self-contained interactive HTML app", async () => {
+  const html = await Deno.readTextFile(
+    join(todoExampleRoot, "app", "index.html"),
+  );
+
+  assertMatch(html, /<!doctype html>/);
+  assertMatch(html, /const statuses = \["open", "completed", "archived"\]/);
+  assertMatch(html, /const createTodo =/);
+  assertMatch(html, /const completeTodo =/);
+  assertMatch(html, /const reopenTodo =/);
+  assertMatch(html, /const archiveTodo =/);
+  assertMatch(html, /value === "" \? null/);
+  assertMatch(html, /name="dueDate" type="date"/);
+  assertMatch(html, /name="priority" type="number"/);
+  assertMatch(html, /tags\.value\.split\(","\)/);
+  assertMatch(html, /priority: priority === "" \? 1 : Number\(priority\)/);
+  assertMatch(html, /Enter a task before adding it\./);
+  assertMatch(html, /id="open-count" aria-label="0 open"/);
+  assertMatch(html, /id="completed-count" aria-label="0 completed"/);
+  assertMatch(html, /id="archived-count" aria-label="0 archived"/);
+  assertMatch(html, /todos\.map/);
+  assertMatch(html, /text\.textContent = todo\.text/);
+});
+
 Deno.test("the skill defines all three required forward evaluations", async () => {
   const evaluations = JSON.parse(
     await Deno.readTextFile(join(repositoryRoot, "test", "skill-evaluations.json")),
   );
 
-  assertEquals(evaluations.rung, 4);
+  assertEquals(evaluations.rung, 5);
   assertEquals(
     evaluations.cases.map(({ id }: { id: string }) => id),
     ["create", "modify", "diagnose"],
@@ -923,6 +1147,21 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /interface "clickCounter"/);
   assertMatch(skill, /When Increment is activated, increase the current value by 1/);
   assertMatch(skill, /When Reset is activated, set the current value to 0/);
+  assertMatch(skill, /interface "todoList"/);
+  assertMatch(skill, /\(number\)value "defaultPriority" 1/);
+  assertMatch(skill, /\(array\)value "todos" variable/);
+  assertMatch(skill, /\(enum\)value "todoStatus"/);
+  assertMatch(skill, /\(enum\)"status" \(value\)"todoStatus"/);
+  assertMatch(skill, /\(date\)"dueDate" optional/);
+  assertMatch(skill, /\(number\)"priority"/);
+  assertMatch(skill, /\(array\)"tags" optional/);
+  assertMatch(skill, /collection "todo"/);
+  assertMatch(skill, /function "createTodo"/);
+  assertMatch(skill, /function "completeTodo"/);
+  assertMatch(skill, /function "reopenTodo"/);
+  assertMatch(skill, /function "archiveTodo"/);
+  assertMatch(skill, /When Complete is activated/);
+  assertMatch(skill, /display each task in exactly one group/);
   assertMatch(skill, /"Use \/ as this screen's URL path\."/);
   assertMatch(
     skill,

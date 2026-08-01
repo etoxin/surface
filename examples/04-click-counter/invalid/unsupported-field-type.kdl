@@ -3,11 +3,11 @@
 surface "0.1"
 
 application "clickCounter" {
-    purpose "Reject an unreleased numeric field type."
+    purpose "Reject an unsupported field type."
 }
 
 collection "counter" {
-    (number)"value"
+    (promise)"value"
 }
 
 interface "clickCounter" {

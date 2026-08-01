@@ -1,37 +1,42 @@
 {
   "skill": "skills/surface/SKILL.md",
-  "rung": 4,
+  "rung": 5,
   "cases": [
     {
       "id": "create",
-      "prompt": "Create a Surface Click Counter at /. It starts at 0, prominently displays the current value, has accessible Increment and Reset actions, increments by 1, resets to 0, and visibly updates after either action.",
+      "prompt": "Create a Surface personal todo list at /. It starts empty, rejects blank task text, and groups every task as Open, Completed, or Archived. Users can add, complete, reopen, and archive tasks, and every group shows a current count.",
       "acceptance": [
         "The result is valid Surface 0.1 KDL with exactly one application and at least one screen.",
-        "A top-level interface uses context for presentation and one logic block for the ordered initial value, increment, reset, and visible updates.",
+        "A global (enum)value todoStatus declares exactly the unique quoted options open, completed, and archived.",
+        "A constant number defaultPriority and variable array todos are declared as typed values.",
+        "A global todo collection uses date, number, and array fields and its enum status field has the checked (value)todoStatus reference.",
+        "Separate createTodo, completeTodo, reopenTodo, and archiveTodo functions use checked collection input and output references and logic strings for their operations.",
+        "createTodo uses a private input collection containing task text and describes blank input as a null output.",
+        "A top-level interface uses context for presentation and one logic block for ordered initial state, function invocation, validation errors, exclusive grouping, and count updates.",
         "The screen uses the interface with use (interface), and inline logic describes / as its URL path.",
-        "No collection or function is added solely for interface-local state.",
-        "Every condition and arithmetic operation remains inside a logic instruction string; no structured operator node is introduced.",
-        "No actor, behaviour, event, scenario, numeric field, state, action, button, or other unreleased node is introduced."
+        "Every condition and transition remains inside a logic instruction string; no structured operator node is introduced.",
+        "No standalone enum, workflow, state, transition, actor, behaviour, event, scenario, action, button, or other unreleased node is introduced."
       ]
     },
     {
       "id": "modify",
-      "prompt": "Starting from examples/04-click-counter/surface.kdl, require the displayed value to be announced by assistive technology whenever it changes. Preserve the existing application, other interface intent, screen, formatting, and unrelated content.",
+      "prompt": "Starting from examples/05-todo-list/surface.kdl, add a Delete action for archived tasks and require a confirmation before deletion. Preserve the existing application, all other task behavior, screen, formatting, and unrelated content.",
       "acceptance": [
-        "The existing interface logic is minimally updated with an ordered assistive-technology announcement instruction.",
-        "No structured state, behaviour, event, action, or button node is added.",
+        "A deleteTodo function is added using the existing todo collection as its input and output contract, with logic describing a null output for an archived todo.",
+        "The existing interface logic is minimally updated to request confirmation and invoke deleteTodo for an archived task.",
+        "The existing enum value and todo status value reference are preserved unchanged.",
+        "No workflow, structured state, transition, behaviour, event, action, button, or other unreleased node is added.",
         "The application, screen, existing intent, formatting, and unrelated content are preserved.",
         "The result remains valid Surface 0.1 KDL."
       ]
     },
     {
       "id": "diagnose",
-      "prompt": "Diagnose a Click Counter Surface file that declares a top-level behaviour, uses (number) for a counter field, places a button child inside an interface, and sets route=\"/\" on its screen.",
+      "prompt": "Diagnose a Todo List Surface file whose (enum)value todoStatus is empty, whose Boolean field has a (value) constraint, whose enum field references a missing value, and whose screen sets route=\"/\".",
       "acceptance": [
-        "The response identifies all four unsupported Surface constructs.",
-        "It explains that behaviour declarations and numeric field types are unreleased and interfaces accept context children plus at most one logic node.",
+        "The response identifies the empty enum value, constraint on a Boolean field, unresolved value reference, and route property as invalid Surface.",
+        "It explains that enum is a value primitive with at least one unique quoted option and that enum fields require one checked value reference.",
         "It replaces the legacy screen route property with inline logic describing the URL path.",
-        "It replaces the intended counter interaction with interface logic rather than speculative syntax.",
         "The response distinguishes valid KDL from valid Surface.",
         "Every suggested correction uses only released syntax."
       ]
