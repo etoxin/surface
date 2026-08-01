@@ -5,9 +5,9 @@ Contact Viewer needs a contact:
 
 ```kdl
 entity "contact" {
-    field "id" type="string" generated=#true
+    field "id" type="string" generated
     field "name" type="string"
-    field "email" type="string" optional=#true
+    field "email" type="string" optional
     field "active" type="boolean"
 }
 ```
@@ -38,29 +38,29 @@ Every field needs a `type`. Surface currently supports:
 
 Numbers are not supported yet.
 
-## Generated and Optional Fields
+## Field Modifiers
 
-Use `generated=#true` when the application creates a field value rather than
-asking a user or external source to provide it:
-
-```kdl
-field "id" type="string" generated=#true
-```
-
-Use `optional=#true` when an entity can exist without the field:
+Add the bare `generated` modifier when the application creates a field value
+rather than asking a user or external source to provide it:
 
 ```kdl
-field "email" type="string" optional=#true
+field "id" type="string" generated
 ```
 
-`generated` and `optional` are Boolean properties, so use the KDL 2
-literals `#true` and `#false`, without quotes. Quoted values such as
-`"true"` are text and are invalid here.
+Add the bare `optional` modifier when an entity can exist without the field:
+
+```kdl
+field "email" type="string" optional
+```
+
+Fields are required unless they include `optional`. A field can use both
+modifiers when needed. Modifiers appear after the properties and do not take a
+value; forms such as `generated=#true` and `optional=#true` are invalid.
 
 A field can also contain prompt-only context:
 
 ```kdl
-field "email" type="string" optional=#true {
+field "email" type="string" optional {
     context "Use this address only to display contact details."
 }
 ```

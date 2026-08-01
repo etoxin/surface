@@ -124,7 +124,7 @@ Introduces:
 - `screen` declarations;
 - named `section` blocks;
 - optional section titles and ordered text;
-- prompt-only `context` annotations on any node;
+- prompt-only `context` notes on any node;
 - nested child blocks;
 - declaration identifiers;
 - strings and scalar properties;
@@ -182,10 +182,10 @@ Introduces:
 - `entity` declarations;
 - `query` declarations;
 - primitive field types;
-- generated and optional fields;
+- bare `generated` and `optional` field modifiers;
 - Boolean and null values;
 - query inputs and return types;
-- references between declarations;
+- annotated references between top-level declarations;
 - not-found and empty screen states.
 
 This stage should establish field syntax and contextual reference resolution.

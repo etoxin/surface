@@ -27,6 +27,7 @@ You can put context inside:
 - `input`;
 - `returns`;
 - `screen`;
+- `use`;
 - `section`;
 - section `field` references;
 - `state`;

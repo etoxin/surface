@@ -3,7 +3,7 @@
 surface "0.1"
 application "contactViewer" { purpose "Display a contact." }
 entity "contact" {
-    field "id" generated=#true
+    field "id" generated
 }
 screen "contact" {
     section "Contact" { text "Display a contact." }

@@ -314,7 +314,7 @@ surface "0.1"
 application "contextual" { purpose "Exercise rung-3 context." }
 entity "contact" {
     context "Entity guidance."
-    field "id" type="string" generated=#true {
+    field "id" type="string" generated {
         context "Field guidance."
     }
 }
@@ -323,11 +323,14 @@ query "contactById" by="id" {
     input "id" type="string" {
         context "Input guidance."
     }
-    returns "contact" missing=#null {
+    returns (entity)"contact" missing=#null {
         context "Return guidance."
     }
 }
-screen "contact" query="contactById" {
+screen "contact" {
+    use (query)"contactById" {
+        context "Query reference guidance."
+    }
     section "Contact" {
         field "id" {
             context "Field reference guidance."
@@ -489,7 +492,9 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /^---\nname: surface\ndescription: .+\n---/);
   assertMatch(skill, /surface "0\.1"/);
   assertMatch(skill, /entity "contact"/);
-  assertMatch(skill, /returns "contact" missing=#null/);
+  assertMatch(skill, /field "id" type="string" generated/);
+  assertMatch(skill, /returns \(entity\)"contact" missing=#null/);
+  assertMatch(skill, /use \(query\)"contactById"/);
   assertMatch(skill, /state "notFound"/);
   assertMatch(metadata, /default_prompt: "Use \$surface /);
 });

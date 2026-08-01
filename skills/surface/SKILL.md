@@ -44,15 +44,15 @@ Declare read-only data and a single-entity lookup when needed:
 
 ```kdl
 entity "contact" {
-    field "id" type="string" generated=#true
+    field "id" type="string" generated
     field "name" type="string"
-    field "email" type="string" optional=#true
+    field "email" type="string" optional
     field "active" type="boolean"
 }
 
 query "contactById" by="id" {
     input "id" type="string"
-    returns "contact" missing=#null
+    returns (entity)"contact" missing=#null
 }
 ```
 
@@ -67,8 +67,11 @@ children. Give every field:
 
 - one quoted lower-camel-case name unique within the entity;
 - required `type="string"` or `type="boolean"`;
-- optional Boolean `generated=#true` or `generated=#false`;
-- optional Boolean `optional=#true` or `optional=#false`.
+- optional bare `generated` modifier;
+- optional bare `optional` modifier. Omit it for a required field.
+
+Put modifiers after the `type` property. Do not give them values: reject old
+forms such as `generated=#true` and `optional=#true`.
 
 A query is a single-entity lookup. Give it:
 
@@ -76,15 +79,22 @@ A query is a single-entity lookup. Give it:
 - required quoted `by` property;
 - one or more `input` children with a quoted name and required primitive
   `type`;
-- exactly one `returns "<entity>" missing=#null` child.
+- exactly one `returns (entity)"<entity>" missing=#null` child.
 
 Resolve `by` to both an input on the query and a field on the returned entity.
 Require those types to match.
 
+Treat a type annotation on a string as a checked reference to a top-level
+Surface declaration of that type. Require the annotation and verify both the
+target ID and its declaration type. Rung 3 supports `(entity)` on `returns`
+arguments and `(query)` on screen `use` arguments. Reject annotations in all
+other positions.
+
 Declare at least one screen. A queried screen looks like:
 
 ```kdl
-screen "contact" route="/contacts" query="contactById" {
+screen "contact" route="/contacts" {
+    use (query)"contactById"
     section "Contact" {
         title "Contact"
         field "name"
@@ -108,16 +118,16 @@ A screen has:
 
 - one quoted identifier argument;
 - zero or one quoted `route` property;
-- zero or one quoted `query` reference;
+- zero or one `use (query)"<query>"` child;
 - one or more ordered `section` children.
 
 Use `route` for addressable screens such as web pages. Omit it when the screen
 does not have a URL or equivalent address.
 
 For web screens, populate query inputs from URL query parameters with matching
-names. Require queried screens to contain exactly one `empty` and one
-`notFound` state. Put one or more static sections inside each state. Do not
-put field references in state sections.
+names. Require screens with a query `use` to contain exactly one `empty` and
+one `notFound` state. Put one or more static sections inside each state. Do
+not put field references in state sections.
 
 A section has:
 
@@ -128,7 +138,8 @@ A section has:
 
 Use `field "<name>"` in a normal section to project a field from the entity
 returned by the screen query. Require that reference to resolve. Continue to
-use `field "<name>" type="..."` only inside an entity declaration.
+use `field "<name>" type="..." [generated] [optional]` only inside an entity
+declaration.
 Do not mix `text` and field references in the same section.
 
 Build a static FAQ with repeated sections: use each section name as the
@@ -142,9 +153,9 @@ dedents it correctly.
 ## Prompt Context
 
 Add zero or more `context` children to any Surface node except another
-`context`. This includes entities, fields, queries, inputs, returns, states,
-and text. Each context contains exactly one quoted prompt string and has no
-properties or children.
+`context`. This includes entities, fields, queries, inputs, returns, uses,
+states, and text. Each context contains exactly one quoted prompt string and
+has no properties or children.
 
 Use context as guidance for interpreting or implementing its parent. Preserve
 it when editing and formatting, but do not treat it as application behavior or
@@ -164,17 +175,17 @@ Check all of the following:
 - Declaration identifiers are valid and unique within their type.
 - Required arguments, properties, and children are present exactly as defined.
 - Entity fields and query inputs have valid unique names and supported types.
-- Boolean and null properties use `#true`, `#false`, and `#null`, not
-  quoted strings.
-- Query return entities, lookup fields/inputs, screen queries, and projected
-  fields resolve.
+- Field modifiers use the bare words `generated` and `optional`; required is
+  implicit. Null properties use `#null`, not a quoted string.
+- Annotated entity and query references have the required type and resolve.
+- Lookup fields/inputs and projected fields resolve.
 - Lookup input and entity-field types match.
 - Every queried screen contains exactly one `empty` and one `notFound`
   state.
 - Every section contains at least one text or field node.
 - Properties are not duplicated.
-- No unsupported top-level nodes, child nodes, properties, or type annotations
-  appear.
+- No unsupported top-level nodes, child nodes, properties, reference types, or
+  misplaced type annotations appear.
 
 When reporting a problem, include its location, the violated rule, and a
 specific valid correction.

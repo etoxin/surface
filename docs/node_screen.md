@@ -37,20 +37,24 @@ screen "home" {
 }
 ```
 
-Use the optional `query` property when a screen displays data:
+Use a typed `use` reference when a screen displays query data:
 
 ```kdl
-screen "contact" route="/contacts" query="contactById" {
+screen "contact" route="/contacts" {
+    use (query)"contactById"
     // Sections and states go here.
 }
 ```
 
-The value refers to a query declared in the same file. For web screens, URL
-query parameters with the same names as the query inputs provide their values.
+The `(query)` annotation makes `"contactById"` a checked reference to a query
+declared in the same file. A screen can use at most one query in Rung 3. For
+web screens, URL query parameters with the same names as the query inputs
+provide their values.
 
 A screen can contain:
 
 - one or more `section` nodes;
+- zero or one `use (query)"<query>"` reference;
 - `empty` and `notFound` states when the screen has a query;
 - any number of prompt-only [`context`](./node_context.md) notes.
 

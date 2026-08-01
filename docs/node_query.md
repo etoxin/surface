@@ -6,7 +6,7 @@ up a contact by its ID:
 ```kdl
 query "contactById" by="id" {
     input "id" type="string"
-    returns "contact" missing=#null
+    returns (entity)"contact" missing=#null
 }
 ```
 
@@ -46,10 +46,13 @@ input.
 Every query has exactly one `returns` node:
 
 ```kdl
-returns "contact" missing=#null
+returns (entity)"contact" missing=#null
 ```
 
-`"contact"` refers to an entity declared in the same Surface file.
+`(entity)"contact"` is a checked reference to an entity declared in the same
+Surface file. The annotation identifies the expected declaration type;
+Surface reports an error if the entity does not exist or the annotation is
+missing or different.
 `missing=#null` says the query returns no entity when the lookup finds
 nothing. Use the KDL 2 null literal `#null`, without quotes.
 

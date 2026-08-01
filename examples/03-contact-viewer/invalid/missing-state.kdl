@@ -7,9 +7,10 @@ entity "contact" {
 }
 query "contactById" by="id" {
     input "id" type="string"
-    returns "contact" missing=#null
+    returns (entity)"contact" missing=#null
 }
-screen "contact" query="contactById" {
+screen "contact" {
+    use (query)"contactById"
     section "Contact" { field "id" }
     state "empty" {
         section "Empty" { text "Select a contact." }

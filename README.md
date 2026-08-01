@@ -44,8 +44,8 @@ Read the guides in this order:
    `surface` declaration
 3. [Describing the application](./docs/node_application.md) — application IDs
    and purpose
-4. [Defining data](./docs/node_entity.md) — entities, typed fields, and Boolean
-   properties
+4. [Defining data](./docs/node_entity.md) — entities, typed fields, and field
+   modifiers
 5. [Looking up data](./docs/node_query.md) — query inputs, return types, and
    references
 6. [Adding screens and text](./docs/node_screen.md) — content, field references,
@@ -61,11 +61,12 @@ Read the guides in this order:
 | `application "<id>"` | Exactly one; contains one `purpose` |
 | `purpose "<text>"` | Child of `application`; exactly one string |
 | `entity "<id>"` | Declares one or more typed `field` nodes |
-| `field "<name>" type="<type>"` | Declares entity data; supports `generated` and `optional` Booleans |
+| `field "<name>" type="<type>" [generated] [optional]` | Declares entity data with optional bare modifiers |
 | `query "<id>" by="<field>"` | Looks up one entity using `input` and `returns` children |
 | `input "<name>" type="<type>"` | Declares a query input |
-| `returns "<entity>" missing=#null` | Declares the returned entity and missing result |
-| `screen "<id>" [route="<route>"] [query="<query>"]` | At least one; contains sections and queried-screen states |
+| `returns (entity)"<entity>" missing=#null` | Returns a checked entity reference or `#null` |
+| `screen "<id>" [route="<route>"]` | At least one; contains uses, sections, and queried-screen states |
+| `use (query)"<query>"` | Gives a screen one checked query reference |
 | `section "<name>"` | Contains an optional `title` and one or more `text` or `field` nodes |
 | `field "<name>"` | In a section, refers to a field returned by the screen query |
 | `state "empty"|"notFound"` | Required alternatives for queried screens |
@@ -81,8 +82,14 @@ Additional rules:
 - Declaration identifiers and nested field/input names are unique within their
   type and scope.
 - Field and input types are currently `string` or `boolean`.
-- KDL 2 Boolean and null literals use `#true`, `#false`, and `#null`.
-- Entity, query, and projected field references must resolve.
+- Field modifiers `generated` and `optional` are bare words. Required fields
+  omit `optional`.
+- The KDL 2 null literal is `#null`.
+- A type annotation on a string marks a checked reference to a top-level
+  declaration of that type.
+- Rung 3 uses `(entity)` on query returns and `(query)` on screen `use` nodes.
+  Those entity and query references must resolve.
+- Local projected field references must also resolve.
 - A section uses either ordered text or ordered field references, not both.
 - Routes are optional strings and currently opaque. Section names, titles, and
   text are strings.
@@ -90,8 +97,8 @@ Additional rules:
 - Triple-quoted KDL strings can hold multiline natural-language content.
 - `context` contains one string, has no properties or children, and is omitted
   from the semantic JSON IR.
-- Unknown nodes, properties, duplicate properties, and unsupported type
-  annotations are rejected.
+- Unknown nodes, properties, duplicate properties, misplaced annotations, and
+  unsupported reference types are rejected.
 - Comments are supported and preserved by the formatter.
 - Canonical formatting uses quoted strings, four-space indentation, one node
   per line, a blank line between top-level declarations, and a final newline.

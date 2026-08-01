@@ -7,7 +7,7 @@ entity "contact" {
 }
 query "contactById" by="id" {
     input "id" type="string"
-    returns "contact" missing="null"
+    returns (entity)"contact" missing="null"
 }
 screen "contact" {
     section "Contact" { text "Display a contact." }

@@ -7,20 +7,21 @@ application "contactViewer" {
 }
 
 entity "contact" {
-    field "id" type="string" generated=#true
+    field "id" type="string" generated
     field "name" type="string"
-    field "email" type="string" optional=#true
+    field "email" type="string" optional
     field "active" type="boolean"
 }
 
 query "contactById" by="id" {
     context "Find the contact whose id equals the id input."
     input "id" type="string"
-    returns "contact" missing=#null
+    returns (entity)"contact" missing=#null
 }
 
-screen "contact" route="/contacts" query="contactById" {
+screen "contact" route="/contacts" {
     context "Read the id input from the URL query parameter named id."
+    use (query)"contactById"
 
     section "Contact" {
         title "Contact"

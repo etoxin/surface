@@ -86,6 +86,7 @@ type PropertyType = "string" | "boolean" | "null";
 
 const IDENTIFIER_PATTERN = /^[a-z][A-Za-z0-9]*$/;
 const PRIMITIVE_TYPES = new Set<PrimitiveType>(["string", "boolean"]);
+const FIELD_MODIFIERS = new Set(["generated", "optional"]);
 const TOP_LEVEL_NODES = new Set([
   "surface",
   "application",
@@ -367,17 +368,76 @@ function validateFieldDeclaration(
 ): void {
   const subject = `${declaration}.field`;
   validateNoTag(node, add, declaration);
-  validateArguments(node, 1, subject, add, true);
-  validateProperties(
-    node,
-    ["type", "generated", "optional"],
-    subject,
-    add,
-    ["type"],
-    { generated: "boolean", optional: "boolean" },
-  );
+  validateFieldArguments(node, subject, add);
+  validateProperties(node, ["type"], subject, add, ["type"]);
   validateOnlyContextChildren(node, subject, add);
   validatePrimitiveType(node, subject, declaration, add);
+}
+
+function validateFieldArguments(
+  node: Node,
+  subject: string,
+  add: AddDiagnostic,
+): void {
+  const arguments_ = node.getArguments();
+  if (arguments_.length < 1 || arguments_.length > 3) {
+    add({
+      code: "SURF-ARG-001",
+      message:
+        `${subject} must contain one name followed by at most one of each supported modifier.`,
+      element: node,
+      declaration: subject,
+      suggestion:
+        'Use field "name" type="string", optionally followed by generated and/or optional.',
+    });
+  }
+
+  const name = arguments_[0];
+  if (name !== undefined) {
+    if (typeof name !== "string") {
+      add({
+        code: "SURF-ARG-002",
+        message: `${subject} identifier must be a string.`,
+        element: node.getArgumentEntry(0),
+        declaration: subject,
+        suggestion: "Use one quoted lower-camel-case identifier.",
+      });
+    } else if (!IDENTIFIER_PATTERN.test(name)) {
+      add({
+        code: "SURF-ID-001",
+        message: `Invalid declaration identifier ${name}.`,
+        element: node.getArgumentEntry(0),
+        declaration: `${node.getName()}.${name}`,
+        suggestion: "Use lower camel case beginning with a lowercase ASCII letter.",
+      });
+    }
+  }
+
+  const seen = new Set<string>();
+  for (let index = 1; index < arguments_.length; index++) {
+    const modifier = arguments_[index];
+    if (typeof modifier !== "string" || !FIELD_MODIFIERS.has(modifier)) {
+      add({
+        code: "SURF-ARG-003",
+        message: `Unsupported field modifier ${String(modifier)} on ${subject}.`,
+        element: node.getArgumentEntry(index),
+        declaration: subject,
+        suggestion: "Use only the bare modifiers generated and optional.",
+      });
+      continue;
+    }
+
+    if (seen.has(modifier)) {
+      add({
+        code: "SURF-ARG-004",
+        message: `Duplicate field modifier ${modifier} on ${subject}.`,
+        element: node.getArgumentEntry(index),
+        declaration: subject,
+        suggestion: `Keep only one ${modifier} modifier.`,
+      });
+    }
+    seen.add(modifier);
+  }
 }
 
 function validateQuery(node: Node, add: AddDiagnostic): void {
@@ -421,7 +481,7 @@ function validateQuery(node: Node, add: AddDiagnostic): void {
       message: `${declaration} must contain exactly one returns child node.`,
       element: returnsNodes[1] ?? node,
       declaration,
-      suggestion: 'Add returns "entityId" missing=#null exactly once.',
+      suggestion: 'Add returns (entity)"entityId" missing=#null exactly once.',
     });
   }
 
@@ -455,8 +515,7 @@ function validateReturns(
   add: AddDiagnostic,
 ): void {
   const subject = `${declaration}.returns`;
-  validateNoTag(node, add, declaration);
-  validateArguments(node, 1, subject, add, true);
+  validateReferenceNode(node, "entity", subject, declaration, add);
   validateProperties(
     node,
     ["missing"],
@@ -489,9 +548,10 @@ function validatePrimitiveType(
 function validateScreen(node: Node, add: AddDiagnostic): void {
   const declaration = declarationName(node);
   validateArguments(node, 1, declaration, add, true);
-  validateProperties(node, ["route", "query"], declaration, add);
+  validateProperties(node, ["route"], declaration, add);
 
   const children = node.children?.nodes ?? [];
+  const uses = children.filter((child) => child.getName() === "use");
   const sections = children.filter((child) => child.getName() === "section");
   const states = children.filter((child) => child.getName() === "state");
   for (const child of children) {
@@ -500,15 +560,33 @@ function validateScreen(node: Node, add: AddDiagnostic): void {
       continue;
     }
 
-    if (child.getName() !== "section" && child.getName() !== "state") {
+    if (
+      child.getName() !== "use" && child.getName() !== "section" &&
+      child.getName() !== "state"
+    ) {
       add({
         code: "SURF-CHILD-002",
         message: `Unknown child node ${child.getName()} in ${declaration}.`,
         element: child,
         declaration,
-        suggestion: "Use only section, state, and context child nodes in a screen.",
+        suggestion:
+          "Use only use, section, state, and context child nodes in a screen.",
       });
     }
+  }
+
+  if (uses.length > 1) {
+    add({
+      code: "SURF-CHILD-005",
+      message: `${declaration} may contain at most one use child node.`,
+      element: uses[1],
+      declaration,
+      suggestion: "Keep no more than one use (query) reference.",
+    });
+  }
+
+  for (const use of uses) {
+    validateUse(use, declaration, add);
   }
 
   if (sections.length === 0) {
@@ -531,8 +609,7 @@ function validateScreen(node: Node, add: AddDiagnostic): void {
     validateIdentity(state, stateIdentities, add);
   }
 
-  const query = node.getProperty("query");
-  if (typeof query === "string") {
+  if (uses.length > 0) {
     for (const requiredState of ["empty", "notFound"]) {
       const matching = states.filter(
         (state) => state.getArgument(0) === requiredState,
@@ -555,9 +632,20 @@ function validateScreen(node: Node, add: AddDiagnostic): void {
       message: `${declaration} cannot contain states without a query.`,
       element: states[0],
       declaration,
-      suggestion: "Add a query property to the screen or remove its states.",
+      suggestion: 'Add use (query)"queryId" to the screen or remove its states.',
     });
   }
+}
+
+function validateUse(
+  node: Node,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  const subject = `${declaration}.use`;
+  validateReferenceNode(node, "query", subject, declaration, add);
+  validateProperties(node, [], subject, add);
+  validateOnlyContextChildren(node, subject, add);
 }
 
 function validateState(
@@ -989,6 +1077,54 @@ function validateNoTag(
   }
 }
 
+function validateReferenceNode(
+  node: Node,
+  expectedType: string,
+  subject: string,
+  declaration: string,
+  add: AddDiagnostic,
+): void {
+  validateArguments(node, 1, subject, add, true);
+
+  if (node.getTag() !== null) {
+    add({
+      code: "SURF-TAG-001",
+      message: `Type annotations are not supported on ${node.getName()} nodes.`,
+      element: node,
+      declaration,
+      suggestion:
+        `Move the annotation to the referenced string: (${expectedType})"id".`,
+    });
+  }
+
+  const reference = node.getArgumentEntry(0);
+  const actualType = reference?.getTag() ?? null;
+  if (actualType !== expectedType) {
+    add({
+      code: "SURF-REF-003",
+      message: actualType === null
+        ? `${subject} must annotate its reference as ${expectedType}.`
+        : `${subject} expects a ${expectedType} reference but found ${actualType}.`,
+      element: reference ?? node,
+      declaration,
+      suggestion: `Use ${node.getName()} (${expectedType})"${expectedType}Id".`,
+    });
+  }
+
+  for (const entry of node.getArgumentEntries().slice(1)) {
+    if (entry.getTag() !== null) {
+      add({
+        code: "SURF-TAG-001",
+        message:
+          `Only the reference argument on ${node.getName()} may have a type annotation.`,
+        element: entry,
+        declaration,
+        suggestion: "Remove the additional KDL type annotation.",
+      });
+    }
+  }
+}
+
 function validateIdentity(
   node: Node,
   identities: Set<string>,
@@ -1106,7 +1242,10 @@ function validateScreenReferences(
   add: AddDiagnostic,
 ): void {
   const declaration = declarationName(screen);
-  const queryId = screen.getProperty("query");
+  const queryUse = (screen.children?.nodes ?? []).find(
+    (child) => child.getName() === "use",
+  );
+  const queryId = queryUse?.getArgument(0);
   const fieldReferences = (screen.children?.nodes ?? [])
     .filter((child) => child.getName() === "section")
     .flatMap((section) =>
@@ -1122,7 +1261,8 @@ function validateScreenReferences(
         message: `${declaration} contains field references but has no query.`,
         element: fieldReferences[0],
         declaration,
-        suggestion: "Add a query property that returns the referenced entity.",
+        suggestion:
+          'Add use (query)"queryId" for a query that returns the referenced entity.',
       });
     }
     return;
@@ -1133,7 +1273,7 @@ function validateScreenReferences(
     add({
       code: "SURF-REF-001",
       message: `Unresolved query reference ${queryId} on ${declaration}.`,
-      element: propertyEntry(screen, "query"),
+      element: queryUse?.getArgumentEntry(0),
       declaration,
       suggestion: `Declare query "${queryId}" or change the screen query.`,
     });
@@ -1217,14 +1357,9 @@ function buildIr(document: Document): SurfaceIr {
         return {
           id: expectString(entity.getArgument(0), "entity identifier"),
           fields: children.findNodesByName("field").map((field) => {
-            const generated = optionalBoolean(
-              field.getProperty("generated"),
-              "field generated",
-            );
-            const optional = optionalBoolean(
-              field.getProperty("optional"),
-              "field optional",
-            );
+            const modifiers = new Set(field.getArguments().slice(1));
+            const generated = modifiers.has("generated") ? true : undefined;
+            const optional = modifiers.has("optional") ? true : undefined;
             return {
               name: expectString(field.getArgument(0), "field name"),
               type: expectPrimitiveType(
@@ -1270,8 +1405,11 @@ function buildIr(document: Document): SurfaceIr {
     }),
     screens: screens.map((screen) => {
       const route = optionalString(screen.getProperty("route"), "screen route");
-      const query = optionalString(screen.getProperty("query"), "screen query");
       const screenChildren = expectChildren(screen, "screen");
+      const queryUse = screenChildren.findNodeByName("use");
+      const query = queryUse === undefined
+        ? undefined
+        : expectString(queryUse.getArgument(0), "screen query");
       const states = screenChildren.findNodesByName("state");
       return {
         id: expectString(screen.getArgument(0), "screen identifier"),
@@ -1363,17 +1501,4 @@ function optionalString(
   subject: string,
 ): string | undefined {
   return value === undefined ? undefined : expectString(value, subject);
-}
-
-function optionalBoolean(
-  value: Primitive | undefined,
-  subject: string,
-): boolean | undefined {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (typeof value !== "boolean") {
-    throw new Error(`Validated ${subject} is not a Boolean.`);
-  }
-  return value;
 }
