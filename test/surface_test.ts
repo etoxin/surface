@@ -314,7 +314,7 @@ surface "0.1"
 application "contextual" { purpose "Exercise rung-3 context." }
 entity "contact" {
     context "Entity guidance."
-    (string)"id" required generated {
+    (string)"id" {
         context "Field guidance."
     }
 }
@@ -492,7 +492,7 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /^---\nname: surface\ndescription: .+\n---/);
   assertMatch(skill, /surface "0\.1"/);
   assertMatch(skill, /entity "contact"/);
-  assertMatch(skill, /\(string\)"id" required generated/);
+  assertMatch(skill, /\(string\)"id"/);
   assertMatch(skill, /returns \(entity\)"contact" missing=#null/);
   assertMatch(skill, /use \(query\)"contactById"/);
   assertMatch(skill, /state "notFound"/);

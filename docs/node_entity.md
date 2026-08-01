@@ -5,10 +5,10 @@ Contact Viewer needs a contact:
 
 ```kdl
 entity "contact" {
-    (string)"id" required generated
-    (string)"name" required
+    (string)"id"
+    (string)"name"
     (string)"email" optional
-    (boolean)"active" required
+    (boolean)"active"
 }
 ```
 
@@ -25,7 +25,7 @@ An entity contains one or more typed field nodes and can contain prompt-only
 A field describes one value on the entity:
 
 ```kdl
-(string)"name" required
+(string)"name"
 ```
 
 `(string)` is a KDL node annotation that declares the field's primitive type.
@@ -41,26 +41,17 @@ Numbers are not supported yet.
 
 ## Field Modifiers
 
-Every field must contain exactly one cardinality modifier:
-
-- `required` means the entity must have a value;
-- `optional` means the entity can omit the value.
-
-Add `generated` after the cardinality when the application creates the value
-rather than asking a user or external source to provide it:
-
-```kdl
-(string)"id" required generated
-```
-
-An optional field looks like:
+Fields are required by default. Add the bare `optional` modifier only when an
+entity can omit the value:
 
 ```kdl
 (string)"email" optional
 ```
 
-Write modifiers as bare words without values. Do not combine `required` and
-`optional`, repeat a modifier, or use forms such as `generated=#true`.
+Do not write `required`; leaving out `optional` already means required. The
+`optional` modifier takes no value and cannot be repeated. The earlier
+`field "name" type="string"`, `required`, and `generated` syntax is not
+supported.
 
 A field can also contain prompt-only context:
 

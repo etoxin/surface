@@ -3,7 +3,7 @@
 surface "0.1"
 application "contactViewer" { purpose "Display a contact." }
 entity "contact" {
-    (boolean)"id" required
+    (boolean)"id"
 }
 query "contactById" by="id" {
     input "id" type="string"

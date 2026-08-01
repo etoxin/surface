@@ -182,8 +182,7 @@ Introduces:
 - `entity` declarations;
 - `query` declarations;
 - primitive field types expressed as KDL node annotations;
-- explicit `required` or `optional` field cardinality;
-- the bare `generated` field modifier;
+- the bare `optional` field modifier for fields that are not required;
 - Boolean and null values;
 - query inputs and return types;
 - annotated references between top-level declarations;

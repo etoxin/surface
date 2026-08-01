@@ -7,12 +7,12 @@ application "contactViewer" {
 }
 
 entity "contact" {
-    (string)"id" required generated
-    (string)"name" required
+    (string)"id"
+    (string)"name"
     (string)"email" optional {
         context "Validate this value as an email address."
     }
-    (boolean)"active" required
+    (boolean)"active"
 }
 
 query "contactById" by="id" {

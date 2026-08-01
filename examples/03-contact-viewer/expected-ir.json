@@ -10,8 +10,7 @@
       "fields": [
         {
           "name": "id",
-          "type": "string",
-          "generated": true
+          "type": "string"
         },
         {
           "name": "name",

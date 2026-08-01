@@ -44,10 +44,10 @@ Declare read-only data and a single-entity lookup when needed:
 
 ```kdl
 entity "contact" {
-    (string)"id" required generated
-    (string)"name" required
+    (string)"id"
+    (string)"name"
     (string)"email" optional
-    (boolean)"active" required
+    (boolean)"active"
 }
 
 query "contactById" by="id" {
@@ -67,11 +67,11 @@ children. Give every field:
 
 - a `(string)` or `(boolean)` node annotation;
 - a quoted lower-camel-case node name unique within the entity;
-- exactly one bare `required` or `optional` modifier;
-- an optional bare `generated` modifier after the cardinality.
+- an optional bare `optional` modifier when the value may be absent.
 
-Do not give modifiers values, combine `required` and `optional`, or repeat a
-modifier. Reject the earlier `field "name" type="string"` syntax.
+Treat fields as required when `optional` is absent. Do not write `required` or
+`generated`, give `optional` a value, or repeat it. Reject the earlier
+`field "name" type="string"` syntax.
 
 A query is a single-entity lookup. Give it:
 
@@ -90,7 +90,7 @@ target ID and its declaration type. Rung 3 supports `(entity)` on `returns`
 arguments and `(query)` on screen `use` arguments.
 
 Distinguish those value annotations from the node annotations that declare
-entity field types: `(string)"name" required` is a field node, while
+entity field types: `(string)"name"` is a field node, while
 `(entity)"contact"` following `returns` is a reference value. Reject
 annotations in all other positions.
 
@@ -178,8 +178,8 @@ Check all of the following:
 - Declaration identifiers are valid and unique within their type.
 - Required arguments, properties, and children are present exactly as defined.
 - Entity fields and query inputs have valid unique names and supported types.
-- Every entity field has exactly one `required` or `optional` modifier; only
-  entity fields may also use `generated`. All modifiers are bare words.
+- Entity fields are required by default; only optional fields use the bare
+  `optional` modifier.
 - Null properties use `#null`, not a quoted string.
 - Annotated entity and query references have the required type and resolve.
 - Lookup fields/inputs and projected fields resolve.

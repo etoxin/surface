@@ -19,9 +19,10 @@ A typed child node inside an entity declares data. A `field` inside a normal scr
 section refers to a field on the entity returned by the screen's query. State sections
 contain static titles and text because no entity is available.
 
-Entity fields use KDL node annotations for their primitive types. Every field states
-`required` or `optional` explicitly, and `generated` is an independent bare modifier.
-Context remains a child node so it stays repeatable and can contain multiline prompts.
+Entity fields use KDL node annotations for their primitive types. Fields are required by
+default, and only fields that may be absent use the bare `optional` modifier. Generation
+is not described because this read-only application never creates contacts. Context
+remains a child node so it stays repeatable and can contain multiline prompts.
 
 The example stores two contacts in memory. Storage and seed data are implementation
 choices and are not part of Surface yet.

@@ -3,7 +3,7 @@
 surface "0.1"
 application "contactViewer" { purpose "Display a contact." }
 entity "contact" {
-    (number)"id" required
+    (number)"id"
 }
 screen "contact" {
     section "Contact" { text "Display a contact." }

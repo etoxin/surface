@@ -4,13 +4,13 @@
   "cases": [
     {
       "id": "create",
-      "prompt": "Create a Surface Contact Viewer at /contacts. Define a contact with generated string id, required name, optional email, and Boolean active fields. Look it up by string id, display name, email, and active, and include empty and not-found states.",
+      "prompt": "Create a Surface Contact Viewer at /contacts. Define a contact with string id, required name, optional email, and required Boolean active fields. Look it up by string id, display name, email, and active, and include empty and not-found states.",
       "acceptance": [
         "The result is valid Surface 0.1 KDL.",
         "The result contains exactly one application and at least one screen.",
         "The application has no version property.",
         "The contact entity declares fields as typed child nodes using only (string) and (boolean).",
-        "Every field uses exactly one required or optional modifier, and generated is a bare modifier.",
+        "Required fields have no modifier, and only email uses the bare optional modifier.",
         "The lookup input and id field are both strings.",
         "The query uses returns (entity)\"contact\" with missing=#null.",
         "The screen uses use (query)\"contactById\", and all references resolve.",
@@ -31,7 +31,7 @@
     },
     {
       "id": "diagnose",
-      "prompt": "Diagnose a Contact Viewer whose id field has no required or optional modifier, whose returns value omits the entity annotation, that repeats a field name, has a by field with no matching input, projects an undeclared phone field, and is missing its notFound state.",
+      "prompt": "Diagnose a Contact Viewer whose id field uses the unsupported required modifier, whose returns value omits the entity annotation, that repeats a field name, has a by field with no matching input, projects an undeclared phone field, and is missing its notFound state.",
       "acceptance": [
         "The response identifies all six validation problems.",
         "The response distinguishes valid KDL from valid Surface.",

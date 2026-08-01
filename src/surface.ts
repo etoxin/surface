@@ -31,7 +31,6 @@ export interface SurfaceEntityIr {
 export interface SurfaceFieldIr {
   name: string;
   type: PrimitiveType;
-  generated?: boolean;
   optional?: boolean;
 }
 
@@ -86,7 +85,7 @@ type PropertyType = "string" | "boolean" | "null";
 
 const IDENTIFIER_PATTERN = /^[a-z][A-Za-z0-9]*$/;
 const PRIMITIVE_TYPES = new Set<PrimitiveType>(["string", "boolean"]);
-const FIELD_MODIFIERS = new Set(["required", "optional", "generated"]);
+const FIELD_MODIFIERS = new Set(["optional"]);
 const TOP_LEVEL_NODES = new Set([
   "surface",
   "application",
@@ -339,7 +338,7 @@ function validateEntity(node: Node, add: AddDiagnostic): void {
       message: `${declaration} must contain at least one field child node.`,
       element: node,
       declaration,
-      suggestion: 'Add a field such as (string)"id" required.',
+      suggestion: 'Add a field such as (string)"id".',
     });
   }
 
@@ -419,8 +418,7 @@ function validateFieldModifiers(
         message: `Unsupported field modifier ${String(modifier)} on ${subject}.`,
         element: node.getArgumentEntry(index),
         declaration: subject,
-        suggestion:
-          "Use exactly one of required or optional, plus generated when needed.",
+        suggestion: "Use only the bare optional modifier.",
       });
       continue;
     }
@@ -445,19 +443,6 @@ function validateFieldModifiers(
         suggestion: `Write ${modifier} as a bare modifier.`,
       });
     }
-  }
-
-  const cardinality = Number(seen.has("required")) +
-    Number(seen.has("optional"));
-  if (cardinality !== 1) {
-    add({
-      code: "SURF-ARG-005",
-      message:
-        `${subject} must contain exactly one of the required or optional modifiers.`,
-      element: node,
-      declaration: subject,
-      suggestion: "Add exactly one bare required or optional modifier.",
-    });
   }
 }
 
@@ -1258,7 +1243,7 @@ function validateQueryReferences(
       declaration,
       suggestion: `Add (${
         typeof inputType === "string" ? inputType : "string"
-      })"${by}" required to entity "${entityId}" or change by.`,
+      })"${by}" to entity "${entityId}" or change by.`,
     });
   }
 
@@ -1400,7 +1385,6 @@ function buildIr(document: Document): SurfaceIr {
           id: expectString(entity.getArgument(0), "entity identifier"),
           fields: children.nodes.filter(isEntityFieldNode).map((field) => {
             const modifiers = new Set(field.getArguments());
-            const generated = modifiers.has("generated") ? true : undefined;
             const optional = modifiers.has("optional") ? true : undefined;
             return {
               name: field.getName(),
@@ -1408,7 +1392,6 @@ function buildIr(document: Document): SurfaceIr {
                 field.getTag() ?? undefined,
                 "field type",
               ),
-              ...(generated === undefined ? {} : { generated }),
               ...(optional === undefined ? {} : { optional }),
             };
           }),
