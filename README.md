@@ -16,6 +16,12 @@ surface "0.1"
 
 application "todo" {
     purpose "Keep a small list of tasks."
+
+    stack "web" {
+        target "browser"
+        technology "markup" "html"
+        technology "styling" "css"
+    }
 }
 
 collection "todo" {
