@@ -1,0 +1,79 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "streetProblemReporter" {
+    purpose "Let a resident report a problem with a street."
+
+    stack "web" {
+        target "browser"
+        technology "markup" "html"
+        technology "language" "typescript"
+        technology "runtime" "deno"
+        technology "designSystem" "govUkFrontend" version="6.4.0" {
+            context "Use the official component HTML and supplied assets without application custom CSS or another visual library. Configure the design system with a system font and Northbridge Council brand colour because this service is not on GOV.UK."
+        }
+    }
+
+    context "This is a fictional local-government service named Northbridge Council, not a service on GOV.UK."
+}
+
+(enum)value "problemType" {
+    "pothole"
+    "brokenStreetlight"
+    "damagedRoadSign"
+}
+
+collection "streetReport" {
+    (enum)"problemType" (value)"problemType"
+    (string)"location"
+    (string)"details" optional
+    (string)"reporterEmail"
+}
+
+collection "reportReceipt" {
+    (string)"reference"
+}
+
+function "validateStreetReport" {
+    input (collection)"streetReport"
+    output (collection)"streetReport"
+
+    logic {
+        (collection)"streetReport" "Trim the location, details, and reporter email, and lowercase the reporter email."
+        "If problemType is absent, report: Select the type of street problem."
+        "If location is empty, report: Enter where the problem is."
+        "If reporterEmail is not a valid email address, report: Enter a valid email address."
+        "Report every validation error in that exact order; otherwise output the normalized street report."
+    }
+}
+
+function "submitStreetReport" {
+    input (collection)"streetReport"
+    output (collection)"reportReceipt"
+
+    logic {
+        (collection)"streetReport" "Accept the reviewed street report."
+        (collection)"reportReceipt" "Output a receipt with reference SR-2026-001."
+    }
+}
+
+interface "streetProblemReporter" {
+    context (function)"validateStreetReport" (function)"submitStreetReport" "Render an accessible, responsive HTML service using only GOV.UK Frontend 6.4.0 styles and official component markup. Use the Generic header branded Northbridge Council, a skip link, two-thirds content width, GOV.UK form groups, radios, text input, textarea, error summary, back link, summary list, buttons, confirmation panel, and a simple footer. Do not use the GOV.UK crown, logotype, font, brand colour, application custom CSS, inline style attributes, or another visual library."
+    context "Use the exact service name Report a street problem. Ask What is the problem? with Pothole, Broken streetlight, and Damaged road sign options; Where is the problem?; Tell us more (optional); and Email address."
+
+    logic {
+        "Initially show the report form and a Continue button."
+        (function)"validateStreetReport" "On Continue, validate all fields and show every error in one focused error summary plus beside its field. Prefix the document title with Error: while errors are visible."
+        "Preserve every entered value after validation fails."
+        "When valid, show Check your answers before sending your report with a summary list, Change links, a Back link, and a Send report button."
+        "Change and Back return to the populated report form."
+        (function)"submitStreetReport" "On Send report, submit the reviewed report."
+        "After submission, show a confirmation panel containing Report submitted, Your reference number, and SR-2026-001, followed by We have sent a confirmation to the supplied email address."
+    }
+}
+
+screen "home" {
+    use (interface)"streetProblemReporter"
+    logic "Use / as this screen's URL path."
+}

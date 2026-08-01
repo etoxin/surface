@@ -110,14 +110,56 @@ source code and visual design vary.
 
 Delivered in [examples/06-signup-determinism](./examples/06-signup-determinism/).
 
-### 7. Private Notes
+### 7. HTML Design Consistency Benchmark
 
-**Status:** Planned
+**Status:** Baseline complete
 
-Build private notes with ordinary users and administrators. Test whether collections,
-enums, functions, and normative function logic can state resource ownership, allow and
-deny behaviour, non-leaking failures, and negative acceptance cases clearly enough
-without a dedicated policy model.
+Build the same small government-service HTML application at least three times from one
+Surface file and one identical generation brief. Use the
+[GOV.UK Design System](https://design-system.service.gov.uk/) and pin one GOV.UK
+Frontend release for every build.
+
+Declare that choice in the application's web stack rather than leaving it only in prompt
+context:
+
+```kdl
+application "serviceApplication" {
+    purpose "Let a resident complete a small government service."
+
+    stack "web" {
+        target "browser"
+        technology "markup" "html"
+        technology "language" "javascript"
+        technology "designSystem" "govUkFrontend" version="6.4.0"
+    }
+}
+```
+
+`designSystem` is an open technology role already supported by Surface 0.1, not a new
+declaration. Context and interface logic may explain how to apply the system, while the
+stack remains the authoritative technology choice.
+
+The application should include a service header, one form with several input types,
+validation errors and an error summary, a review step, and a confirmation page. Every
+build must use the official page template and component HTML, the same supplied content,
+and the pinned design-system assets. Do not allow custom CSS, substitute components, or
+additional visual libraries.
+
+Generate each build in a fresh isolated run. Compare:
+
+- screenshots at fixed mobile and desktop viewports;
+- page hierarchy, spacing, typography, colour, and responsive layout;
+- selected GOV.UK components and their HTML classes;
+- wording, validation placement, focus behaviour, and accessibility results;
+- first-pass success, repairs, assumptions, source hashes, and implementation structure.
+
+This benchmark asks whether a named design system plus Surface context produces a
+consistent visual result without adding structured UI syntax. Include a Markdown-only
+control using the same requirements. Record both exact pixel differences and a
+thresholded visual-similarity score: design-system font rendering may vary by platform,
+so pixel identity is not the only success criterion.
+
+Delivered in [examples/07-design-consistency](./examples/07-design-consistency/).
 
 ### 8. URL Shortener API
 
@@ -229,6 +271,15 @@ Reconstruct a production-style application using only its Surface project and pi
 toolchain inputs. Compare independent implementations for API, data, UI, tests,
 infrastructure, semantic changes, reproducibility, and conformance. This is the
 long-term test of whether Surface is more useful than a prose brief.
+
+### 20. Private Notes
+
+**Status:** Planned
+
+Build private notes with ordinary users and administrators. Test whether collections,
+enums, functions, and normative function logic can state resource ownership, allow and
+deny behaviour, non-leaking failures, and negative acceptance cases clearly enough
+without a dedicated policy model.
 
 ## What the Roadmap Measures
 

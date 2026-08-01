@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en" class="govuk-template">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#006853">
+    <title>Report a street problem – Northbridge Council</title>
+    <link rel="stylesheet" href="/assets/govuk-frontend.min.css">
+  </head>
+  <body class="govuk-template__body">
+    <div id="service"></div>
+    <script>
+      class StreetProblemApplication {
+        constructor(root) {
+          this.root = root;
+          this.baseTitle = "Report a street problem – Northbridge Council";
+          this.report = { problemType: "", location: "", details: "", reporterEmail: "" };
+          this.labels = { pothole: "Pothole", brokenStreetlight: "Broken streetlight", damagedRoadSign: "Damaged road sign" };
+          this.renderShell();
+          this.showForm([]);
+        }
+
+        renderShell() {
+          this.root.innerHTML = `<a href="#main-content" class="govuk-skip-link">Skip to main content</a><header class="govuk-generic-header" role="banner"><div class="govuk-generic-header__container govuk-width-container"><div class="govuk-generic-header__logo"><a href="/" class="govuk-generic-header__homepage-link"><svg width="28" height="30" viewBox="0 0 28 30" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false"><circle cx="13.5549" cy="4.21349" r="4.21349"></circle><circle cx="13.5549" cy="25.7865" r="4.21349"></circle><circle cx="22.8963" cy="9.6068" r="4.21349"></circle><circle cx="4.2135" cy="20.3932" r="4.21349"></circle><circle cx="22.8963" cy="20.3932" r="4.21349"></circle><circle cx="4.21351" cy="9.60674" r="4.21349"></circle></svg> Northbridge Council</a></div></div></header><main class="govuk-main-wrapper" id="main-content" tabindex="-1"><div class="govuk-width-container"><div class="govuk-grid-row"><div class="govuk-grid-column-two-thirds" id="app"></div></div></div></main><footer class="govuk-footer"><div class="govuk-width-container"><div class="govuk-footer__meta"><div class="govuk-footer__meta-item">Northbridge Council</div></div></div></footer>`;
+          this.app = document.getElementById("app");
+        }
+
+        escape(value) {
+          const node = document.createElement("span");
+          node.textContent = value;
+          return node.innerHTML;
+        }
+
+        error(id, message) {
+          return message ? `<p id="${id}-error" class="govuk-error-message"><span class="govuk-visually-hidden">Error:</span> ${message}</p>` : "";
+        }
+
+        description(id, errors) {
+          return `${id}-hint${errors[id] ? ` ${id}-error` : ""}`;
+        }
+
+        showForm(errorList) {
+          const errors = Object.fromEntries(errorList.map((error) => [error.id, error.message]));
+          document.title = errorList.length ? `Error: ${this.baseTitle}` : this.baseTitle;
+          const summary = errorList.length ? `<div class="govuk-error-summary" data-module="govuk-error-summary" tabindex="-1"><div role="alert"><h2 class="govuk-error-summary__title">There is a problem</h2><div class="govuk-error-summary__body"><ul class="govuk-list govuk-error-summary__list">${errorList.map(({ id, message }) => `<li><a href="#${id}">${message}</a></li>`).join("")}</ul></div></div></div>` : "";
+          this.app.innerHTML = `${summary}<h1 class="govuk-heading-xl">Report a street problem</h1><form id="report-form" novalidate>
+            <div id="problemType-group" class="govuk-form-group${errors.problemType ? " govuk-form-group--error" : ""}"><fieldset class="govuk-fieldset" aria-describedby="${this.description("problemType", errors)}"><legend class="govuk-fieldset__legend govuk-fieldset__legend--m"><span class="govuk-fieldset__heading">What is the problem?</span></legend><div id="problemType-hint" class="govuk-hint">Select one option.</div>${this.error("problemType", errors.problemType)}<div class="govuk-radios" data-module="govuk-radios">${Object.entries(this.labels).map(([value, label]) => `<div class="govuk-radios__item"><input class="govuk-radios__input" id="problemType-${value}" name="problemType" type="radio" value="${value}"${this.report.problemType === value ? " checked" : ""}><label class="govuk-label govuk-radios__label" for="problemType-${value}">${label}</label></div>`).join("")}</div></fieldset></div>
+            <div id="location-group" class="govuk-form-group${errors.location ? " govuk-form-group--error" : ""}"><label class="govuk-label govuk-label--m" for="location">Where is the problem?</label><div id="location-hint" class="govuk-hint">For example, outside 14 Market Street.</div>${this.error("location", errors.location)}<input class="govuk-input${errors.location ? " govuk-input--error" : ""}" id="location" name="location" type="text" aria-describedby="${this.description("location", errors)}" value="${this.escape(this.report.location)}"></div>
+            <div class="govuk-form-group"><label class="govuk-label govuk-label--m" for="details">Tell us more (optional)</label><div id="details-hint" class="govuk-hint">Do not include personal or financial information.</div><textarea class="govuk-textarea" id="details" name="details" rows="5" aria-describedby="details-hint">${this.escape(this.report.details)}</textarea></div>
+            <div id="reporterEmail-group" class="govuk-form-group${errors.reporterEmail ? " govuk-form-group--error" : ""}"><label class="govuk-label govuk-label--m" for="reporterEmail">Email address</label><div id="reporterEmail-hint" class="govuk-hint">We will send your reference number here.</div>${this.error("reporterEmail", errors.reporterEmail)}<input class="govuk-input govuk-input--width-20${errors.reporterEmail ? " govuk-input--error" : ""}" id="reporterEmail" name="reporterEmail" type="email" autocomplete="email" spellcheck="false" aria-describedby="${this.description("reporterEmail", errors)}" value="${this.escape(this.report.reporterEmail)}"></div>
+            <button class="govuk-button" data-module="govuk-button" type="submit">Continue</button></form>`;
+          this.app.querySelector("form").addEventListener("submit", (event) => this.continue(event));
+          this.app.querySelector(".govuk-error-summary")?.focus();
+        }
+
+        continue(event) {
+          event.preventDefault();
+          const input = new FormData(event.currentTarget);
+          this.report = {
+            problemType: String(input.get("problemType") || ""),
+            location: String(input.get("location") || "").trim(),
+            details: String(input.get("details") || "").trim(),
+            reporterEmail: String(input.get("reporterEmail") || "").trim().toLowerCase()
+          };
+          const errors = [
+            !this.report.problemType && { id: "problemType", message: "Select the type of street problem." },
+            !this.report.location && { id: "location", message: "Enter where the problem is." },
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.report.reporterEmail) && { id: "reporterEmail", message: "Enter a valid email address." }
+          ].filter(Boolean);
+          errors.length ? this.showForm(errors) : this.showReview();
+        }
+
+        showReview() {
+          document.title = `Check your answers – ${this.baseTitle}`;
+          const rows = [
+            ["Problem", this.labels[this.report.problemType], "problemType"],
+            ["Location", this.report.location, "location"],
+            ["Details", this.report.details || "Not provided", "details"],
+            ["Email address", this.report.reporterEmail, "reporterEmail"]
+          ];
+          this.app.innerHTML = `<a href="#" class="govuk-back-link" data-action="back">Back</a><h1 class="govuk-heading-xl">Check your answers before sending your report</h1><dl class="govuk-summary-list">${rows.map(([key, value, id]) => `<div class="govuk-summary-list__row"><dt class="govuk-summary-list__key">${key}</dt><dd class="govuk-summary-list__value">${this.escape(value)}</dd><dd class="govuk-summary-list__actions"><a class="govuk-link" href="#${id}" data-action="change">Change<span class="govuk-visually-hidden"> ${key.toLowerCase()}</span></a></dd></div>`).join("")}</dl><button class="govuk-button" data-module="govuk-button" data-action="send" type="button">Send report</button>`;
+          this.app.addEventListener("click", (event) => {
+            const action = event.target.closest("[data-action]")?.dataset.action;
+            if (action === "back" || action === "change") { event.preventDefault(); this.showForm([]); }
+            if (action === "send") this.showConfirmation();
+          }, { once: true });
+          document.getElementById("main-content").focus();
+        }
+
+        showConfirmation() {
+          document.title = `Report submitted – ${this.baseTitle}`;
+          this.app.innerHTML = `<div class="govuk-panel govuk-panel--confirmation"><h1 class="govuk-panel__title">Report submitted</h1><div class="govuk-panel__body">Your reference number<br><strong>SR-2026-001</strong></div></div><p class="govuk-body">We have sent a confirmation to ${this.escape(this.report.reporterEmail)}.</p>`;
+          document.getElementById("main-content").focus();
+        }
+      }
+
+      new StreetProblemApplication(document.getElementById("service"));
+    </script>
+  </body>
+</html>

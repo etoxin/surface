@@ -1,0 +1,16 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "unquotedDesignVersion" {
+    purpose "Reject a numeric technology version."
+
+    stack "web" {
+        target "browser"
+        technology "designSystem" "govUkFrontend" version=6.4
+    }
+}
+
+screen "home" {
+    context "Render home."
+}

@@ -97,11 +97,15 @@ mise run contact-viewer
 mise run click-counter
 mise run todo-list
 mise run signup-determinism
+mise run design-consistency
+mise run design-visual
 mise run url-shortener
 mise run file-converter
 INVENTORY_API_TOKEN=development PAYMENT_API_TOKEN=development mise run online-checkout
 mise run multi-tenant-project-tracker
 ```
+
+`design-visual` downloads its pinned Playwright Chromium browser on first use.
 
 The direct equivalents are `deno task verify` and `deno task surf`. The CLI supports
 `parse`, `check`, `format`, `export`, and `reference`. Reference selectors include
@@ -125,6 +129,7 @@ human documentation, and updates to the LLM skill.
 ### Candidate stress tests
 
 - [Rung 6: Signup Determinism](./examples/06-signup-determinism/benchmark.md)
+- [Rung 7: HTML Design Consistency](./examples/07-design-consistency/benchmark.md)
 - [Rung 8: URL Shortener API](./examples/08-url-shortener-api/surface.kdl)
 - [Rung 11: File Converter](./examples/11-file-converter/surface.kdl)
 - [Rung 15: Online Checkout](./examples/15-online-checkout/surface.kdl)
@@ -145,6 +150,8 @@ The Static FAQ runs at `http://localhost:8002/faq`; the Contact Viewer runs at
 Checkout at `http://localhost:8006/checkout`, and the Multi-tenant Project Tracker at
 `http://localhost:8007/`. The three signup builds run at `http://localhost:8010/`,
 `http://localhost:8011/`, and `http://localhost:8012/`.
+The three design-consistency builds run at `http://localhost:8020/`,
+`http://localhost:8021/`, and `http://localhost:8022/`.
 
 Surface 0.1 is frozen. Roadmap applications must use its documented grammar; missing
 capabilities become evidence for a later language version rather than new 0.1 syntax.

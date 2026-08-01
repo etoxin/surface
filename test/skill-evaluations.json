@@ -1,49 +1,42 @@
 {
   "skill": "skills/surface/SKILL.md",
-  "rung": 5,
+  "rung": 7,
   "cases": [
     {
       "id": "create",
-      "prompt": "Create a Surface personal todo list at /. The delivered application is one self-contained browser HTML file using CSS, JavaScript, browser-memory storage, and no framework. It starts empty, rejects blank task text, and groups every task as Open, Completed, or Archived. Users can add, complete, reopen, and archive tasks, and every group shows a current count.",
+      "prompt": "Create a Surface specification for an accessible browser service that lets a resident report a street problem, review their answers, and receive a confirmation reference. Use HTML, TypeScript, Deno, and GOV.UK Frontend 6.4.0. Require official design-system components with no custom CSS. Ask for a problem type, location, optional details, and email, with ordered field errors.",
       "acceptance": [
-        "The result is valid Surface 0.1 KDL with exactly one application and at least one screen.",
-        "The application declares a web stack targeting browser, with markup html, styling css, language javascript, storage browserMemory, and packaging singleFile technologies.",
-        "A global (enum)value todoStatus declares exactly the unique quoted options open, completed, and archived.",
-        "A constant number defaultPriority and variable array todos are declared as typed values.",
-        "A global todo collection uses date, number, and array fields and its enum status field has the checked (value)todoStatus reference.",
-        "Separate createTodo, completeTodo, reopenTodo, and archiveTodo functions use checked collection input and output references and logic strings for their operations.",
-        "createTodo uses a private input collection containing task text and describes blank input as a null output.",
-        "A top-level interface uses context for presentation and one logic block for ordered initial state, function invocation, validation errors, exclusive grouping, and count updates.",
-        "The screen uses the interface with use (interface), and inline logic describes / as its URL path.",
-        "Every condition and transition remains inside a logic instruction string; no structured operator node is introduced.",
-        "No standalone enum, workflow, state, transition, actor, behaviour, event, scenario, action, button, or other unreleased node is introduced.",
+        "The result is valid frozen Surface 0.1 KDL with exactly one application and at least one screen.",
+        "The application's web stack targets browser and declares markup html, language typescript, runtime deno, and designSystem govUkFrontend with quoted version 6.4.0.",
+        "Design-system implementation guidance is attached with context; no design or component declaration is invented.",
+        "A global enum value defines the allowed problem types and a street-report collection uses a checked enum value reference.",
+        "Validation and submission are functions with checked collection input and output references.",
+        "Exact validation order, review behavior, and confirmation behavior remain in logic instruction strings.",
+        "Interface context describes accessibility and official component usage without structured UI children.",
+        "The screen uses the interface and describes / through logic.",
         "The frozen Surface 0.1 grammar is not extended to satisfy the request."
       ]
     },
     {
       "id": "modify",
-      "prompt": "Starting from examples/05-todo-list/surface.kdl, add a Delete action for archived tasks and require a confirmation before deletion. Preserve the existing application, all other task behavior, screen, formatting, and unrelated content.",
+      "prompt": "Starting from examples/07-design-consistency/surface.kdl, change the pinned design system to NHS.UK Frontend 10.2.0 and require official NHS components without custom CSS. Preserve the application behavior, data contracts, copy, screen, and unrelated content.",
       "acceptance": [
-        "A deleteTodo function is added using the existing todo collection as its input and output contract, with logic describing a null output for an archived todo.",
-        "The existing interface logic is minimally updated to request confirmation and invoke deleteTodo for an archived task.",
-        "The existing enum value and todo status value reference are preserved unchanged.",
-        "No workflow, structured state, transition, behaviour, event, action, button, or other unreleased node is added.",
-        "The application stack, screen, existing intent, formatting, and unrelated content are preserved.",
-        "The result remains valid Surface 0.1 KDL.",
-        "The frozen Surface 0.1 grammar is not extended to satisfy the request."
+        "Only the existing designSystem technology name, quoted version, and directly related context are changed.",
+        "The design system remains a technology in the application web stack and is not moved into a new declaration.",
+        "No structured component, button, form, design, or theme node is introduced.",
+        "All collections, values, functions, interface logic, screen logic, and unrelated content are preserved.",
+        "The result remains valid frozen Surface 0.1 KDL."
       ]
     },
     {
       "id": "diagnose",
-      "prompt": "Diagnose a Todo List Surface file whose web stack has no target and uses technology \"language\" \"javascript\" version=2026, whose (enum)value todoStatus is empty, whose Boolean field has a (value) constraint, whose enum field references a missing value, and whose screen sets route=\"/\".",
+      "prompt": "Diagnose a Surface file that puts designSystem \"govUkFrontend\" at the top level, uses technology \"designSystem\" \"govUkFrontend\" version=6.4 in its web stack, and adds button and textInput children to an interface.",
       "acceptance": [
-        "The response identifies the missing stack target, numeric technology version, empty enum value, constraint on a Boolean field, unresolved value reference, and route property as invalid Surface.",
-        "It explains that every stack needs exactly one target and technology version is an optional quoted string.",
-        "It explains that enum is a value primitive with at least one unique quoted option and that enum fields require one checked value reference.",
-        "It replaces the legacy screen route property with inline logic describing the URL path.",
-        "The response distinguishes valid KDL from valid Surface.",
-        "Every suggested correction uses only released syntax.",
-        "The response treats the Surface 0.1 grammar as frozen and does not propose adding syntax to it."
+        "The response identifies the top-level designSystem declaration, numeric technology version, and structured interface children as invalid Surface 0.1.",
+        "It keeps the design system as technology \"designSystem\" \"govUkFrontend\" version=\"6.4\" inside the application stack.",
+        "It moves component and customization guidance into interface or technology context rather than inventing UI nodes.",
+        "It distinguishes valid KDL from valid Surface.",
+        "It treats Surface 0.1 as frozen and every correction uses only released syntax."
       ]
     }
   ]

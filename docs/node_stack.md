@@ -56,6 +56,19 @@ name pair cannot be repeated in one stack.
 is an intentional implementation constraint; omit it when a compatible or
 current version is acceptable.
 
+Design belongs in the stack when a named design system is an implementation
+constraint:
+
+```kdl
+technology "designSystem" "govUkFrontend" version="6.4.0" {
+    context "Use the official components without custom CSS."
+}
+```
+
+`designSystem` is an ordinary open technology role. It makes the choice visible in the
+semantic IR; context can then explain how strictly to apply it. Do not create a separate
+`design`, `theme`, or component declaration.
+
 ## Extra Guidance
 
 Attach [context](./node_context.md) to a stack, target, or technology when the

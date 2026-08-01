@@ -1,0 +1,179 @@
+{
+  "browser": "MiniBrowser 2.52.3",
+  "designSystem": "GOV.UK Frontend 6.4.0",
+  "builds": [
+    "01-render-functions",
+    "02-template-clones",
+    "03-controller"
+  ],
+  "viewports": [
+    {
+      "name": "mobile",
+      "width": 390,
+      "height": 844
+    },
+    {
+      "name": "desktop",
+      "width": 1440,
+      "height": 900
+    }
+  ],
+  "states": [
+    "initial",
+    "error",
+    "review",
+    "confirmation"
+  ],
+  "comparisonCount": 16,
+  "exactMatches": 16,
+  "componentMatches": 16,
+  "minimumSimilarity": 1,
+  "passThreshold": 0.98,
+  "passed": true,
+  "comparisons": [
+    {
+      "viewport": "mobile",
+      "state": "initial",
+      "baseline": "01-render-functions",
+      "candidate": "02-template-clones",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "mobile",
+      "state": "initial",
+      "baseline": "01-render-functions",
+      "candidate": "03-controller",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "mobile",
+      "state": "error",
+      "baseline": "01-render-functions",
+      "candidate": "02-template-clones",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "mobile",
+      "state": "error",
+      "baseline": "01-render-functions",
+      "candidate": "03-controller",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "mobile",
+      "state": "review",
+      "baseline": "01-render-functions",
+      "candidate": "02-template-clones",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "mobile",
+      "state": "review",
+      "baseline": "01-render-functions",
+      "candidate": "03-controller",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "mobile",
+      "state": "confirmation",
+      "baseline": "01-render-functions",
+      "candidate": "02-template-clones",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "mobile",
+      "state": "confirmation",
+      "baseline": "01-render-functions",
+      "candidate": "03-controller",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "desktop",
+      "state": "initial",
+      "baseline": "01-render-functions",
+      "candidate": "02-template-clones",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "desktop",
+      "state": "initial",
+      "baseline": "01-render-functions",
+      "candidate": "03-controller",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "desktop",
+      "state": "error",
+      "baseline": "01-render-functions",
+      "candidate": "02-template-clones",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "desktop",
+      "state": "error",
+      "baseline": "01-render-functions",
+      "candidate": "03-controller",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "desktop",
+      "state": "review",
+      "baseline": "01-render-functions",
+      "candidate": "02-template-clones",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "desktop",
+      "state": "review",
+      "baseline": "01-render-functions",
+      "candidate": "03-controller",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "desktop",
+      "state": "confirmation",
+      "baseline": "01-render-functions",
+      "candidate": "02-template-clones",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    },
+    {
+      "viewport": "desktop",
+      "state": "confirmation",
+      "baseline": "01-render-functions",
+      "candidate": "03-controller",
+      "mismatchRatio": 0,
+      "similarity": 1,
+      "componentSignatureEqual": true
+    }
+  ]
+}

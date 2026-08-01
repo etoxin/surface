@@ -37,6 +37,11 @@ const todoExampleRoot = join(
   "examples",
   "05-todo-list",
 );
+const designExampleRoot = join(
+  repositoryRoot,
+  "examples",
+  "07-design-consistency",
+);
 const candidateExampleDirectories = [
   "06-signup-determinism",
   "08-url-shortener-api",
@@ -100,6 +105,19 @@ Deno.test("the Todo List specification exports the reviewed IR", async () => {
   const source = await Deno.readTextFile(join(todoExampleRoot, "surface.kdl"));
   const expected = JSON.parse(
     await Deno.readTextFile(join(todoExampleRoot, "expected-ir.json")),
+  );
+
+  const result = parseSurface(source, "surface.kdl");
+
+  assertEquals(result.diagnostics, []);
+  assertEquals(result.ir, expected);
+  assertEquals(formatSurface(source, "surface.kdl").output, source);
+});
+
+Deno.test("the Design Consistency specification exports the reviewed IR", async () => {
+  const source = await Deno.readTextFile(join(designExampleRoot, "surface.kdl"));
+  const expected = JSON.parse(
+    await Deno.readTextFile(join(designExampleRoot, "expected-ir.json")),
   );
 
   const result = parseSurface(source, "surface.kdl");
@@ -287,6 +305,31 @@ Deno.test(
       if (entry.isFile && entry.name.endsWith(".kdl")) {
         fixtures.push(entry.name);
       }
+    }
+    assertEquals(Object.keys(expected).sort(), fixtures.sort());
+
+    for (const [file, code] of Object.entries(expected)) {
+      const source = await Deno.readTextFile(join(invalidRoot, file));
+      const result = parseSurface(source, file);
+      assert(
+        result.diagnostics.some((diagnostic) => diagnostic.code === code),
+        `${file} should report ${code}`,
+      );
+      assertEquals(result.ir, null);
+    }
+  },
+);
+
+Deno.test(
+  "the Design Consistency invalid fixtures report their expected diagnostics",
+  async () => {
+    const invalidRoot = join(designExampleRoot, "invalid");
+    const expected = JSON.parse(
+      await Deno.readTextFile(join(invalidRoot, "expected-diagnostics.json")),
+    );
+    const fixtures = [];
+    for await (const entry of Deno.readDir(invalidRoot)) {
+      if (entry.isFile && entry.name.endsWith(".kdl")) fixtures.push(entry.name);
     }
     assertEquals(Object.keys(expected).sort(), fixtures.sort());
 
@@ -1259,7 +1302,7 @@ Deno.test("the skill defines all three required forward evaluations", async () =
     await Deno.readTextFile(join(repositoryRoot, "test", "skill-evaluations.json")),
   );
 
-  assertEquals(evaluations.rung, 5);
+  assertEquals(evaluations.rung, 7);
   assertEquals(
     evaluations.cases.map(({ id }: { id: string }) => id),
     ["create", "modify", "diagnose"],
@@ -1284,6 +1327,11 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /target "browser"/);
   assertMatch(skill, /technology "language" "typescript"/);
   assertMatch(skill, /optional quoted `version` property/);
+  assertMatch(
+    skill,
+    /technology "designSystem" "govUkFrontend" version="6\.4\.0"/,
+  );
+  assertMatch(skill, /Use interface context to constrain presentation/);
   assertMatch(skill, /collection "contact"/);
   assertMatch(skill, /\(string\)"id"/);
   assertMatch(skill, /collection "contactLookup"/);

@@ -1,0 +1,182 @@
+{
+  "surfaceVersion": "0.1",
+  "application": {
+    "id": "streetProblemReporter",
+    "purpose": "Let a resident report a problem with a street.",
+    "stacks": [
+      {
+        "id": "web",
+        "target": "browser",
+        "technologies": [
+          {
+            "role": "markup",
+            "name": "html"
+          },
+          {
+            "role": "language",
+            "name": "typescript"
+          },
+          {
+            "role": "runtime",
+            "name": "deno"
+          },
+          {
+            "role": "designSystem",
+            "name": "govUkFrontend",
+            "version": "6.4.0"
+          }
+        ]
+      }
+    ]
+  },
+  "values": [
+    {
+      "id": "problemType",
+      "type": "enum",
+      "kind": "constant",
+      "values": [
+        "pothole",
+        "brokenStreetlight",
+        "damagedRoadSign"
+      ]
+    }
+  ],
+  "collections": [
+    {
+      "id": "streetReport",
+      "fields": [
+        {
+          "name": "problemType",
+          "type": "enum",
+          "value": "problemType"
+        },
+        {
+          "name": "location",
+          "type": "string"
+        },
+        {
+          "name": "details",
+          "type": "string",
+          "optional": true
+        },
+        {
+          "name": "reporterEmail",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "id": "reportReceipt",
+      "fields": [
+        {
+          "name": "reference",
+          "type": "string"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "id": "validateStreetReport",
+      "input": {
+        "collection": "streetReport"
+      },
+      "output": {
+        "collection": "streetReport"
+      },
+      "logic": [
+        {
+          "instruction": "Trim the location, details, and reporter email, and lowercase the reporter email.",
+          "reference": {
+            "type": "collection",
+            "id": "streetReport"
+          }
+        },
+        {
+          "instruction": "If problemType is absent, report: Select the type of street problem."
+        },
+        {
+          "instruction": "If location is empty, report: Enter where the problem is."
+        },
+        {
+          "instruction": "If reporterEmail is not a valid email address, report: Enter a valid email address."
+        },
+        {
+          "instruction": "Report every validation error in that exact order; otherwise output the normalized street report."
+        }
+      ]
+    },
+    {
+      "id": "submitStreetReport",
+      "input": {
+        "collection": "streetReport"
+      },
+      "output": {
+        "collection": "reportReceipt"
+      },
+      "logic": [
+        {
+          "instruction": "Accept the reviewed street report.",
+          "reference": {
+            "type": "collection",
+            "id": "streetReport"
+          }
+        },
+        {
+          "instruction": "Output a receipt with reference SR-2026-001.",
+          "reference": {
+            "type": "collection",
+            "id": "reportReceipt"
+          }
+        }
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "streetProblemReporter",
+      "logic": [
+        {
+          "instruction": "Initially show the report form and a Continue button."
+        },
+        {
+          "instruction": "On Continue, validate all fields and show every error in one focused error summary plus beside its field. Prefix the document title with Error: while errors are visible.",
+          "reference": {
+            "type": "function",
+            "id": "validateStreetReport"
+          }
+        },
+        {
+          "instruction": "Preserve every entered value after validation fails."
+        },
+        {
+          "instruction": "When valid, show Check your answers before sending your report with a summary list, Change links, a Back link, and a Send report button."
+        },
+        {
+          "instruction": "Change and Back return to the populated report form."
+        },
+        {
+          "instruction": "On Send report, submit the reviewed report.",
+          "reference": {
+            "type": "function",
+            "id": "submitStreetReport"
+          }
+        },
+        {
+          "instruction": "After submission, show a confirmation panel containing Report submitted, Your reference number, and SR-2026-001, followed by We have sent a confirmation to the supplied email address."
+        }
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "id": "home",
+      "interface": "streetProblemReporter",
+      "logic": [
+        {
+          "instruction": "Use / as this screen's URL path."
+        }
+      ]
+    }
+  ]
+}

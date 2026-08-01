@@ -81,6 +81,36 @@ description = "Run the pipeline signup build on port 8012"
 depends = ["deps"]
 run = "deno task signup-build-3"
 
+[tasks."design-consistency"]
+description = "Check the three rung-7 design builds"
+depends = ["deps"]
+run = "deno task design-consistency"
+
+[tasks."design-browser-install"]
+description = "Install the pinned Chromium browser for the rung-7 visual benchmark"
+depends = ["deps"]
+run = "deno task design-browser-install"
+
+[tasks."design-visual"]
+description = "Capture and compare the rung-7 browser screenshots"
+depends = ["design-browser-install"]
+run = "deno task design-visual"
+
+[tasks."design-build-1"]
+description = "Run the render-functions design build on port 8020"
+depends = ["deps"]
+run = "deno task design-build-1"
+
+[tasks."design-build-2"]
+description = "Run the template-clones design build on port 8021"
+depends = ["deps"]
+run = "deno task design-build-2"
+
+[tasks."design-build-3"]
+description = "Run the controller design build on port 8022"
+depends = ["deps"]
+run = "deno task design-build-3"
+
 [tasks."url-shortener"]
 description = "Run the rung-8 URL Shortener API example"
 depends = ["deps"]

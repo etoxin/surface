@@ -120,6 +120,19 @@ stack. Stack, target, and technology nodes may contain context. Do not invent
 fixed framework, database, build, or deployment child nodes; express these as
 technology roles.
 
+Declare a required design system as an open technology role in the application
+stack, not as a new top-level or interface node:
+
+```kdl
+technology "designSystem" "govUkFrontend" version="6.4.0" {
+    context "Use official components without custom CSS."
+}
+```
+
+Use interface context to constrain presentation, component selection, and
+customization. Keep the design-system identity and pinned version in the stack
+so they remain visible in the semantic IR.
+
 A value puts its portable type annotation on the node. It is constant by
 default; add bare `variable` last for mutable state. A compatible scalar initial
 value may follow the ID:
