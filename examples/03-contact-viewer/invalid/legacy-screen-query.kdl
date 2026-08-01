@@ -1,0 +1,14 @@
+/- kdl-version 2
+
+surface "0.1"
+application "contactViewer" { purpose "Display a contact." }
+entity "contact" {
+    (string)"id" required
+}
+query "contactById" by="id" {
+    input "id" type="string"
+    returns (entity)"contact" missing=#null
+}
+screen "contact" query="contactById" {
+    section "Contact" { text "Display a contact." }
+}

@@ -1,0 +1,10 @@
+/- kdl-version 2
+
+surface "0.1"
+application "contactViewer" { purpose "Display a contact." }
+entity "contact" {
+    (string)"id" required optional
+}
+screen "contact" {
+    section "Contact" { text "Display a contact." }
+}
