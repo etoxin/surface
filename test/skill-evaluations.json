@@ -4,7 +4,7 @@
   "cases": [
     {
       "id": "create",
-      "prompt": "Create a Surface Contact Viewer at /contacts. Define a contact with string id, required name, optional email, and required Boolean active fields. Look it up by string id, display name, email, and active, and include empty and not-found states.",
+      "prompt": "Create a Surface Contact Viewer at /contacts. Define a contact with string id, required name, optional email, and required Boolean active fields. Look it up by string id, display name, email, and active, and include empty and not-found states. Also describe / as a non-visual screen that should redirect to /contacts.",
       "acceptance": [
         "The result is valid Surface 0.1 KDL.",
         "The result contains exactly one application and at least one screen.",
@@ -15,6 +15,7 @@
         "The query references the global contact with returns (entity)\"contact\" and uses context to say that no match returns null.",
         "The screen uses use (query)\"contactById\", and all references resolve.",
         "The screen contains exactly one empty and one notFound state.",
+        "A separate context-only screen maps / and describes the redirect using a checked (screen) reference without inventing logic or redirect nodes.",
         "The result does not introduce syntax from a later rung."
       ]
     },

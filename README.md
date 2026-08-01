@@ -65,14 +65,14 @@ Read the guides in this order:
 | `query "<id>"` | Uses private/global entity references for structured input and output |
 | `input (entity)"<entity>"` | Optionally declares one structured query input |
 | `returns (entity)"<entity>"` | Returns a checked entity reference |
-| `screen "<id>" [route="<route>"]` | At least one; contains uses, sections, and queried-screen states |
+| `screen "<id>" [route="<route>"]` | At least one; contains sections or only prompt context |
 | `use (query)"<query>"` | Gives a screen one checked query reference |
 | `section "<name>"` | Contains an optional `title` and one or more `text` or `field` nodes |
 | `field "<name>"` | In a section, refers to a field returned by the screen query |
 | `state "empty"|"notFound"` | Required alternatives for queried screens |
 | `title "<text>"` | Optional child of `section`; at most one |
 | `text "<text>"` | Child of `section`; one or more, in presentation order |
-| `context "<prompt>"` | Optional, repeatable child of any Surface node; prompt-only |
+| `context [(<type>)"<id>"...] "<prompt>"` | Repeatable prompt with optional checked references |
 
 Additional rules:
 
@@ -96,10 +96,13 @@ Additional rules:
 - A section uses either ordered text or ordered field references, not both.
 - Routes are optional strings and currently opaque. Section names, titles, and
   text are strings.
+- A non-visual screen can contain only `context`; an empty screen is invalid.
 - Sections and their text remain in source order.
 - Triple-quoted KDL strings can hold multiline natural-language content.
-- `context` contains one string, has no properties or children, and is omitted
-  from the semantic JSON IR.
+- `context` ends with one unannotated prompt string. Any earlier arguments are
+  typed references to visible applications, entities, queries, or screens.
+  Context has no properties or children and is omitted from the semantic JSON
+  IR.
 - Unknown nodes, properties, duplicate properties, misplaced annotations, and
   unsupported reference types are rejected.
 - Comments are supported and preserved by the formatter.

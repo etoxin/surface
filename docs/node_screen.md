@@ -53,12 +53,26 @@ input entity provide their values.
 
 A screen can contain:
 
-- one or more `section` nodes;
+- one or more `section` nodes, or only `context` notes for a non-visual screen;
 - zero or one `use (query)"<query>"` reference;
 - `empty` and `notFound` states when the screen has a query;
 - any number of prompt-only [`context`](./node_context.md) notes.
 
 Sections stay in the order in which you write them.
+
+Use a context-only screen when a route needs implementation guidance but has
+no interface of its own:
+
+```kdl
+screen "home" route="/" {
+    context (screen)"contact" "Redirect to this screen."
+}
+```
+
+Because `context` is unstructured prompt guidance, this does not introduce a
+separate redirect or logic feature. The annotated string is a checked reference
+to the target screen. A context-only screen cannot use a query or define states.
+A completely empty screen is invalid.
 
 ## Section
 

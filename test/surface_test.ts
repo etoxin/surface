@@ -6,7 +6,10 @@ import {
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { renderContactPage } from "../examples/03-contact-viewer/app/server.ts";
+import {
+  handleContactRequest,
+  renderContactPage,
+} from "../examples/03-contact-viewer/app/server.ts";
 import { formatSurface } from "../src/formatter.ts";
 import { parseKdl, parseSurface } from "../src/surface.ts";
 
@@ -268,6 +271,82 @@ screen "home" {
       text: ["Hello, world!"],
     }],
   });
+});
+
+Deno.test("a context-only screen can describe non-visual route behavior", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1"
+application "routing" { purpose "Describe a routed application." }
+screen "home" route="/" {
+    context (screen)"contact" "Redirect to this screen."
+}
+screen "contact" route="/contacts" {
+    section "Contact" { text "Contact details." }
+}
+`;
+
+  const result = parseSurface(source, "context-only-screen.kdl");
+  assertEquals(result.diagnostics, []);
+  assert(result.ir !== null);
+  assertEquals(result.ir.screens[0], {
+    id: "home",
+    route: "/",
+    sections: [],
+  });
+
+  const empty = parseSurface(
+    `/- kdl-version 2
+surface "0.1"
+application "emptyScreen" { purpose "Reject an empty screen." }
+screen "home" {}
+`,
+    "empty-screen.kdl",
+  );
+  assert(empty.diagnostics.some(({ code }) => code === "SURF-CHILD-003"));
+});
+
+Deno.test("context resolves typed references before its final prompt", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1" {
+    context (application)"references" "Apply this application guidance."
+}
+application "references" { purpose "Exercise context references." }
+entity "contact" { (string)"id" }
+query "getContact" {
+    entity "lookup" { (string)"id" }
+    context (entity)"lookup" (entity)"contact" (screen)"contact" "Use these declarations together."
+    returns (entity)"contact"
+}
+screen "home" route="/" {
+    context (query)"getContact" (screen)"contact" "Delegate to these declarations."
+}
+screen "contact" route="/contacts" {
+    section "Contact" { text "Contact details." }
+}
+`;
+
+  const result = parseSurface(source, "context-references.kdl");
+  assertEquals(result.diagnostics, []);
+  assert(result.ir !== null);
+  assert(!JSON.stringify(result.ir).includes("Use these declarations together"));
+
+  const invalid = parseSurface(
+    `/- kdl-version 2
+surface "0.1"
+application "invalidReferences" { purpose "Reject invalid references." }
+screen "home" {
+    context "contact" "The first argument needs a type."
+    context (string)"contact" "The type is unsupported."
+    context (screen)"missing" "The target must resolve."
+}
+`,
+    "invalid-context-references.kdl",
+  );
+  assert(invalid.diagnostics.some(({ code }) => code === "SURF-REF-003"));
+  assert(invalid.diagnostics.some(({ code }) => code === "SURF-REF-002"));
+  assert(invalid.diagnostics.some(({ code }) => code === "SURF-REF-001"));
 });
 
 Deno.test("context is valid on every Surface node and omitted from the IR", () => {
@@ -571,6 +650,23 @@ Deno.test("the Contact Viewer implements selected, empty, and not-found states",
   assertMatch(missing, /No contact exists for the selected identifier/);
 });
 
+Deno.test("the Contact Viewer redirects its root URL to its declared route", async () => {
+  const root = handleContactRequest(new Request("http://localhost:8000/"));
+  assertEquals(root.status, 302);
+  assertEquals(root.headers.get("location"), "http://localhost:8000/contacts");
+
+  const contacts = handleContactRequest(
+    new Request("http://localhost:8000/contacts?id=ada"),
+  );
+  assertEquals(contacts.status, 200);
+  assertMatch(await contacts.text(), /Ada Lovelace/);
+
+  const unknown = handleContactRequest(
+    new Request("http://localhost:8000/unknown"),
+  );
+  assertEquals(unknown.status, 404);
+});
+
 Deno.test("the skill defines all three required forward evaluations", async () => {
   const evaluations = JSON.parse(
     await Deno.readTextFile(join(repositoryRoot, "test", "skill-evaluations.json")),
@@ -603,6 +699,11 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /If there is no contact, return null\./);
   assertMatch(skill, /use \(query\)"contactById"/);
   assertMatch(skill, /state "notFound"/);
+  assertMatch(skill, /screen "home" route="\/"/);
+  assertMatch(
+    skill,
+    /context \(screen\)"contact" "Redirect to this screen\."/,
+  );
   assertMatch(metadata, /default_prompt: "Use \$surface /);
 });
 

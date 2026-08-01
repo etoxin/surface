@@ -17,6 +17,10 @@ same names. For this example, `/contacts?id=ada` supplies the private input enti
 
 ## Display
 
+A context-only `home` screen records that `/` redirects to the checked
+`(screen)"contact"` reference. The redirect is implementation guidance rather than a
+new structured language feature.
+
 A typed child node inside an entity declares data. A `field` inside a normal screen
 section refers to a field on the entity returned by the screen's query. State sections
 contain static titles and text because no entity is available.
@@ -31,8 +35,9 @@ choices and are not part of Surface yet.
 
 ## Acceptance Scenarios
 
-1. Opening `/contacts` without an `id` shows the empty state.
-2. Opening `/contacts?id=ada` shows Ada's name, email, and active status.
-3. Opening `/contacts?id=grace` shows the optional email as unavailable and the inactive
+1. Opening `/` redirects to `/contacts`.
+2. Opening `/contacts` without an `id` shows the empty state.
+3. Opening `/contacts?id=ada` shows Ada's name, email, and active status.
+4. Opening `/contacts?id=grace` shows the optional email as unavailable and the inactive
    Boolean state.
-4. Opening `/contacts?id=unknown` shows the not-found state.
+5. Opening `/contacts?id=unknown` shows the not-found state.

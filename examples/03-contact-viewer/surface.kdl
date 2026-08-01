@@ -28,6 +28,10 @@ query "contactById" {
     context "If there is no contact, return null."
 }
 
+screen "home" route="/" {
+    context (screen)"contact" "Redirect to this screen."
+}
+
 screen "contact" route="/contacts" {
     context "Read the id input from the URL query parameter named id."
     use (query)"contactById"

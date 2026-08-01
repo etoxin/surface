@@ -52,6 +52,29 @@ screen "home" {
 }
 ```
 
-You can add several context notes to the same parent. Each one takes exactly
-one quoted prompt and has no properties. A `context` node cannot have its own
-child block.
+## Referencing Declarations
+
+Put zero or more typed references before the prompt when the guidance mentions
+other Surface declarations:
+
+```kdl
+screen "home" route="/" {
+    context (screen)"contact" "Redirect to this screen."
+}
+```
+
+The annotated strings are checked references. Context can reference global
+applications, entities, queries, and screens. Context inside a query can also
+reference that query's private entities. Every reference must be visible in
+the current scope and have the annotated declaration type.
+
+Several references can share one prompt:
+
+```kdl
+context (entity)"contact" (query)"contactById" "Use this query to load this entity."
+```
+
+The final argument is always one unannotated quoted prompt. All earlier
+arguments must be annotated string references. You can add several context
+notes to the same parent. Context has no properties or child block, and its
+prompt and references are omitted from the semantic JSON IR.

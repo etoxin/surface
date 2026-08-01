@@ -135,10 +135,23 @@ A screen has:
 - one quoted identifier argument;
 - zero or one quoted `route` property;
 - zero or one `use (query)"<query>"` child;
-- one or more ordered `section` children.
+- one or more ordered `section` children, or only `context` children when it
+  has no interface.
 
 Use `route` for addressable screens such as web pages. Omit it when the screen
 does not have a URL or equivalent address.
+
+Use a context-only screen for a non-visual route behavior without adding a new
+language feature:
+
+```kdl
+screen "home" route="/" {
+    context (screen)"contact" "Redirect to this screen."
+}
+```
+
+Do not add `logic` or `redirect` nodes. Do not add `use` or states to a
+context-only screen, and reject a completely empty screen.
 
 For web screens, populate query input-entity fields from URL query parameters
 with matching names. Require every queried screen to contain exactly one
@@ -171,8 +184,18 @@ dedents it correctly.
 
 Add zero or more `context` children to any Surface node except another
 `context`. This includes entities, fields, queries, inputs, returns, uses,
-states, and text. Each context contains exactly one quoted prompt string and
-has no properties or children.
+states, and text. End each context with exactly one unannotated quoted prompt
+string. Put zero or more typed string references before the prompt:
+
+```kdl
+context (screen)"contact" "Redirect to this screen."
+context (entity)"contact" (query)"contactById" "Use this query to load this entity."
+```
+
+Allow references to global applications, entities, queries, and screens. Also
+allow a context inside a query to reference private entities in that query.
+Require every reference to resolve in the current scope with the annotated
+declaration type. Do not allow properties or children on context.
 
 Use context as unstructured guidance for interpreting or implementing its
 parent. Preserve it when editing and formatting, and omit it from the semantic
@@ -197,10 +220,13 @@ Check all of the following:
 - Private entity IDs do not collide with global entity IDs.
 - Annotated entity and query references have the required type, visibility,
   and target.
+- Typed context references precede the final prompt and resolve to visible
+  declarations of the annotated type.
 - Projected fields resolve on the query's returned private or global entity.
 - Every queried screen contains one `notFound` state and, exactly when its
   query input entity has a required field, one `empty` state.
 - Every section contains at least one text or field node.
+- Every screen contains at least one section or consists only of context nodes.
 - Properties are not duplicated.
 - No unsupported top-level nodes, child nodes, properties, field/reference
   types, or misplaced annotations appear.

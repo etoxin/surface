@@ -68,6 +68,19 @@ export function renderContactPage(id: string | null): string {
   `);
 }
 
+export function handleContactRequest(request: Request): Response {
+  const url = new URL(request.url);
+  if (url.pathname === "/") {
+    return Response.redirect(new URL("/contacts", url), 302);
+  }
+  if (url.pathname !== "/contacts") {
+    return new Response("Not found", { status: 404 });
+  }
+  return new Response(renderContactPage(url.searchParams.get("id")), {
+    headers: { "content-type": "text/html; charset=utf-8" },
+  });
+}
+
 function page(content: string): string {
   return `<!doctype html>
 <html lang="en">
@@ -121,13 +134,5 @@ function escapeHtml(value: string): string {
 }
 
 if (import.meta.main) {
-  Deno.serve((request) => {
-    const url = new URL(request.url);
-    if (url.pathname !== "/contacts") {
-      return new Response("Not found", { status: 404 });
-    }
-    return new Response(renderContactPage(url.searchParams.get("id")), {
-      headers: { "content-type": "text/html; charset=utf-8" },
-    });
-  });
+  Deno.serve(handleContactRequest);
 }

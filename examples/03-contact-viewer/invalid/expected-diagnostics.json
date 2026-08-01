@@ -14,6 +14,7 @@
   "unresolved-entity.kdl": "SURF-REF-001",
   "private-entity-shadow.kdl": "SURF-ID-003",
   "unresolved-input-entity.kdl": "SURF-REF-001",
+  "unresolved-context-reference.kdl": "SURF-REF-001",
   "unresolved-query.kdl": "SURF-REF-001",
   "missing-state.kdl": "SURF-STATE-001",
   "unresolved-field.kdl": "SURF-REF-001",

@@ -41,7 +41,7 @@ Surface file
 │   └── returns
 └── screen
     ├── use (optional query reference)
-    ├── section
+    ├── section (or context only for a non-visual screen)
     │   ├── title (optional)
     │   ├── text
     │   └── field reference

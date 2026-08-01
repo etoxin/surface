@@ -52,6 +52,11 @@
   ],
   "screens": [
     {
+      "id": "home",
+      "route": "/",
+      "sections": []
+    },
+    {
       "id": "contact",
       "route": "/contacts",
       "query": "contactById",

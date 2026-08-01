@@ -82,6 +82,12 @@ type PropertyType = "string" | "boolean";
 const IDENTIFIER_PATTERN = /^[a-z][A-Za-z0-9]*$/;
 const PRIMITIVE_TYPES = new Set<PrimitiveType>(["string", "boolean"]);
 const FIELD_MODIFIERS = new Set(["optional"]);
+const CONTEXT_REFERENCE_TYPES = new Set([
+  "application",
+  "entity",
+  "query",
+  "screen",
+]);
 const TOP_LEVEL_NODES = new Set([
   "surface",
   "application",
@@ -209,7 +215,7 @@ export function validateDocument(
     add({
       code: "SURF-SCREEN-001",
       message: "The project must contain at least one screen declaration.",
-      suggestion: "Add a screen with at least one section.",
+      suggestion: "Add a screen with a section or prompt context.",
     });
   }
 
@@ -234,7 +240,7 @@ export function validateDocument(
     validateIdentity(screen, identities, add);
   }
 
-  validateReferences(entities, queries, screens, add);
+  validateReferences(versionNodes, applications, entities, queries, screens, add);
 
   return diagnostics;
 }
@@ -563,6 +569,8 @@ function validateScreen(node: Node, add: AddDiagnostic): void {
   const uses = children.filter((child) => child.getName() === "use");
   const sections = children.filter((child) => child.getName() === "section");
   const states = children.filter((child) => child.getName() === "state");
+  const isContextOnly = children.length > 0 &&
+    children.every((child) => child.getName() === "context");
   for (const child of children) {
     if (child.getName() === "context") {
       validateContextNode(child, declaration, add);
@@ -598,13 +606,15 @@ function validateScreen(node: Node, add: AddDiagnostic): void {
     validateUse(use, declaration, add);
   }
 
-  if (sections.length === 0) {
+  if (sections.length === 0 && !isContextOnly) {
     add({
       code: "SURF-CHILD-003",
-      message: `${declaration} must contain at least one section child node.`,
+      message:
+        `${declaration} must contain at least one section or only context child nodes.`,
       element: node,
       declaration,
-      suggestion: 'Add a section such as section "Home" { text "Hello, world!" }.',
+      suggestion:
+        'Add a section such as section "Home" { text "Hello, world!" }, or describe a non-visual screen with context.',
     });
   }
 
@@ -845,7 +855,81 @@ function validateContextNode(
   declaration: string,
   add: AddDiagnostic,
 ): void {
-  validateLeafStringNode(node, "context", declaration, add, false);
+  const subject = `${declaration}.context`;
+  if (node.getTag() !== null) {
+    add({
+      code: "SURF-TAG-001",
+      message: "Type annotations are not supported on context nodes.",
+      element: node,
+      declaration,
+      suggestion: "Annotate referenced string arguments instead.",
+    });
+  }
+  validateProperties(node, [], subject, add);
+  validateNoChildren(node, subject, add);
+
+  const entries = node.getArgumentEntries();
+  if (entries.length === 0) {
+    add({
+      code: "SURF-ARG-001",
+      message: `${subject} must end with one quoted prompt string.`,
+      element: node,
+      declaration,
+      suggestion: 'Add a prompt such as "Keep this concise.".',
+    });
+    return;
+  }
+
+  const prompt = entries.at(-1);
+  if (typeof prompt?.getValue() !== "string") {
+    add({
+      code: "SURF-ARG-002",
+      message: "The final context argument must be a quoted prompt string.",
+      element: prompt ?? node,
+      declaration,
+      suggestion: 'End context with a prompt such as "Keep this concise.".',
+    });
+  }
+  if (prompt?.getTag() !== null) {
+    add({
+      code: "SURF-TAG-001",
+      message: "The final context prompt must not have a type annotation.",
+      element: prompt,
+      declaration,
+      suggestion: "Put typed references before the final unannotated prompt.",
+    });
+  }
+
+  for (const reference of entries.slice(0, -1)) {
+    const value = reference.getValue();
+    const type = reference.getTag();
+    if (typeof value !== "string") {
+      add({
+        code: "SURF-ARG-002",
+        message: "Context references must be quoted strings.",
+        element: reference,
+        declaration,
+        suggestion: 'Use a typed string such as (screen)"home".',
+      });
+    }
+    if (type === null) {
+      add({
+        code: "SURF-REF-003",
+        message: "Every context argument before the prompt must be a typed reference.",
+        element: reference,
+        declaration,
+        suggestion: 'Add a declaration annotation such as (screen)"home".',
+      });
+    } else if (!CONTEXT_REFERENCE_TYPES.has(type)) {
+      add({
+        code: "SURF-REF-002",
+        message: `Unsupported context reference type ${type}.`,
+        element: reference,
+        declaration,
+        suggestion: "Use application, entity, query, or screen references.",
+      });
+    }
+  }
 }
 
 function validateOnlyContextChildren(
@@ -1135,6 +1219,8 @@ function validateIdentity(
 }
 
 function validateReferences(
+  surfaceNodes: Node[],
+  applications: Node[],
   entities: Node[],
   queries: Node[],
   screens: Node[],
@@ -1149,6 +1235,80 @@ function validateReferences(
 
   for (const screen of screens) {
     validateScreenReferences(screen, queriesById, entitiesById, add);
+  }
+
+  const declarationsByType = new Map<string, Map<string, Node>>([
+    ["application", nodesByIdentifier(applications)],
+    ["entity", entitiesById],
+    ["query", queriesById],
+    ["screen", nodesByIdentifier(screens)],
+  ]);
+  for (
+    const node of [
+      ...surfaceNodes,
+      ...applications,
+      ...entities,
+      ...queries,
+      ...screens,
+    ]
+  ) {
+    const privateEntities = node.getName() === "query"
+      ? nodesByIdentifier(
+        (node.children?.nodes ?? []).filter((child) => child.getName() === "entity"),
+      )
+      : undefined;
+    validateContextReferences(
+      node,
+      declarationName(node),
+      declarationsByType,
+      privateEntities,
+      add,
+    );
+  }
+}
+
+function validateContextReferences(
+  node: Node,
+  declaration: string,
+  declarationsByType: Map<string, Map<string, Node>>,
+  privateEntities: Map<string, Node> | undefined,
+  add: AddDiagnostic,
+): void {
+  if (node.getName() === "context") {
+    for (const reference of node.getArgumentEntries().slice(0, -1)) {
+      const id = reference.getValue();
+      const type = reference.getTag();
+      if (
+        typeof id !== "string" || type === null ||
+        !CONTEXT_REFERENCE_TYPES.has(type)
+      ) {
+        continue;
+      }
+      const resolved = type === "entity"
+        ? privateEntities?.get(id) ?? declarationsByType.get(type)?.get(id)
+        : declarationsByType.get(type)?.get(id);
+      if (resolved === undefined) {
+        add({
+          code: "SURF-REF-001",
+          message: `Unresolved ${type} reference ${id} in context.`,
+          element: reference,
+          declaration,
+          suggestion:
+            `Declare ${type} "${id}" in the visible scope or change the reference.`,
+        });
+      }
+    }
+    return;
+  }
+
+  for (const child of node.children?.nodes ?? []) {
+    validateContextReferences(
+      child,
+      declaration,
+      declarationsByType,
+      privateEntities,
+      add,
+    );
   }
 }
 
