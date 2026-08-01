@@ -37,6 +37,12 @@ const todoExampleRoot = join(
   "examples",
   "05-todo-list",
 );
+const candidateExampleDirectories = [
+  "08-url-shortener-api",
+  "11-file-converter",
+  "15-online-checkout",
+  "16-multi-tenant-project-tracker",
+];
 const cli = join(repositoryRoot, "src", "cli.ts");
 const decoder = new TextDecoder();
 
@@ -100,6 +106,21 @@ Deno.test("the Todo List specification exports the reviewed IR", async () => {
   assertEquals(result.diagnostics, []);
   assertEquals(result.ir, expected);
   assertEquals(formatSurface(source, "surface.kdl").output, source);
+});
+
+Deno.test("candidate specifications export their reviewed IR", async () => {
+  for (const directory of candidateExampleDirectories) {
+    const root = join(repositoryRoot, "examples", directory);
+    const source = await Deno.readTextFile(join(root, "surface.kdl"));
+    const expected = JSON.parse(
+      await Deno.readTextFile(join(root, "expected-ir.json")),
+    );
+
+    const result = parseSurface(source, `${directory}/surface.kdl`);
+
+    assertEquals(result.diagnostics, []);
+    assertEquals(result.ir, expected);
+  }
 });
 
 Deno.test("all invalid fixtures include their expected diagnostic", async () => {

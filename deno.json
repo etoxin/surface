@@ -5,8 +5,12 @@
     "contact-viewer": "deno run --allow-net examples/03-contact-viewer/app/server.ts",
     "click-counter": "deno run --allow-net examples/04-click-counter/app/server.ts",
     "todo-list": "deno eval 'const html = await Deno.readTextFile(\"examples/05-todo-list/app/index.html\"); console.log(\"Todo List: http://localhost:8003/\"); Deno.serve({ port: 8003 }, (request) => new URL(request.url).pathname === \"/\" ? new Response(html, { headers: { \"content-type\": \"text/html; charset=utf-8\" } }) : new Response(\"Not found\", { status: 404 }));'",
+    "url-shortener": "deno run --allow-net --allow-read --allow-write examples/08-url-shortener-api/app/server.ts",
+    "file-converter": "deno run --allow-net --allow-read examples/11-file-converter/app/server.ts",
+    "online-checkout": "deno run --allow-net --allow-read --allow-env=INVENTORY_API_TOKEN,PAYMENT_API_TOKEN examples/15-online-checkout/app/server.ts",
+    "multi-tenant-project-tracker": "deno run --allow-net --allow-read examples/16-multi-tenant-project-tracker/app/server.ts",
     "test": "deno test --allow-read --allow-write --allow-run",
-    "typecheck": "deno check src/cli.ts src/diagnostics.ts src/formatter.ts src/surface.ts examples/02-static-faq/app/server.ts examples/03-contact-viewer/app/server.ts examples/04-click-counter/app/server.ts test/surface_test.ts",
+    "typecheck": "deno check src/cli.ts src/diagnostics.ts src/formatter.ts src/surface.ts examples/02-static-faq/app/server.ts examples/03-contact-viewer/app/server.ts examples/04-click-counter/app/server.ts examples/08-url-shortener-api/app/server.ts examples/08-url-shortener-api/app/server_test.ts examples/11-file-converter/app/converter.ts examples/11-file-converter/app/converter_test.ts examples/11-file-converter/app/server.ts examples/11-file-converter/app/server_test.ts examples/15-online-checkout/app/domain.ts examples/15-online-checkout/app/domain_test.ts examples/15-online-checkout/app/server.ts examples/15-online-checkout/app/server_test.ts examples/15-online-checkout/app/test_helpers.ts examples/16-multi-tenant-project-tracker/app/domain.ts examples/16-multi-tenant-project-tracker/app/domain_test.ts examples/16-multi-tenant-project-tracker/app/server.ts examples/16-multi-tenant-project-tracker/app/server_test.ts test/surface_test.ts",
     "verify": "deno fmt --check && deno lint && deno task typecheck && deno task test",
     "check": "deno task verify"
   },
@@ -21,11 +25,18 @@
       "examples/03-contact-viewer/app/server.ts",
       "examples/04-click-counter/app/server.ts",
       "examples/05-todo-list/app/index.html",
+      "examples/08-url-shortener-api/app/",
+      "examples/11-file-converter/app/",
+      "examples/15-online-checkout/app/",
+      "examples/16-multi-tenant-project-tracker/app/",
       "deno.json",
       "mise.toml"
     ],
     "exclude": [
-      "test/skill-evaluations.json"
+      "test/skill-evaluations.json",
+      "examples/11-file-converter/app/index.html",
+      "examples/15-online-checkout/app/index.html",
+      "examples/16-multi-tenant-project-tracker/app/index.html"
     ],
     "indentWidth": 2,
     "lineWidth": 88,
@@ -38,6 +49,10 @@
       "examples/02-static-faq/app/server.ts",
       "examples/03-contact-viewer/app/server.ts",
       "examples/04-click-counter/app/server.ts",
+      "examples/08-url-shortener-api/app/",
+      "examples/11-file-converter/app/",
+      "examples/15-online-checkout/app/",
+      "examples/16-multi-tenant-project-tracker/app/",
       "test/"
     ]
   }

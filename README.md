@@ -91,6 +91,10 @@ mise run static-faq
 mise run contact-viewer
 mise run click-counter
 mise run todo-list
+mise run url-shortener
+mise run file-converter
+INVENTORY_API_TOKEN=development PAYMENT_API_TOKEN=development mise run online-checkout
+mise run multi-tenant-project-tracker
 ```
 
 The direct equivalents are `deno task verify` and `deno task surf`. The CLI
@@ -101,19 +105,40 @@ Values use selectors such as `value.todoStatus`.
 
 ## Examples
 
+### Completed rungs
+
 - [Rung 1: Hello World](./examples/01-hello-world/surface.kdl)
 - [Rung 2: Static FAQ](./examples/02-static-faq/surface.kdl)
 - [Rung 3: Contact Viewer](./examples/03-contact-viewer/surface.kdl)
 - [Rung 4: Click Counter](./examples/04-click-counter/surface.kdl)
 - [Rung 5: Todo List](./examples/05-todo-list/surface.kdl)
-- [LLM skill](./skills/surface/SKILL.md)
 
-Each rung includes expected JSON, invalid fixtures, a small implementation,
-human documentation, and updates to the LLM skill. The Static FAQ runs at
+Each completed rung includes expected JSON, invalid fixtures, a small
+implementation, human documentation, and updates to the LLM skill.
+
+### Candidate stress tests
+
+- [Rung 8: URL Shortener API](./examples/08-url-shortener-api/surface.kdl)
+- [Rung 11: File Converter](./examples/11-file-converter/surface.kdl)
+- [Rung 15: Online Checkout](./examples/15-online-checkout/surface.kdl)
+- [Rung 16: Multi-tenant Project Tracker](./examples/16-multi-tenant-project-tracker/surface.kdl)
+
+These candidates test whether released syntax can support later applications.
+They include implementations and reviewed IR, but are not complete rung
+deliveries with invalid fixtures, full human documentation, or skill updates.
+
+The [LLM skill](./skills/surface/SKILL.md) covers the currently completed
+language surface.
+
+The Static FAQ runs at
 `http://localhost:8002/faq`; the Contact Viewer runs at
 `http://localhost:8000/contacts?id=ada`; the Click Counter runs at
 `http://localhost:8001/`; the self-contained Todo List HTML runs at
-`http://localhost:8003/` through its convenience task.
+`http://localhost:8003/` through its convenience task. The URL Shortener API
+runs at `http://localhost:8004/`, the File Converter at
+`http://localhost:8005/`, the Online Checkout at
+`http://localhost:8006/checkout`, and the Multi-tenant Project Tracker at
+`http://localhost:8007/`.
 
 Only the documented syntax is released. New syntax is added when a roadmap
 application demonstrates that it is necessary.
