@@ -15,7 +15,7 @@ entity "contact" {
     (boolean)"active"
 }
 
-query "contactById" {
+function "contactById" {
     context (entity)"contactLookup" (entity)"contact" "Find the contact whose id equals the lookup id."
 
     entity "contactLookup" {
@@ -29,9 +29,9 @@ query "contactById" {
 }
 
 interface "contactViewer" {
-    context (query)"contactById" (entity)"contact" "Render a user interface that asks for a contact id and displays the matching contact's name, email, and active status."
-    context (query)"contactById" "When no id is provided, ask the user to select a contact."
-    context (query)"contactById" "When no contact matches, show that the contact was not found."
+    context (function)"contactById" (entity)"contact" "Render a user interface that asks for a contact id and displays the matching contact's name, email, and active status."
+    context (function)"contactById" "When no id is provided, ask the user to select a contact."
+    context (function)"contactById" "When no contact matches, show that the contact was not found."
 }
 
 screen "home" route="/" {

@@ -1,0 +1,23 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "contactViewer" {
+    purpose "Reject the former query declaration."
+}
+
+entity "contact" {
+    (string)"id"
+}
+
+query "contactById" {
+    returns (entity)"contact"
+}
+
+interface "contactViewer" {
+    context "Render a contact."
+}
+
+screen "contact" {
+    use (interface)"contactViewer"
+}

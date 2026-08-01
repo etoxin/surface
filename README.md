@@ -34,7 +34,7 @@ only context for non-visual behavior.
 2. [Starting a Surface file](./docs/node_surface.md)
 3. [Describing the application](./docs/node_application.md)
 4. [Defining data](./docs/node_entity.md)
-5. [Looking up data](./docs/node_query.md)
+5. [Defining functions](./docs/node_function.md)
 6. [Describing an interface](./docs/node_interface.md)
 7. [Adding screens](./docs/node_screen.md)
 8. [Adding prompt context](./docs/node_context.md)
@@ -46,8 +46,9 @@ only context for non-visual behavior.
   `application` containing a `purpose`.
 - `entity` declares fields as `(string)"name"` or `(boolean)"active"`. Fields
   are required by default; the only modifier is `optional`.
-- `query` has one `returns (entity)"id"`, an optional structured `input`, and
-  may declare query-private entities.
+- `function` describes a named capability. It currently has one
+  `returns (entity)"id"`, an optional structured `input`, and may declare
+  function-private entities.
 - `interface "id"` contains only universal `context` nodes.
 - `screen "id"` contains either one `use (interface)"id"` plus optional
   context, or context alone. Its `route` property is optional.
@@ -79,7 +80,7 @@ mise run contact-viewer
 The direct equivalents are `deno task verify` and `deno task surf`. The CLI
 supports `parse`, `check`, `format`, `export`, and `reference`. Reference
 selectors include `interface.contactViewer`, `screen.contact`, and scoped
-private entities such as `query.contactById.entity.contactLookup`.
+private entities such as `function.contactById.entity.contactLookup`.
 
 ## Examples
 

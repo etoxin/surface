@@ -306,13 +306,13 @@ surface "0.1" {
 }
 application "references" { purpose "Exercise context references." }
 entity "contact" { (string)"id" }
-query "getContact" {
+function "getContact" {
     entity "lookup" { (string)"id" }
     context (entity)"lookup" (entity)"contact" (interface)"contact" (screen)"contact" "Use these declarations together."
     returns (entity)"contact"
 }
 screen "home" route="/" {
-    context (query)"getContact" (interface)"contact" (screen)"contact" "Delegate to these declarations."
+    context (function)"getContact" (interface)"contact" (screen)"contact" "Delegate to these declarations."
 }
 interface "contact" { context "Render contact details." }
 screen "contact" route="/contacts" {
@@ -384,8 +384,8 @@ entity "contact" {
         context "Field guidance."
     }
 }
-query "contactById" {
-    context "Query guidance."
+function "contactById" {
+    context "Function guidance."
     entity "contactLookup" {
         context "Private entity guidance."
         (string)"id" {
@@ -401,7 +401,7 @@ query "contactById" {
     context "Return null when no contact matches."
 }
 interface "contact" {
-    context (query)"contactById" (entity)"contact" "Interface guidance."
+    context (function)"contactById" (entity)"contact" "Interface guidance."
 }
 screen "contact" {
     use (interface)"contact" {
@@ -416,15 +416,15 @@ screen "contact" {
   assert(!JSON.stringify(result.ir).includes("guidance"));
 });
 
-Deno.test("query entity references resolve private and global scopes", () => {
+Deno.test("function entity references resolve private and global scopes", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
-application "scopedQuery" { purpose "Exercise scoped entities." }
+application "scopedFunction" { purpose "Exercise scoped entities." }
 entity "lookup" {
     (string)"id"
 }
-query "getMessage" {
+function "getMessage" {
     entity "message" {
         (string)"text"
     }
@@ -433,17 +433,17 @@ query "getMessage" {
     context "Return null when no message matches."
 }
 interface "message" {
-    context (query)"getMessage" "Render the returned message text."
+    context (function)"getMessage" "Render the returned message text."
 }
 screen "message" {
     use (interface)"message"
 }
 `;
 
-  const result = parseSurface(source, "scoped-query.kdl");
+  const result = parseSurface(source, "scoped-function.kdl");
   assertEquals(result.diagnostics, []);
   assert(result.ir !== null);
-  assertEquals(result.ir.queries?.[0], {
+  assertEquals(result.ir.functions?.[0], {
     id: "getMessage",
     entities: [{
       id: "message",
@@ -455,12 +455,12 @@ screen "message" {
   assertEquals(result.ir.screens[0].interface, "message");
 });
 
-Deno.test("a query can return a private entity without an input", () => {
+Deno.test("a function can return a private entity without an input", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
-application "helloQuery" { purpose "Display a queried greeting." }
-query "getHello" {
+application "helloFunction" { purpose "Display a returned greeting." }
+function "getHello" {
     entity "hello" {
         (string)"message"
     }
@@ -468,26 +468,26 @@ query "getHello" {
     context "Return null when no greeting is available."
 }
 interface "hello" {
-    context (query)"getHello" "Render the greeting message."
+    context (function)"getHello" "Render the greeting message."
 }
 screen "hello" {
     use (interface)"hello"
 }
 `;
 
-  const result = parseSurface(source, "hello-query.kdl");
+  const result = parseSurface(source, "hello-function.kdl");
   assertEquals(result.diagnostics, []);
   assert(result.ir !== null);
-  assertEquals(result.ir.queries?.[0].input, undefined);
-  assertEquals(result.ir.queries?.[0].returns.entity, "hello");
+  assertEquals(result.ir.functions?.[0].input, undefined);
+  assertEquals(result.ir.functions?.[0].returns.entity, "hello");
 });
 
-Deno.test("a query can use an optional-only input entity", () => {
+Deno.test("a function can use an optional-only input entity", () => {
   const source = `/- kdl-version 2
 
 surface "0.1"
 application "search" { purpose "Search messages." }
-query "searchMessages" {
+function "searchMessages" {
     entity "filters" { (string)"term" optional }
     entity "result" { (string)"message" }
     input (entity)"filters"
@@ -495,7 +495,7 @@ query "searchMessages" {
     context "Return null when no message matches."
 }
 interface "results" {
-    context (query)"searchMessages" "Render matching messages or a no-results experience."
+    context (function)"searchMessages" "Render matching messages or a no-results experience."
 }
 screen "results" {
     use (interface)"results"
@@ -541,6 +541,13 @@ Deno.test("CLI reference lists and returns canonical checked references", () => 
   );
   assert(
     references.some(
+      ({ selector, reference }: { selector: string; reference: string }) =>
+        selector === "function.contactById" &&
+        reference === '(function)"contactById"',
+    ),
+  );
+  assert(
+    references.some(
       (
         { selector, reference, scope }: {
           selector: string;
@@ -548,9 +555,9 @@ Deno.test("CLI reference lists and returns canonical checked references", () => 
           scope?: string;
         },
       ) =>
-        selector === "query.contactById.entity.contactLookup" &&
+        selector === "function.contactById.entity.contactLookup" &&
         reference === '(entity)"contactLookup"' &&
-        scope === "query.contactById",
+        scope === "function.contactById",
     ),
   );
 
@@ -558,10 +565,21 @@ Deno.test("CLI reference lists and returns canonical checked references", () => 
   assertEquals(selected.code, 0, decoder.decode(selected.stderr));
   assertEquals(decoder.decode(selected.stdout).trim(), '(screen)"contact"');
 
+  const selectedFunction = runCli([
+    "reference",
+    specification,
+    "function.contactById",
+  ]);
+  assertEquals(selectedFunction.code, 0, decoder.decode(selectedFunction.stderr));
+  assertEquals(
+    decoder.decode(selectedFunction.stdout).trim(),
+    '(function)"contactById"',
+  );
+
   const privateEntity = runCli([
     "reference",
     specification,
-    "query.contactById.entity.contactLookup",
+    "function.contactById.entity.contactLookup",
   ]);
   assertEquals(privateEntity.code, 0, decoder.decode(privateEntity.stderr));
   assertEquals(
@@ -717,6 +735,7 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /entity "contact"/);
   assertMatch(skill, /\(string\)"id"/);
   assertMatch(skill, /entity "contactLookup"/);
+  assertMatch(skill, /function "contactById"/);
   assertMatch(skill, /input \(entity\)"contactLookup"/);
   assertMatch(skill, /returns \(entity\)"contact"/);
   assertMatch(skill, /If there is no contact, return null\./);

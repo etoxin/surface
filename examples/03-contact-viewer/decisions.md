@@ -11,10 +11,10 @@ field. That URL mapping is an implementation choice, not Surface syntax.
 
 ## Interface and Screens
 
-`contactViewer` is an intent-driven interface. Its contexts reference the query
-and entity while describing the input, displayed contact fields, and missing
-input/result behavior. Surface leaves the exact controls, copy, and layout to
-the implementer.
+`contactViewer` is an intent-driven interface. Its contexts reference the
+function and entity while describing the input, displayed contact fields, and
+missing input/result behavior. Surface leaves the exact controls, copy, and
+layout to the implementer.
 
 The `contact` screen uses that interface. The context-only `home` screen says
 that `/` redirects to the checked `(screen)"contact"` reference without adding

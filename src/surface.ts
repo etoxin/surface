@@ -19,7 +19,7 @@ export interface SurfaceIr {
     purpose: string;
   };
   entities?: SurfaceEntityIr[];
-  queries?: SurfaceQueryIr[];
+  functions?: SurfaceFunctionIr[];
   interfaces?: SurfaceInterfaceIr[];
   screens: SurfaceScreenIr[];
 }
@@ -35,7 +35,7 @@ export interface SurfaceFieldIr {
   optional?: boolean;
 }
 
-export interface SurfaceQueryIr {
+export interface SurfaceFunctionIr {
   id: string;
   entities?: SurfaceEntityIr[];
   input?: {
@@ -77,7 +77,7 @@ const CONTEXT_REFERENCE_TYPES = new Set([
   "application",
   "entity",
   "interface",
-  "query",
+  "function",
   "screen",
 ]);
 const TOP_LEVEL_NODES = new Set([
@@ -85,7 +85,7 @@ const TOP_LEVEL_NODES = new Set([
   "application",
   "entity",
   "interface",
-  "query",
+  "function",
   "screen",
 ]);
 
@@ -174,7 +174,7 @@ export function validateDocument(
         message: `Unknown top-level node ${name}.`,
         element: node,
         suggestion:
-          "Use only surface, application, entity, query, interface, and screen nodes in Surface 0.1.",
+          "Use only surface, application, entity, function, interface, and screen nodes in Surface 0.1.",
       });
     }
 
@@ -192,7 +192,7 @@ export function validateDocument(
   const interfaces = document.nodes.filter(
     (node) => node.getName() === "interface",
   );
-  const queries = document.nodes.filter((node) => node.getName() === "query");
+  const functions = document.nodes.filter((node) => node.getName() === "function");
   const screens = document.nodes.filter((node) => node.getName() === "screen");
 
   if (applications.length !== 1) {
@@ -226,9 +226,9 @@ export function validateDocument(
     validateIdentity(entity, identities, add);
   }
 
-  for (const query of queries) {
-    validateQuery(query, add);
-    validateIdentity(query, identities, add);
+  for (const functionNode of functions) {
+    validateFunction(functionNode, add);
+    validateIdentity(functionNode, identities, add);
   }
 
   for (const interfaceNode of interfaces) {
@@ -245,7 +245,7 @@ export function validateDocument(
     versionNodes,
     applications,
     entities,
-    queries,
+    functions,
     interfaces,
     screens,
     add,
@@ -483,7 +483,7 @@ function validateFieldIdentity(
   fieldNames.add(name);
 }
 
-function validateQuery(node: Node, add: AddDiagnostic): void {
+function validateFunction(node: Node, add: AddDiagnostic): void {
   const declaration = declarationName(node);
   validateArguments(node, 1, declaration, add, true);
   validateProperties(node, [], declaration, add);
@@ -507,7 +507,8 @@ function validateQuery(node: Node, add: AddDiagnostic): void {
         message: `Unknown child node ${child.getName()} in ${declaration}.`,
         element: child,
         declaration,
-        suggestion: "Use entity, input, returns, and context child nodes in a query.",
+        suggestion:
+          "Use entity, input, returns, and context child nodes in a function.",
       });
     }
   }
@@ -742,7 +743,8 @@ function validateContextNode(
         message: `Unsupported context reference type ${type}.`,
         element: reference,
         declaration,
-        suggestion: "Use application, entity, interface, query, or screen references.",
+        suggestion:
+          "Use application, entity, interface, function, or screen references.",
       });
     }
   }
@@ -1038,14 +1040,14 @@ function validateReferences(
   surfaceNodes: Node[],
   applications: Node[],
   entities: Node[],
-  queries: Node[],
+  functions: Node[],
   interfaces: Node[],
   screens: Node[],
   add: AddDiagnostic,
 ): void {
   const entitiesById = nodesByIdentifier(entities);
-  for (const query of queries) {
-    validateQueryReferences(query, entitiesById, add);
+  for (const functionNode of functions) {
+    validateFunctionReferences(functionNode, entitiesById, add);
   }
 
   for (const screen of screens) {
@@ -1056,7 +1058,7 @@ function validateReferences(
     ["application", nodesByIdentifier(applications)],
     ["entity", entitiesById],
     ["interface", nodesByIdentifier(interfaces)],
-    ["query", nodesByIdentifier(queries)],
+    ["function", nodesByIdentifier(functions)],
     ["screen", nodesByIdentifier(screens)],
   ]);
   for (
@@ -1064,12 +1066,12 @@ function validateReferences(
       ...surfaceNodes,
       ...applications,
       ...entities,
-      ...queries,
+      ...functions,
       ...interfaces,
       ...screens,
     ]
   ) {
-    const privateEntities = node.getName() === "query"
+    const privateEntities = node.getName() === "function"
       ? nodesByIdentifier(
         (node.children?.nodes ?? []).filter((child) => child.getName() === "entity"),
       )
@@ -1129,13 +1131,13 @@ function validateContextReferences(
   }
 }
 
-function validateQueryReferences(
-  query: Node,
+function validateFunctionReferences(
+  functionNode: Node,
   entitiesById: Map<string, Node>,
   add: AddDiagnostic,
 ): void {
-  const declaration = declarationName(query);
-  const children = query.children?.nodes ?? [];
+  const declaration = declarationName(functionNode);
+  const children = functionNode.children?.nodes ?? [];
   const localEntities = children.filter((child) => child.getName() === "entity");
   const localEntitiesById = nodesByIdentifier(localEntities);
 
@@ -1228,7 +1230,7 @@ function buildIr(document: Document): SurfaceIr {
     "application purpose",
   );
   const entities = document.nodes.filter((node) => node.getName() === "entity");
-  const queries = document.nodes.filter((node) => node.getName() === "query");
+  const functions = document.nodes.filter((node) => node.getName() === "function");
   const interfaces = document.nodes.filter(
     (node) => node.getName() === "interface",
   );
@@ -1243,17 +1245,17 @@ function buildIr(document: Document): SurfaceIr {
     ...(entities.length === 0 ? {} : {
       entities: entities.map(buildEntityIr),
     }),
-    ...(queries.length === 0 ? {} : {
-      queries: queries.map((query) => {
-        const children = expectChildren(query, "query");
+    ...(functions.length === 0 ? {} : {
+      functions: functions.map((functionNode) => {
+        const children = expectChildren(functionNode, "function");
         const localEntities = children.findNodesByName("entity");
         const inputNode = children.findNodeByName("input");
         const returnsNode = expectNode(
           children.findNodeByName("returns"),
-          "query returns",
+          "function returns",
         );
         return {
-          id: expectString(query.getArgument(0), "query identifier"),
+          id: expectString(functionNode.getArgument(0), "function identifier"),
           ...(localEntities.length === 0 ? {} : {
             entities: localEntities.map(buildEntityIr),
           }),

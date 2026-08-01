@@ -1,6 +1,6 @@
 ---
 name: surface
-description: Create, edit, review, format, and validate Surface 0.1 application specifications written as KDL 2 files. Use for Surface files or repository work involving the released application, entity, query, interface, screen, and context syntax.
+description: Create, edit, review, format, and validate Surface 0.1 application specifications written as KDL 2 files. Use for Surface files or repository work involving the released application, entity, function, interface, screen, and context syntax.
 ---
 
 # Surface
@@ -39,7 +39,7 @@ entity "contact" {
     (boolean)"active"
 }
 
-query "contactById" {
+function "contactById" {
     context "Find the contact whose id equals the id input."
 
     entity "contactLookup" {
@@ -53,9 +53,9 @@ query "contactById" {
 }
 
 interface "contactViewer" {
-    context (query)"contactById" (entity)"contact" "Render a user interface that asks for a contact id and displays the matching contact's name, email, and active status."
-    context (query)"contactById" "When no id is provided, ask the user to select a contact."
-    context (query)"contactById" "When no contact matches, show that the contact was not found."
+    context (function)"contactById" (entity)"contact" "Render a user interface that asks for a contact id and displays the matching contact's name, email, and active status."
+    context (function)"contactById" "When no id is provided, ask the user to select a contact."
+    context (function)"contactById" "When no contact matches, show that the contact was not found."
 }
 
 screen "home" route="/" {
@@ -95,11 +95,13 @@ is a quoted lower-camel-case identifier. Fields are required by default. The
 only modifier is bare `optional`; do not write `required`, `generated`, or
 `field "name" type="string"`.
 
-A query has one ID, no properties, zero or more private entities, zero or one
-structured input, and exactly one return entity:
+A function is a named computation or capability. It may represent a database
+lookup, HTTP request, file read, calculation, or another implementation. The
+current syntax gives it one ID, no properties, zero or more private entities,
+zero or one structured input, and exactly one return entity:
 
 ```kdl
-query "contactById" {
+function "contactById" {
     entity "contactLookup" {
         (string)"id"
     }
@@ -108,11 +110,11 @@ query "contactById" {
 }
 ```
 
-`input` and `returns` may reference a private entity in their query or a global
-entity. Private IDs are unique in their query and cannot shadow global entity
-IDs. Other queries cannot see them. Use context to explain data sources,
-transformations, and missing results; Surface does not define URL-to-input
-mapping.
+`input` and `returns` may reference a private entity in their function or a
+global entity. Private IDs are unique in their function and cannot shadow global
+entity IDs. Other functions cannot see them. Use context to explain data
+sources, transformations, and missing results; Surface does not define
+URL-to-input mapping.
 
 An interface describes visible or usable UI through intent, not widget syntax:
 
@@ -154,15 +156,15 @@ Add repeatable `context` children to any supported node except another context:
 
 ```kdl
 context "Use accessible defaults."
-context (query)"contactById" (entity)"contact" "Display the returned contact."
+context (function)"contactById" (entity)"contact" "Display the returned contact."
 ```
 
 The last argument is exactly one unannotated prompt string. Earlier arguments,
 if present, are annotated string references. A type annotation on a string
 means that the string references another Surface declaration. Global
-`application`, `entity`, `interface`, `query`, and `screen` declarations may be
-referenced. A context inside a query may also reference that query's private
-entities. Verify every reference's visibility, ID, and annotation type.
+`application`, `entity`, `interface`, `function`, and `screen` declarations may
+be referenced. A context inside a function may also reference that function's
+private entities. Verify every reference's visibility, ID, and annotation type.
 
 Context has no properties or children. Preserve it in source and formatting;
 it is omitted from the reduced semantic JSON IR. Use KDL triple-quoted strings
@@ -206,12 +208,12 @@ surf reference surface.kdl --list
 surf reference surface.kdl interface.contactViewer
 ```
 
-Private entity selectors include their query scope, such as
-`query.contactById.entity.contactLookup`.
+Private entity selectors include their function scope, such as
+`function.contactById.entity.contactLookup`.
 
 ## Current Limits
 
 Do not add actors, numeric field types, behaviors, events, policies, workflows,
-components, scenarios, imports, executable logic, list queries, filtering,
-sorting, structured UI elements, or code-generation directives. Add future
-syntax only when a later roadmap rung releases it.
+components, scenarios, imports, executable logic, list-returning functions,
+filtering, sorting, structured UI elements, or code-generation directives. Add
+future syntax only when a later roadmap rung releases it.

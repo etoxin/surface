@@ -18,12 +18,12 @@ An interface has no properties or interface-specific child nodes. Add
 do. The implementing person or LLM chooses suitable text, layout, inputs,
 buttons, selectors, accessibility, and responsive behavior.
 
-Use typed references when the interface depends on declared data or queries:
+Use typed references when the interface depends on declared data or functions:
 
 ```kdl
 interface "contactViewer" {
-    context (query)"contactById" (entity)"contact" "Render a user interface that finds and displays a contact."
-    context (query)"contactById" "When no contact matches, show that the contact was not found."
+    context (function)"contactById" (entity)"contact" "Render a user interface that finds and displays a contact."
+    context (function)"contactById" "When no contact matches, show that the contact was not found."
 }
 ```
 

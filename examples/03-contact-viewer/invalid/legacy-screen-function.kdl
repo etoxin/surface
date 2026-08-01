@@ -5,10 +5,10 @@ application "contactViewer" { purpose "Display a contact." }
 entity "contact" {
     (string)"id"
 }
-query "contactById" {
+function "contactById" {
     entity "contactLookup" { (string)"id" }
     input (entity)"contactLookup"
     returns (entity)"contact"
 }
 interface "contactViewer" { context "Render a contact." }
-screen "contact" query="contactById" { use (interface)"contactViewer" }
+screen "contact" function="contactById" { use (interface)"contactViewer" }

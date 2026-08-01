@@ -160,17 +160,17 @@ function collectReferences(ir: SurfaceIr): SurfaceReference[] {
       reference: `(entity)"${entity.id}"`,
     });
   }
-  for (const query of ir.queries ?? []) {
-    const querySelector = `query.${query.id}`;
+  for (const functionNode of ir.functions ?? []) {
+    const functionSelector = `function.${functionNode.id}`;
     references.push({
-      selector: querySelector,
-      reference: `(query)"${query.id}"`,
+      selector: functionSelector,
+      reference: `(function)"${functionNode.id}"`,
     });
-    for (const entity of query.entities ?? []) {
+    for (const entity of functionNode.entities ?? []) {
       references.push({
-        selector: `${querySelector}.entity.${entity.id}`,
+        selector: `${functionSelector}.entity.${entity.id}`,
         reference: `(entity)"${entity.id}"`,
-        scope: querySelector,
+        scope: functionSelector,
       });
     }
   }

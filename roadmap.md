@@ -179,13 +179,13 @@ Build a read-only page that displays a contact selected by identifier.
 Introduces:
 
 - `entity` declarations;
-- `query` declarations;
+- `function` declarations for named capabilities;
 - primitive field types expressed as KDL node annotations;
 - the bare `optional` field modifier for fields that are not required;
 - Boolean and null values;
-- private query entities and structured entity input/output references;
+- private function entities and structured entity input/output references;
 - annotated references between top-level declarations;
-- context that relates queries, entities, interfaces, and screens.
+- context that relates functions, entities, interfaces, and screens.
 
 This stage should establish field syntax and contextual reference resolution.
 Rung 3 supports only `string` and `boolean` primitive types; numeric values
@@ -199,7 +199,7 @@ Delivered in:
 - [`examples/03-contact-viewer/app/server.ts`](./examples/03-contact-viewer/app/server.ts);
 - [Rung 3 decisions and acceptance scenarios](./examples/03-contact-viewer/decisions.md);
 - [Entity guide](./docs/node_entity.md);
-- [Query guide](./docs/node_query.md);
+- [Function guide](./docs/node_function.md);
 - [Interface guide](./docs/node_interface.md);
 - [Screen guide](./docs/node_screen.md);
 - [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
@@ -232,7 +232,7 @@ Introduces:
 - `enum` declarations;
 - `workflow` declarations;
 - default field values;
-- multiple behaviors and queries;
+- multiple behaviors and functions;
 - workflow states and transitions;
 - initial states;
 - transition invariants;
@@ -269,7 +269,7 @@ Introduces:
 - allow and deny rules;
 - authorization failures;
 - negative acceptance scenarios;
-- policy references from behaviors, queries, and screens.
+- policy references from behaviors, functions, and screens.
 
 ### 8. URL Shortener API
 
@@ -480,7 +480,7 @@ specification rather than only a documentation format.
 | `interface` | 1. Hello World Page |
 | `screen` | 1. Hello World Page |
 | `entity` | 3. Contact Viewer |
-| `query` | 3. Contact Viewer |
+| `function` | 3. Contact Viewer |
 | `actor` | 4. Click Counter |
 | `behavior` | 4. Click Counter |
 | `event` | 4. Click Counter |

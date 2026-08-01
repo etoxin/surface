@@ -28,7 +28,7 @@
       ]
     }
   ],
-  "queries": [
+  "functions": [
     {
       "id": "contactById",
       "entities": [
