@@ -1,0 +1,89 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "urlShortenerApi" {
+    purpose "Create short links and resolve them through an HTTP API."
+
+    stack "api" {
+        target "server"
+        technology "protocol" "http"
+        technology "language" "typescript"
+        technology "runtime" "deno"
+        technology "storage" "sqlite"
+    }
+}
+
+(url)value "shortLinkBaseUrl" "https://sho.rt"
+
+collection "shortLink" {
+    (uuid)"id"
+    (url)"destination"
+    (string)"slug"
+    (url)"shortUrl"
+    (dateTime)"createdAt"
+    (boolean)"protected"
+}
+
+collection "createShortLinkResult" {
+    (integer)"httpStatus"
+    (uuid)"id" optional
+    (url)"destination" optional
+    (string)"slug" optional
+    (url)"shortUrl" optional
+    (dateTime)"createdAt" optional
+    (boolean)"protected" optional
+    (string)"error" optional
+}
+
+collection "resolveShortLinkResult" {
+    (integer)"httpStatus"
+    (url)"location" optional
+    (string)"error" optional
+}
+
+function "createShortLink" {
+    collection "createShortLinkInput" {
+        (url)"destination"
+        (string)"customSlug" optional
+        (string)"authorization"
+    }
+
+    input (collection)"createShortLinkInput"
+    output (collection)"createShortLinkResult"
+
+    logic {
+        "Expose this operation as HTTP POST /links."
+        (collection)"createShortLinkInput" "Read destination and optional customSlug from the JSON request body, and read authorization from the Authorization header."
+        "Require a valid API credential because this operation is protected; otherwise output httpStatus 401 and an error."
+        "If destination is invalid, output httpStatus 400 and an error."
+        (collection)"shortLink" "Require slug to be unique across all stored short links; if a requested slug already exists, output httpStatus 409 and an error."
+        (value)"shortLinkBaseUrl" "Generate a slug when customSlug is omitted and combine it with this base URL."
+        (collection)"shortLink" "Persist the new short link, then output it with httpStatus 201 and no error."
+    }
+}
+
+function "resolveShortLink" {
+    collection "resolveShortLinkInput" {
+        (string)"slug"
+        (string)"authorization" optional
+    }
+
+    input (collection)"resolveShortLinkInput"
+    output (collection)"resolveShortLinkResult"
+
+    logic {
+        "Expose this operation as HTTP GET /{slug}."
+        (collection)"resolveShortLinkInput" "Bind the slug path parameter to slug and read an optional credential from the Authorization header."
+        (collection)"shortLink" "Find the stored short link with the unique matching slug; if none exists, output httpStatus 404 and an error."
+        (collection)"shortLink" "This operation is public for an unprotected link; for a protected link require a valid credential, otherwise output httpStatus 401 or 403 and an error."
+        (collection)"resolveShortLinkResult" "For an authorized match, output httpStatus 302, set location to the destination URL, and omit error."
+    }
+}
+
+screen "api" {
+    logic {
+        (function)"createShortLink" "Make this HTTP operation available."
+        (function)"resolveShortLink" "Make this HTTP operation available."
+    }
+}

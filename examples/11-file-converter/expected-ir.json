@@ -1,0 +1,161 @@
+{
+  "surfaceVersion": "0.1",
+  "application": {
+    "id": "fileConverter",
+    "purpose": "Convert one local file with a deterministic custom byte transformation and provide the result for download.",
+    "stacks": [
+      {
+        "id": "web",
+        "target": "browser",
+        "technologies": [
+          {
+            "role": "markup",
+            "name": "html"
+          },
+          {
+            "role": "styling",
+            "name": "css"
+          },
+          {
+            "role": "language",
+            "name": "typescript"
+          },
+          {
+            "role": "binaryApi",
+            "name": "uint8Array"
+          },
+          {
+            "role": "packaging",
+            "name": "singleFile"
+          }
+        ]
+      }
+    ]
+  },
+  "collections": [
+    {
+      "id": "convertedFile",
+      "fields": [
+        {
+          "name": "fileName",
+          "type": "string"
+        },
+        {
+          "name": "mediaType",
+          "type": "string"
+        },
+        {
+          "name": "bytes",
+          "type": "bytes"
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "id": "convertFile",
+      "collections": [
+        {
+          "id": "fileConversionInput",
+          "fields": [
+            {
+              "name": "fileName",
+              "type": "string"
+            },
+            {
+              "name": "bytes",
+              "type": "bytes"
+            }
+          ]
+        }
+      ],
+      "input": {
+        "collection": "fileConversionInput"
+      },
+      "output": {
+        "collection": "convertedFile"
+      },
+      "logic": [
+        {
+          "instruction": "Start a monotonic 5,000 millisecond deadline when this function is called."
+        },
+        {
+          "instruction": "If fileName is empty or bytes contains more than 1,048,576 bytes, output null and stop.",
+          "reference": {
+            "type": "collection",
+            "id": "fileConversionInput"
+          }
+        },
+        {
+          "instruction": "Run the conversion as custom application code with no network, filesystem, subprocess, or third-party package dependency."
+        },
+        {
+          "instruction": "Visit the input bytes once in their original order; replace each byte from 0x41 through 0x5A with 0x41 + ((byte - 0x41 + 13) modulo 26), replace each byte from 0x61 through 0x7A with 0x61 + ((byte - 0x61 + 13) modulo 26), and copy every other byte unchanged.",
+          "reference": {
+            "type": "collection",
+            "id": "fileConversionInput"
+          }
+        },
+        {
+          "instruction": "If the deadline expires or any conversion step fails, output null and stop."
+        },
+        {
+          "instruction": "Otherwise, output exactly one converted file whose fileName is the input fileName followed by .rot13, whose mediaType is application/octet-stream, and whose bytes are exactly the transformed bytes.",
+          "reference": {
+            "type": "collection",
+            "id": "convertedFile"
+          }
+        }
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "fileConverter",
+      "logic": [
+        {
+          "instruction": "Accept exactly one local file and do not read or upload it before the user activates Convert."
+        },
+        {
+          "instruction": "When Convert is activated, call this function once with the selected file's original name and exact bytes.",
+          "reference": {
+            "type": "function",
+            "id": "convertFile"
+          }
+        },
+        {
+          "instruction": "While the call is pending, prevent another conversion and indicate that conversion is in progress.",
+          "reference": {
+            "type": "function",
+            "id": "convertFile"
+          }
+        },
+        {
+          "instruction": "If this function outputs null, show that conversion failed and provide no download.",
+          "reference": {
+            "type": "function",
+            "id": "convertFile"
+          }
+        },
+        {
+          "instruction": "If conversion succeeds, provide one download using the output fileName, mediaType, and exact bytes without further transformation.",
+          "reference": {
+            "type": "collection",
+            "id": "convertedFile"
+          }
+        }
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "id": "home",
+      "interface": "fileConverter",
+      "logic": [
+        {
+          "instruction": "Use / as this screen's URL path."
+        }
+      ]
+    }
+  ]
+}

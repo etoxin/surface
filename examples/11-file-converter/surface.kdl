@@ -1,0 +1,58 @@
+/- kdl-version 2
+
+surface "0.1"
+
+application "fileConverter" {
+    purpose "Convert one local file with a deterministic custom byte transformation and provide the result for download."
+
+    stack "web" {
+        target "browser"
+        technology "markup" "html"
+        technology "styling" "css"
+        technology "language" "typescript"
+        technology "binaryApi" "uint8Array"
+        technology "packaging" "singleFile"
+    }
+}
+
+collection "convertedFile" {
+    (string)"fileName"
+    (string)"mediaType"
+    (bytes)"bytes"
+}
+
+function "convertFile" {
+    collection "fileConversionInput" {
+        (string)"fileName"
+        (bytes)"bytes"
+    }
+
+    input (collection)"fileConversionInput"
+    output (collection)"convertedFile"
+
+    logic {
+        "Start a monotonic 5,000 millisecond deadline when this function is called."
+        (collection)"fileConversionInput" "If fileName is empty or bytes contains more than 1,048,576 bytes, output null and stop."
+        "Run the conversion as custom application code with no network, filesystem, subprocess, or third-party package dependency."
+        (collection)"fileConversionInput" "Visit the input bytes once in their original order; replace each byte from 0x41 through 0x5A with 0x41 + ((byte - 0x41 + 13) modulo 26), replace each byte from 0x61 through 0x7A with 0x61 + ((byte - 0x61 + 13) modulo 26), and copy every other byte unchanged."
+        "If the deadline expires or any conversion step fails, output null and stop."
+        (collection)"convertedFile" "Otherwise, output exactly one converted file whose fileName is the input fileName followed by .rot13, whose mediaType is application/octet-stream, and whose bytes are exactly the transformed bytes."
+    }
+}
+
+interface "fileConverter" {
+    context (function)"convertFile" (collection)"convertedFile" "Render an accessible file picker, a Convert action, conversion status, and a download action for one file."
+
+    logic {
+        "Accept exactly one local file and do not read or upload it before the user activates Convert."
+        (function)"convertFile" "When Convert is activated, call this function once with the selected file's original name and exact bytes."
+        (function)"convertFile" "While the call is pending, prevent another conversion and indicate that conversion is in progress."
+        (function)"convertFile" "If this function outputs null, show that conversion failed and provide no download."
+        (collection)"convertedFile" "If conversion succeeds, provide one download using the output fileName, mediaType, and exact bytes without further transformation."
+    }
+}
+
+screen "home" {
+    use (interface)"fileConverter"
+    logic "Use / as this screen's URL path."
+}
