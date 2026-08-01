@@ -5,8 +5,9 @@ application "contactViewer" { purpose "Display a contact." }
 entity "contact" {
     (string)"id"
 }
-query "contactById" by="id" {
-    input "id" type="string"
+query "contactById" {
+    entity "contactLookup" { (string)"id" }
+    input (entity)"contactLookup"
     returns (entity)"contact" missing="null"
 }
 screen "contact" {

@@ -36,7 +36,8 @@ Surface file
 ├── entity
 │   └── typed field
 ├── query
-│   ├── input
+│   ├── private entity (optional)
+│   ├── input (optional)
 │   └── returns
 └── screen
     ├── use (optional query reference)

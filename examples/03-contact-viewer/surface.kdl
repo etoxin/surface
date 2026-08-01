@@ -15,9 +15,14 @@ entity "contact" {
     (boolean)"active"
 }
 
-query "contactById" by="id" {
+query "contactById" {
     context "Find the contact whose id equals the id input."
-    input "id" type="string"
+
+    entity "contactLookup" {
+        (string)"id"
+    }
+
+    input (entity)"contactLookup"
     returns (entity)"contact" missing=#null
 }
 

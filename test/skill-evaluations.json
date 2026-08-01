@@ -11,8 +11,8 @@
         "The application has no version property.",
         "The contact entity declares fields as typed child nodes using only (string) and (boolean).",
         "Required fields have no modifier, and only email uses the bare optional modifier.",
-        "The lookup input and id field are both strings.",
-        "The query uses returns (entity)\"contact\" with missing=#null.",
+        "The query declares a private entity containing a string id field and references it with input (entity).",
+        "The query references the global contact with returns (entity)\"contact\" and missing=#null.",
         "The screen uses use (query)\"contactById\", and all references resolve.",
         "The screen contains exactly one empty and one notFound state.",
         "The result does not introduce syntax from a later rung."
@@ -31,7 +31,7 @@
     },
     {
       "id": "diagnose",
-      "prompt": "Diagnose a Contact Viewer whose id field uses the unsupported required modifier, whose returns value omits the entity annotation, that repeats a field name, has a by field with no matching input, projects an undeclared phone field, and is missing its notFound state.",
+      "prompt": "Diagnose a Contact Viewer whose id field uses the unsupported required modifier, whose returns value omits the entity annotation, whose private entity shadows a global entity, whose input references an undeclared entity, which projects an undeclared phone field, and which is missing its notFound state.",
       "acceptance": [
         "The response identifies all six validation problems.",
         "The response distinguishes valid KDL from valid Surface.",

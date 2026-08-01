@@ -31,13 +31,20 @@
   "queries": [
     {
       "id": "contactById",
-      "by": "id",
-      "inputs": [
+      "entities": [
         {
-          "name": "id",
-          "type": "string"
+          "id": "contactLookup",
+          "fields": [
+            {
+              "name": "id",
+              "type": "string"
+            }
+          ]
         }
       ],
+      "input": {
+        "entity": "contactLookup"
+      },
       "returns": {
         "entity": "contact",
         "missing": null

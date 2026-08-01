@@ -184,7 +184,7 @@ Introduces:
 - primitive field types expressed as KDL node annotations;
 - the bare `optional` field modifier for fields that are not required;
 - Boolean and null values;
-- query inputs and return types;
+- private query entities and structured entity input/output references;
 - annotated references between top-level declarations;
 - not-found and empty screen states.
 

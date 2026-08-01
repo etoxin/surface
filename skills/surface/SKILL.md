@@ -50,8 +50,11 @@ entity "contact" {
     (boolean)"active"
 }
 
-query "contactById" by="id" {
-    input "id" type="string"
+query "contactById" {
+    entity "contactLookup" {
+        (string)"id"
+    }
+    input (entity)"contactLookup"
     returns (entity)"contact" missing=#null
 }
 ```
@@ -73,21 +76,28 @@ Treat fields as required when `optional` is absent. Do not write `required` or
 `generated`, give `optional` a value, or repeat it. Reject the earlier
 `field "name" type="string"` syntax.
 
-A query is a single-entity lookup. Give it:
+A query returns one entity or `#null`. Give it:
 
 - one quoted identifier;
-- required quoted `by` property;
-- one or more `input` children with a quoted name and required primitive
-  `type`;
+- no properties;
+- zero or more private `entity` declarations;
+- zero or one `input (entity)"<entity>"` child;
 - exactly one `returns (entity)"<entity>" missing=#null` child.
 
-Resolve `by` to both an input on the query and a field on the returned entity.
-Require those types to match.
+Allow `input` and `returns` to reference either a private entity in their query
+or a global top-level entity. Keep private entity IDs unique within the query
+and reject a private ID that matches a global entity ID. Do not resolve private
+entities from other queries.
 
-Treat a type annotation on a string value as a checked reference to a top-level
-Surface declaration of that type. Require the annotation and verify both the
-target ID and its declaration type. Rung 3 supports `(entity)` on `returns`
-arguments and `(query)` on screen `use` arguments.
+Use private entities for query-specific request or response shapes. Use global
+entities for data shapes shared across queries. For a web screen, populate the
+fields of the input entity from same-named URL query parameters. Explain how
+the query transforms input into output with `context`.
+
+Treat a type annotation on a string value as a checked reference to a
+declaration visible in the current scope. Require the annotation and verify
+both the target ID and its declaration type. Rung 3 supports `(entity)` on
+query `input` and `returns` arguments and `(query)` on screen `use` arguments.
 
 Distinguish those value annotations from the node annotations that declare
 entity field types: `(string)"name"` is a field node, while
@@ -128,10 +138,12 @@ A screen has:
 Use `route` for addressable screens such as web pages. Omit it when the screen
 does not have a URL or equivalent address.
 
-For web screens, populate query inputs from URL query parameters with matching
-names. Require screens with a query `use` to contain exactly one `empty` and
-one `notFound` state. Put one or more static sections inside each state. Do
-not put field references in state sections.
+For web screens, populate query input-entity fields from URL query parameters
+with matching names. Require every queried screen to contain exactly one
+`notFound` state. Also require exactly one `empty` state when the query's input
+entity has a required field; reject `empty` when it has no required input
+fields. Put one or more static sections inside each state. Do not put field
+references in state sections.
 
 A section has:
 
@@ -177,15 +189,16 @@ Check all of the following:
 - At least one screen exists.
 - Declaration identifiers are valid and unique within their type.
 - Required arguments, properties, and children are present exactly as defined.
-- Entity fields and query inputs have valid unique names and supported types.
+- Global and private entity fields have valid unique names and supported types.
 - Entity fields are required by default; only optional fields use the bare
   `optional` modifier.
 - Null properties use `#null`, not a quoted string.
-- Annotated entity and query references have the required type and resolve.
-- Lookup fields/inputs and projected fields resolve.
-- Lookup input and entity-field types match.
-- Every queried screen contains exactly one `empty` and one `notFound`
-  state.
+- Private entity IDs do not collide with global entity IDs.
+- Annotated entity and query references have the required type, visibility,
+  and target.
+- Projected fields resolve on the query's returned private or global entity.
+- Every queried screen contains one `notFound` state and, exactly when its
+  query input entity has a required field, one `empty` state.
 - Every section contains at least one text or field node.
 - Properties are not duplicated.
 - No unsupported top-level nodes, child nodes, properties, field/reference

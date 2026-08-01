@@ -2,8 +2,7 @@
 
 surface "0.1"
 application "contactViewer" { purpose "Display a contact." }
-query "contactById" by="id" {
-    input "id" type="string"
+query "contactById" {
     returns (entity)"missingContact" missing=#null
 }
 screen "contact" {

@@ -4,8 +4,12 @@ A query describes how a screen retrieves one entity. The Contact Viewer looks
 up a contact by its ID:
 
 ```kdl
-query "contactById" by="id" {
-    input "id" type="string"
+query "contactById" {
+    entity "contactLookup" {
+        (string)"id"
+    }
+
+    input (entity)"contactLookup"
     returns (entity)"contact" missing=#null
 }
 ```
@@ -15,31 +19,43 @@ query "contactById" by="id" {
 `"contactById"` is the query ID. It starts with a lowercase letter and should
 use lower camel case. Each query needs a different ID.
 
-`by="id"` names the lookup value. Surface resolves it in two places:
-
-- an `input` named `id` on this query;
-- a `field` named `id` on the returned entity.
-
-Both must exist and use the same primitive type. This makes the lookup
-unambiguous without writing executable query logic.
+Queries have no properties. Their `input` and `returns` nodes use checked
+entity references, while [`context`](./node_context.md) explains how the query
+uses the input to produce the result.
 
 Rung 3 supports this single-entity lookup shape only. Lists, filtering, and
 sorting will be introduced only when a later application needs them.
 
-## Input
+## Private Entities
 
-An input is a value the query needs:
+A query can declare entities that are private to that query:
 
 ```kdl
-input "id" type="string"
+entity "contactLookup" {
+    (string)"id"
+}
 ```
 
-Input names use lower camel case and must be unique within the query. Input
-types are `string` or `boolean`.
+Private entities use the same field syntax as global entities. They can be
+referenced by `input` and `returns` inside their query, but other queries
+cannot see them. A private entity ID cannot duplicate a global entity ID.
+
+## Input
+
+A query can accept one structured entity input:
+
+```kdl
+input (entity)"contactLookup"
+```
+
+The reference can target a private entity in the query or a global entity in
+the Surface file. A query can omit `input` when it needs no caller-supplied
+data, but it cannot contain several input nodes.
 
 When a web screen uses a query, URL query parameters with matching names supply
-its inputs. For example, `/contacts?id=ada` supplies `"ada"` to the `id`
-input.
+the input entity's fields. For example, `/contacts?id=ada` supplies `"ada"`
+to the `id` field of `contactLookup`. Missing required fields activate the
+screen's `empty` state; optional fields can be absent.
 
 ## Returns
 
@@ -49,15 +65,15 @@ Every query has exactly one `returns` node:
 returns (entity)"contact" missing=#null
 ```
 
-`(entity)"contact"` is a checked reference to an entity declared in the same
-Surface file. The annotation identifies the expected declaration type;
-Surface reports an error if the entity does not exist or the annotation is
-missing or different.
+`(entity)"contact"` is a checked reference to a visible entity. It can target
+a private entity in this query or a global entity in the Surface file. The
+annotation identifies the expected declaration type; Surface reports an error
+if the entity does not exist or the annotation is missing or different.
 `missing=#null` says the query returns no entity when the lookup finds
 nothing. Use the KDL 2 null literal `#null`, without quotes.
 
-The missing result activates the screen's `notFound` state. A missing query
-input activates its `empty` state.
+The missing result activates the screen's `notFound` state. A screen needs an
+`empty` state only when its query input entity has at least one required field.
 
 Queries, inputs, and returns can all contain prompt-only
 [`context`](./node_context.md).

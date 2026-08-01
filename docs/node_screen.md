@@ -48,8 +48,8 @@ screen "contact" route="/contacts" {
 
 The `(query)` annotation makes `"contactById"` a checked reference to a query
 declared in the same file. A screen can use at most one query in Rung 3. For
-web screens, URL query parameters with the same names as the query inputs
-provide their values.
+web screens, URL query parameters with the same names as fields on the query's
+input entity provide their values.
 
 A screen can contain:
 
@@ -175,8 +175,8 @@ state "notFound" {
 }
 ```
 
-The `empty` state appears when a required query input is absent. The
-`notFound` state appears when the query returns `#null`.
+The `empty` state appears when a required field on the query's input entity is
+absent. The `notFound` state appears when the query returns `#null`.
 
 States contain one or more ordinary sections and can contain prompt-only
 context. Their sections use static titles and text; they cannot refer to

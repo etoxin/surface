@@ -318,9 +318,15 @@ entity "contact" {
         context "Field guidance."
     }
 }
-query "contactById" by="id" {
+query "contactById" {
     context "Query guidance."
-    input "id" type="string" {
+    entity "contactLookup" {
+        context "Private entity guidance."
+        (string)"id" {
+            context "Private field guidance."
+        }
+    }
+    input (entity)"contactLookup" {
         context "Input guidance."
     }
     returns (entity)"contact" missing=#null {
@@ -351,6 +357,100 @@ screen "contact" {
   assertEquals(result.diagnostics, []);
   assert(result.ir !== null);
   assert(!JSON.stringify(result.ir).includes("guidance"));
+});
+
+Deno.test("query entity references resolve private and global scopes", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1"
+application "scopedQuery" { purpose "Exercise scoped entities." }
+entity "lookup" {
+    (string)"id"
+}
+query "getMessage" {
+    entity "message" {
+        (string)"text"
+    }
+    input (entity)"lookup"
+    returns (entity)"message" missing=#null
+}
+screen "message" {
+    use (query)"getMessage"
+    section "Message" { field "text" }
+    state "empty" {
+        section "Empty" { text "Enter an identifier." }
+    }
+    state "notFound" {
+        section "Missing" { text "Message not found." }
+    }
+}
+`;
+
+  const result = parseSurface(source, "scoped-query.kdl");
+  assertEquals(result.diagnostics, []);
+  assert(result.ir !== null);
+  assertEquals(result.ir.queries?.[0], {
+    id: "getMessage",
+    entities: [{
+      id: "message",
+      fields: [{ name: "text", type: "string" }],
+    }],
+    input: { entity: "lookup" },
+    returns: { entity: "message", missing: null },
+  });
+  assertEquals(result.ir.screens[0].sections[0].fields, ["text"]);
+});
+
+Deno.test("a query can return a private entity without an input", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1"
+application "helloQuery" { purpose "Display a queried greeting." }
+query "getHello" {
+    entity "hello" {
+        (string)"message"
+    }
+    returns (entity)"hello" missing=#null
+}
+screen "hello" {
+    use (query)"getHello"
+    section "Hello" { field "message" }
+    state "notFound" {
+        section "Missing" { text "Greeting not found." }
+    }
+}
+`;
+
+  const result = parseSurface(source, "hello-query.kdl");
+  assertEquals(result.diagnostics, []);
+  assert(result.ir !== null);
+  assertEquals(result.ir.queries?.[0].input, undefined);
+  assertEquals(result.ir.queries?.[0].returns.entity, "hello");
+});
+
+Deno.test("an optional-only input does not require an empty state", () => {
+  const source = `/- kdl-version 2
+
+surface "0.1"
+application "search" { purpose "Search messages." }
+query "searchMessages" {
+    entity "filters" { (string)"term" optional }
+    entity "result" { (string)"message" }
+    input (entity)"filters"
+    returns (entity)"result" missing=#null
+}
+screen "results" {
+    use (query)"searchMessages"
+    section "Result" { field "message" }
+    state "notFound" {
+        section "Missing" { text "No messages found." }
+    }
+}
+`;
+
+  const result = parseSurface(source, "optional-input.kdl");
+  assertEquals(result.diagnostics, []);
+  assert(result.ir !== null);
 });
 
 Deno.test("CLI check and export succeed for the valid example", () => {
@@ -493,6 +593,8 @@ Deno.test("the skill defines all three required forward evaluations", async () =
   assertMatch(skill, /surface "0\.1"/);
   assertMatch(skill, /entity "contact"/);
   assertMatch(skill, /\(string\)"id"/);
+  assertMatch(skill, /entity "contactLookup"/);
+  assertMatch(skill, /input \(entity\)"contactLookup"/);
   assertMatch(skill, /returns \(entity\)"contact" missing=#null/);
   assertMatch(skill, /use \(query\)"contactById"/);
   assertMatch(skill, /state "notFound"/);

@@ -60,10 +60,10 @@ Read the guides in this order:
 | `surface "0.1"` | First semantic node; exactly one |
 | `application "<id>"` | Exactly one; contains one `purpose` |
 | `purpose "<text>"` | Child of `application`; exactly one string |
-| `entity "<id>"` | Declares one or more typed field nodes |
+| `entity "<id>"` | Declares a global entity, or a private entity inside a query |
 | `(<type>)"<name>" [optional]` | Declares a required-by-default entity field using a node annotation |
-| `query "<id>" by="<field>"` | Looks up one entity using `input` and `returns` children |
-| `input "<name>" type="<type>"` | Declares a query input |
+| `query "<id>"` | Uses private/global entity references for structured input and output |
+| `input (entity)"<entity>"` | Optionally declares one structured query input |
 | `returns (entity)"<entity>" missing=#null` | Returns a checked entity reference or `#null` |
 | `screen "<id>" [route="<route>"]` | At least one; contains uses, sections, and queried-screen states |
 | `use (query)"<query>"` | Gives a screen one checked query reference |
@@ -81,15 +81,16 @@ Additional rules:
   lower camel case.
 - Declaration identifiers and nested field/input names are unique within their
   type and scope.
-- Entity field node annotations and input types are currently `string` or
-  `boolean`.
+- Entity field node annotations are currently `string` or `boolean`.
 - Entity fields are required by default. The bare `optional` modifier marks the
   only alternative.
 - The KDL 2 null literal is `#null`.
-- A type annotation on a string marks a checked reference to a top-level
-  declaration of that type.
-- Rung 3 uses `(entity)` on query returns and `(query)` on screen `use` nodes.
-  Those entity and query references must resolve.
+- A type annotation on a string marks a checked reference to a declaration
+  visible in the current scope.
+- Query `input` and `returns` can reference private entities in that query or
+  global entities. Private entity IDs cannot shadow global entity IDs.
+- Screen `use` nodes reference global queries. All annotated references must
+  resolve to the declared type.
 - Local projected field references must also resolve.
 - A section uses either ordered text or ordered field references, not both.
 - Routes are optional strings and currently opaque. Section names, titles, and

@@ -2,16 +2,17 @@
 
 ## Lookup
 
-A rung-3 query is a single-entity lookup. Its `by` property names both an input and a
-field on the returned entity. Those two values must use the same primitive type.
-`missing=#null` makes the not-found result explicit.
+A rung-3 query accepts zero or one entity-shaped input and returns one entity or
+`#null`. `contactById` declares a private `contactLookup` input entity and returns the
+global `contact` entity. Context explains that the input ID matches the contact ID.
 
 Cross-declaration references use annotated strings. The query returns
 `(entity)"contact"`, and the screen declares `use (query)"contactById"`. Surface checks
 that each target exists and has the annotated declaration type.
 
-A queried web screen receives query inputs from URL query parameters with the same
-names. For this example, `/contacts?id=ada` supplies the `id` input.
+A queried web screen receives input-entity fields from URL query parameters with the
+same names. For this example, `/contacts?id=ada` supplies the private input entity's
+`id` field.
 
 ## Display
 
