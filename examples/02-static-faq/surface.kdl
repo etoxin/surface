@@ -28,4 +28,5 @@ interface "surfaceFaq" {
 
 screen "faq" {
     use (interface)"surfaceFaq"
+    logic "Use /faq as this screen's URL path."
 }

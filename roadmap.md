@@ -172,6 +172,7 @@ Build a page containing several questions and answers.
 Introduces:
 
 - detailed interface intent expressed through prompt context;
+- inline screen `logic` for one normative URL-path instruction;
 - multiline natural-language content;
 - ordering within prompt content;
 - comment preservation;
@@ -186,8 +187,11 @@ Delivered in:
 - [`examples/02-static-faq/expected-ir.json`](./examples/02-static-faq/expected-ir.json);
 - [`examples/02-static-faq/invalid/`](./examples/02-static-faq/invalid/);
 - [`examples/02-static-faq/app/index.html`](./examples/02-static-faq/app/index.html);
+- [`examples/02-static-faq/app/server.ts`](./examples/02-static-faq/app/server.ts);
 - [Rung 2 decisions and acceptance scenario](./examples/02-static-faq/decisions.md);
 - [Interface guide](./docs/node_interface.md);
+- [Screen guide](./docs/node_screen.md);
+- [Logic guide](./docs/node_logic.md);
 - [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
 
 ### 3. Contact Viewer
@@ -205,6 +209,8 @@ Introduces:
 - Boolean and null values;
 - private function collections and structured collection input/output references;
 - annotated references between top-level declarations;
+- block `logic` for ordered function, interface, and screen instructions;
+- checked declaration references from logic instructions;
 - context that relates functions, collections, interfaces, and screens.
 
 This stage should establish field syntax and contextual reference resolution.
@@ -223,6 +229,7 @@ Delivered in:
 - [Function guide](./docs/node_function.md);
 - [Interface guide](./docs/node_interface.md);
 - [Screen guide](./docs/node_screen.md);
+- [Logic guide](./docs/node_logic.md);
 - [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
 
 ### 4. Click Counter
@@ -231,18 +238,12 @@ Delivered in:
 
 Build a counter that a visitor can increment and reset.
 
-Introduces:
-
-- inline and block `logic` on functions, interfaces, and screens;
-- ordered, normative natural-language instructions retained in the IR;
-- optional checked references on logic instructions;
-- conditions, arithmetic, events, HTTP operations, and errors expressed inside
-  instruction strings rather than as structured operator nodes.
-
 Reuses:
 
 - `application`, `interface`, and `screen` declarations;
 - `context` for presentation guidance;
+- block `logic` for ordered, normative interface instructions;
+- conditions and arithmetic expressed inside instruction strings;
 - an interface-local value and observable state changes;
 - implementation-level acceptance tests.
 
@@ -254,6 +255,8 @@ tested without modelling that local UI state as application data.
 state, preconditions, and effects remain unreleased until a later application
 demonstrates a concrete ambiguity or validation gap that logic strings cannot
 cover.
+
+Rung 4 introduces no new Surface syntax.
 
 Delivered in:
 

@@ -79,6 +79,7 @@ mise run surf check examples/01-hello-world/surface.kdl
 mise run surf format examples/01-hello-world/surface.kdl
 mise run surf export examples/03-contact-viewer/surface.kdl --format json
 mise run surf reference examples/03-contact-viewer/surface.kdl --list
+mise run static-faq
 mise run contact-viewer
 mise run click-counter
 ```
@@ -97,7 +98,8 @@ private collections such as `function.contactById.collection.contactLookup`.
 - [LLM skill](./skills/surface/SKILL.md)
 
 Each rung includes expected JSON, invalid fixtures, a small implementation,
-human documentation, and updates to the LLM skill. The Contact Viewer runs at
+human documentation, and updates to the LLM skill. The Static FAQ runs at
+`http://localhost:8002/faq`; the Contact Viewer runs at
 `http://localhost:8000/contacts?id=ada`; the Click Counter runs at
 `http://localhost:8001/`.
 

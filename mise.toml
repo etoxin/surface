@@ -46,6 +46,11 @@ description = "Run the rung-3 Contact Viewer example"
 depends = ["deps"]
 run = "deno task contact-viewer"
 
+[tasks."static-faq"]
+description = "Run the rung-2 Static FAQ example"
+depends = ["deps"]
+run = "deno task static-faq"
+
 [tasks."click-counter"]
 description = "Run the rung-4 Click Counter example"
 depends = ["deps"]

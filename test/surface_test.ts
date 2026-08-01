@@ -10,6 +10,7 @@ import {
   handleContactRequest,
   renderContactPage,
 } from "../examples/03-contact-viewer/app/server.ts";
+import { handleFaqRequest } from "../examples/02-static-faq/app/server.ts";
 import {
   handleCounterRequest,
   parseCounterValue,
@@ -796,6 +797,22 @@ Deno.test("the implemented FAQ page contains every ordered question", async () =
     /No\. Surface is a specification format rather than an executable language\./,
   );
   assertMatch(html, /Describe the URL path in the screen's logic\./);
+  assertMatch(html, /class="skip-link"/);
+  assertMatch(html, /aria-labelledby="faq-title"/);
+  assertEquals([...html.matchAll(/class="faq-card"/g)].length, 3);
+
+  const faq = handleFaqRequest(
+    new Request("http://localhost:8002/faq"),
+    html,
+  );
+  assertEquals(faq.status, 200);
+  assertMatch(await faq.text(), /<h1 id="faq-title">Frequently asked questions<\/h1>/);
+
+  const unknown = handleFaqRequest(
+    new Request("http://localhost:8002/unknown"),
+    html,
+  );
+  assertEquals(unknown.status, 404);
 });
 
 Deno.test("the Contact Viewer implements selected, empty, and not-found states", () => {

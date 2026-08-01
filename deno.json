@@ -1,10 +1,11 @@
 {
   "tasks": {
     "surf": "deno run --allow-read --allow-write src/cli.ts",
+    "static-faq": "deno run --allow-net --allow-read examples/02-static-faq/app/server.ts",
     "contact-viewer": "deno run --allow-net examples/03-contact-viewer/app/server.ts",
     "click-counter": "deno run --allow-net examples/04-click-counter/app/server.ts",
     "test": "deno test --allow-read --allow-write --allow-run",
-    "typecheck": "deno check src/cli.ts src/diagnostics.ts src/formatter.ts src/surface.ts examples/03-contact-viewer/app/server.ts examples/04-click-counter/app/server.ts test/surface_test.ts",
+    "typecheck": "deno check src/cli.ts src/diagnostics.ts src/formatter.ts src/surface.ts examples/02-static-faq/app/server.ts examples/03-contact-viewer/app/server.ts examples/04-click-counter/app/server.ts test/surface_test.ts",
     "verify": "deno fmt --check && deno lint && deno task typecheck && deno task test",
     "check": "deno task verify"
   },
@@ -15,6 +16,7 @@
     "include": [
       "src/",
       "test/",
+      "examples/02-static-faq/app/server.ts",
       "examples/03-contact-viewer/app/server.ts",
       "examples/04-click-counter/app/server.ts",
       "deno.json",
@@ -31,6 +33,7 @@
   "lint": {
     "include": [
       "src/",
+      "examples/02-static-faq/app/server.ts",
       "examples/03-contact-viewer/app/server.ts",
       "examples/04-click-counter/app/server.ts",
       "test/"

@@ -12,7 +12,12 @@
   "screens": [
     {
       "id": "faq",
-      "interface": "surfaceFaq"
+      "interface": "surfaceFaq",
+      "logic": [
+        {
+          "instruction": "Use /faq as this screen's URL path."
+        }
+      ]
     }
   ]
 }
