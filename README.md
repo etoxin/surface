@@ -4,8 +4,10 @@ Surface is a small [KDL](https://kdl.dev/) format for describing an application 
 implementation. It gives humans and LLMs a shared, checked product specification: data,
 capabilities, interfaces, screens, technology choices, context, and ordered logic.
 
+It adds just enough syntax to describe an application with the ability to add LLM context to kdl nodes.
+
 **Status:** experimental · **Format:** Surface 0.1 · **Syntax:** KDL 2 · **Extension:**
-`.kdl` · **Grammar:** frozen
+`.kdl`
 
 ```kdl
 /- kdl-version 2
@@ -54,24 +56,48 @@ screen "home" {
 }
 ```
 
-Surface is not a source-code generator. Its CLI checks, formats, exports, and resolves
-references in a specification. Give the checked `.kdl` file and the included Surface
-skill to an LLM—or to a person—to produce the application.
+## Install on macOS
 
-## Try Surface
-
-Install [mise](https://mise.jdx.dev/), then run:
+Surface currently builds locally from source. Install [mise](https://mise.jdx.dev/), then
+build and install the CLI for your user:
 
 ```sh
-git clone https://github.com/etoxin/surface-lang.git
-cd surface-lang
+git clone https://github.com/etoxin/surface.git
+cd surface
 mise install
 mise run build
-mise run surf check examples/hello-world/surface.kdl
-mise run verify
+install -d "$HOME/.local/bin"
+install -m 755 build/surf "$HOME/.local/bin/surf"
 ```
 
-`mise run build` creates a native executable for the current platform at `build/surf`.
+Make sure your `~/.zshrc` contains:
+
+```sh
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Open a new terminal and confirm the installation:
+
+```sh
+surf --help
+```
+
+This installation path currently supports macOS only.
+
+## Start a Project
+
+Enter a directory containing a `surface.kdl` file, then run:
+
+```sh
+surf init
+```
+
+Select Codex, Claude Code, or both. The command installs their project-local Surface
+skills and adds `/build/` to `.gitignore`. Use `surf init --codex`, `surf init --claude`,
+or both flags for a non-interactive setup.
+
+To have an LLM create the specification as well as the application, follow
+[Create a Specification with an LLM](./examples/llm-authoring/README.md).
 
 Start with [Getting started](./docs/getting_started.md) to write and implement your own
 specification. Surface is experimental, so keep the `.kdl` source in version control and
@@ -125,44 +151,8 @@ Select Codex, Claude Code, or both, then open that agent in the example director
 
 ## CLI
 
-Build the CLI locally:
-
-```sh
-mise run build
-./build/surf --help
-```
-
-### Install for your macOS user
-
-Install the binary in your user account without `sudo`:
-
-```sh
-install -d "$HOME/.local/bin"
-install -m 755 build/surf "$HOME/.local/bin/surf"
-```
-
-Make sure this line is in `~/.zshrc`:
-
-```sh
-export PATH="$HOME/.local/bin:$PATH"
-```
-
-Open a new terminal, then confirm the installation with `surf --help`. This first
-installation path supports macOS only; cross-platform release binaries can follow later.
-
-### Start a project
-
-From the directory containing `surface.kdl`, run:
-
-```sh
-surf init
-```
-
-The interactive multi-select installs project-local support for Codex, Claude Code, or
-both, and adds `/build/` to `.gitignore`. For automation, use `surf init --codex`,
-`surf init --claude`, or both flags.
-
 ```text
+surf init [--codex] [--claude]
 surf parse <file.kdl>
 surf check <file.kdl>
 surf format <file.kdl>
@@ -172,8 +162,8 @@ surf reference <file.kdl> <selector|--list>
 `reference --list` discovers selectors and typed reference literals. Passing a selector
 prints its complete KDL declaration for focused human or LLM context.
 
-Run `mise tasks` to see the available tasks. The complete repository check is
-`mise run verify`.
+For repository development, run `mise tasks` to see the available tasks. The complete
+repository check is `mise run verify`.
 
 Surface 0.1 is frozen. Bug fixes, diagnostics, formatting, documentation, and tooling
 may improve, but new valid syntax belongs to a later format version.
