@@ -1,19 +1,21 @@
 ---
 name: surface
-description: Create, edit, review, format, and validate Surface 0.1 application specifications written as KDL 2 files. Use for Surface files or repository work involving released application stacks, typed value, collection, function, interface, screen, context, and ordered logic syntax.
+description: Create, edit, review, format, and validate frozen Surface 0.1 application specifications written as KDL 2 files. Use for Surface files or repository work involving released application stacks, typed value, collection, function, interface, screen, context, and ordered logic syntax.
 ---
 
 # Surface
 
-Use only the released syntax below. Keep operators and control flow inside
-logic instruction strings; do not invent structured UI or operator nodes.
+Surface 0.1's grammar is frozen. Use only the released syntax below. Keep
+operators and control flow inside logic instruction strings; do not invent
+structured UI, operator, or other nodes. A missing capability is evidence for
+a later version, not permission to extend 0.1.
 
 ## Workflow
 
 1. Confirm the first line is `/- kdl-version 2` and the first semantic node is
    `surface "0.1"`.
-2. Read the repository `README.md` when available; it is authoritative if it
-   differs from this skill.
+2. Read the repository `docs/grammar.md` when available; it is the authoritative
+   Surface 0.1 grammar. Use `README.md` for repository workflow.
 3. Preserve comments, declaration order, prompts, and unrelated content.
 4. When editing an existing file, run `surf reference surface.kdl --list`
    before adding a reference if the repository CLI is available. For a new
@@ -428,8 +430,8 @@ Private collection selectors include their function scope, such as
 ## Current Limits
 
 Do not add actors, behaviour or event declarations, workflows, structured state
-or transitions, policies,
-components, scenarios, imports, structured expressions or control-flow nodes,
-list-returning functions, structured UI elements, or code-generation
-directives. Express operations in released logic strings and add future syntax
-only when a later roadmap rung releases it.
+or transitions, policies, components, scenarios, imports, structured
+expressions or control-flow nodes, list-returning functions, structured UI
+elements, or code-generation directives. Express operations in released logic
+strings when that is sufficiently precise. Otherwise report the smallest
+missing capability and stop; do not create new Surface 0.1 syntax.

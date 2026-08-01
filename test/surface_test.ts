@@ -38,6 +38,7 @@ const todoExampleRoot = join(
   "05-todo-list",
 );
 const candidateExampleDirectories = [
+  "06-signup-determinism",
   "08-url-shortener-api",
   "11-file-converter",
   "15-online-checkout",
@@ -121,6 +122,46 @@ Deno.test("candidate specifications export their reviewed IR", async () => {
     assertEquals(result.diagnostics, []);
     assertEquals(result.ir, expected);
   }
+});
+
+Deno.test("Surface 0.1 rejects grammar extensions and later versions", () => {
+  const futureDeclarations = [
+    "actor",
+    "behaviour",
+    "component",
+    "event",
+    "import",
+    "scenario",
+    "workflow",
+  ];
+
+  for (const declaration of futureDeclarations) {
+    const result = parseSurface(
+      `/- kdl-version 2
+surface "0.1"
+application "frozenGrammar" { purpose "Keep version 0.1 fixed." }
+screen "home" { context "Render home." }
+${declaration} "future"
+`,
+      `future-${declaration}.kdl`,
+    );
+    assert(
+      result.diagnostics.some(({ code }) => code === "SURF-NODE-001"),
+      `${declaration} must remain outside Surface 0.1`,
+    );
+    assertEquals(result.ir, null);
+  }
+
+  const laterVersion = parseSurface(
+    `/- kdl-version 2
+surface "0.2"
+application "laterVersion" { purpose "Use a future grammar." }
+screen "home" { context "Render home." }
+`,
+    "later-version.kdl",
+  );
+  assert(laterVersion.diagnostics.some(({ code }) => code === "SURF-VERSION-003"));
+  assertEquals(laterVersion.ir, null);
 });
 
 Deno.test("all invalid fixtures include their expected diagnostic", async () => {
@@ -1236,6 +1277,8 @@ Deno.test("the skill defines all three required forward evaluations", async () =
     join(repositoryRoot, "skills", "surface", "agents", "openai.yaml"),
   );
   assertMatch(skill, /^---\nname: surface\ndescription: .+\n---/);
+  assertMatch(skill, /Surface 0\.1's grammar is frozen/);
+  assertMatch(skill, /docs\/grammar\.md/);
   assertMatch(skill, /surface "0\.1"/);
   assertMatch(skill, /stack "web"/);
   assertMatch(skill, /target "browser"/);

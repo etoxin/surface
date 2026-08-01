@@ -1,0 +1,233 @@
+{
+  "surfaceVersion": "0.1",
+  "application": {
+    "id": "signupDeterminism",
+    "purpose": "Create an account through an accessible, consistently validated signup experience.",
+    "stacks": [
+      {
+        "id": "web",
+        "target": "browser",
+        "technologies": [
+          {
+            "role": "markup",
+            "name": "html"
+          },
+          {
+            "role": "language",
+            "name": "javascript"
+          },
+          {
+            "role": "uiLibrary",
+            "name": "picoCss",
+            "version": "2"
+          }
+        ]
+      },
+      {
+        "id": "service",
+        "target": "server",
+        "technologies": [
+          {
+            "role": "language",
+            "name": "typescript"
+          },
+          {
+            "role": "runtime",
+            "name": "deno"
+          },
+          {
+            "role": "protocol",
+            "name": "httpJson"
+          },
+          {
+            "role": "storage",
+            "name": "memory"
+          }
+        ]
+      }
+    ]
+  },
+  "values": [
+    {
+      "id": "signupStatus",
+      "type": "enum",
+      "kind": "constant",
+      "values": [
+        "success",
+        "invalid",
+        "conflict"
+      ]
+    }
+  ],
+  "collections": [
+    {
+      "id": "account",
+      "fields": [
+        {
+          "name": "id",
+          "type": "uuid"
+        },
+        {
+          "name": "email",
+          "type": "string"
+        },
+        {
+          "name": "createdAt",
+          "type": "dateTime"
+        }
+      ]
+    },
+    {
+      "id": "signupResult",
+      "fields": [
+        {
+          "name": "httpStatus",
+          "type": "uint16"
+        },
+        {
+          "name": "status",
+          "type": "enum",
+          "value": "signupStatus"
+        },
+        {
+          "name": "accountId",
+          "type": "uuid",
+          "optional": true
+        },
+        {
+          "name": "errors",
+          "type": "array",
+          "optional": true
+        }
+      ]
+    }
+  ],
+  "functions": [
+    {
+      "id": "registerAccount",
+      "collections": [
+        {
+          "id": "signupInput",
+          "fields": [
+            {
+              "name": "email",
+              "type": "string"
+            },
+            {
+              "name": "password",
+              "type": "string"
+            },
+            {
+              "name": "confirmPassword",
+              "type": "string"
+            },
+            {
+              "name": "acceptedTerms",
+              "type": "boolean"
+            }
+          ]
+        }
+      ],
+      "input": {
+        "collection": "signupInput"
+      },
+      "output": {
+        "collection": "signupResult"
+      },
+      "logic": [
+        {
+          "instruction": "Trim email and convert it to lowercase before validation or lookup.",
+          "reference": {
+            "type": "collection",
+            "id": "signupInput"
+          }
+        },
+        {
+          "instruction": "Validate fields in this order: email, password, confirmPassword, acceptedTerms."
+        },
+        {
+          "instruction": "Email is invalid when empty or when it does not contain non-whitespace text before and after one @ character and a dot after @; use the message Enter a valid email address."
+        },
+        {
+          "instruction": "Password is invalid unless it contains at least 12 characters, one uppercase ASCII letter, one lowercase ASCII letter, and one ASCII digit; use the message Use at least 12 characters with uppercase, lowercase, and a number."
+        },
+        {
+          "instruction": "confirmPassword is invalid when it differs from password; use the message Passwords must match."
+        },
+        {
+          "instruction": "acceptedTerms is invalid unless it is true; use the message Accept the terms to continue."
+        },
+        {
+          "instruction": "If any field is invalid, output httpStatus 422, status invalid, omit accountId, and include one field and message error object for every invalid field in validation order.",
+          "reference": {
+            "type": "collection",
+            "id": "signupResult"
+          }
+        },
+        {
+          "instruction": "If an account already has the normalized email, output httpStatus 409, status conflict, omit accountId, and include one email error with message An account already exists for this email.",
+          "reference": {
+            "type": "collection",
+            "id": "account"
+          }
+        },
+        {
+          "instruction": "Otherwise create exactly one account with a unique id, the normalized email, and the current date and time.",
+          "reference": {
+            "type": "collection",
+            "id": "account"
+          }
+        },
+        {
+          "instruction": "After creation output httpStatus 201, status success, the created accountId, and omit errors.",
+          "reference": {
+            "type": "collection",
+            "id": "signupResult"
+          }
+        }
+      ]
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "signup",
+      "logic": [
+        {
+          "instruction": "Start with an empty form, no errors, and the Create account action enabled."
+        },
+        {
+          "instruction": "On submission call this function once; while awaiting it, disable the form and announce Creating account.",
+          "reference": {
+            "type": "function",
+            "id": "registerAccount"
+          }
+        },
+        {
+          "instruction": "For an invalid or conflict result, keep the normalized email and terms choice, clear both password fields, show every returned error beside its field, focus the first invalid field, re-enable the form, and announce that signup failed.",
+          "reference": {
+            "type": "function",
+            "id": "registerAccount"
+          }
+        },
+        {
+          "instruction": "For a success result, replace the form with Account created and announce success.",
+          "reference": {
+            "type": "function",
+            "id": "registerAccount"
+          }
+        }
+      ]
+    }
+  ],
+  "screens": [
+    {
+      "id": "home",
+      "interface": "signup",
+      "logic": [
+        {
+          "instruction": "Use / as this screen's URL path."
+        }
+      ]
+    }
+  ]
+}

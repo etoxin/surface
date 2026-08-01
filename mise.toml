@@ -61,6 +61,26 @@ description = "Serve the rung-5 HTML Todo List example"
 depends = ["deps"]
 run = "deno task todo-list"
 
+[tasks."signup-determinism"]
+description = "Compare the three rung-6 signup builds"
+depends = ["deps"]
+run = "deno task signup-determinism"
+
+[tasks."signup-build-1"]
+description = "Run the functional signup build on port 8010"
+depends = ["deps"]
+run = "deno task signup-build-1"
+
+[tasks."signup-build-2"]
+description = "Run the object-oriented signup build on port 8011"
+depends = ["deps"]
+run = "deno task signup-build-2"
+
+[tasks."signup-build-3"]
+description = "Run the pipeline signup build on port 8012"
+depends = ["deps"]
+run = "deno task signup-build-3"
+
 [tasks."url-shortener"]
 description = "Run the rung-8 URL Shortener API example"
 depends = ["deps"]

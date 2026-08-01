@@ -1,132 +1,47 @@
-# Surface Roadmap
+# Surface Application Roadmap
 
-## Development Strategy
+## Direction
 
-Surface will grow from applications rather than from speculative format design.
+Surface grows through applications, not a catalogue of proposed declarations. Each
+application asks whether the frozen Surface 0.1 vocabulary is sufficient to produce a
+working implementation.
 
-Each roadmap application should be the smallest application that creates a real
-need for the next Surface feature. Surface syntax and semantics should only be
-added when the current application cannot be described clearly without them.
+For every application:
 
-Surface files will use a constrained KDL 2 profile as their concrete syntax.
-Surface will continue to define its own declarations, validation rules,
-references, intermediate representation, and semantics.
+1. describe the observable result;
+2. try the existing grammar first;
+3. implement it from the Surface file;
+4. test observable behaviour and specification-to-IR stability;
+5. record assumptions and ambiguities;
+6. treat a genuine language blocker as evidence for a future version, not as permission
+   to extend 0.1.
 
-Surface specifications use the standard `.kdl` extension. The `surface`
-node distinguishes a Surface document from other KDL documents.
+## Surface 0.1 Freeze
 
-## Guiding Rules
+The [Surface 0.1 grammar](./docs/grammar.md) is frozen. Surface 0.1 may receive bug
+fixes, better diagnostics, formatting improvements, documentation, and tooling, but its
+valid syntax will not grow.
 
-1. Begin with observable application behaviour.
-2. Attempt to express it using existing Surface features.
-3. Add the smallest general feature that removes the blocking limitation.
-4. Avoid adding syntax solely for a hypothetical future application.
-5. Map every new construct deterministically into the Surface IR.
-6. Record unresolved semantics as decisions rather than silently assuming them.
-7. Keep earlier examples valid unless a deliberate format-version change is
-   made.
-8. Prefer one authoritative representation of each fact over duplicated
-   relationships.
-9. Update the Surface LLM skill in the same rung as the Surface feature it
-   teaches.
-10. Add or update human-facing node documentation in `docs/` in the same rung
-    as the syntax it describes.
-
-## Vocabulary Boundaries
-
-- `context` is universal prompt guidance. It explains intent, constraints, and
-  implementation considerations. It is non-normative and omitted from the IR.
-- `logic` is normative on a function, interface, or screen. One instruction can
-  use `logic "..."`; a block contains ordered quoted instructions or checked
-  references followed by quoted instructions. Conditions, comparisons, HTTP
-  requests, events, errors, and every other operator stay inside strings.
-- `function` is a named callable capability with an optional `input` and one
-  `output`. A function may describe computation, an HTTP request, encryption,
-  persistence, or another operation when invocation and output are the useful
-  model.
-- `behaviour` is reserved for a named reaction to a trigger. A behaviour may
-  change observable state, invoke functions, or emit and respond to events.
-  It should not become a generic container for function implementation notes.
-
-Do not release `behaviour` merely to restate logic or context. Introduce it
-only when a roadmap application needs a named, reusable reaction with semantics
-that ordered local logic cannot express.
+An application that cannot be expressed faithfully should stop and report the smallest
+missing capability. Any syntax experiment belongs to a prospective Surface 0.2 and must
+not make a Surface 0.1 file invalid.
 
 ## Completion Gate
 
-Each application is complete when:
+A completed application has:
 
-- its Surface specification parses;
-- its formatter is idempotent;
-- formatting does not change its meaning;
-- it exports to a reviewed IR snapshot;
-- all references resolve;
-- its required validation rules pass;
-- invalid fixtures produce clear diagnostics;
-- human-facing documentation covers every node introduced or changed by the
-  rung;
-- the application can be implemented from the specification;
-- implementation assumptions are recorded as decisions;
-- the application has at least one observable acceptance scenario when behaviour
-  is present;
-- the Surface LLM skill documents the newly supported syntax;
-- the skill does not expose syntax from future rungs;
-- the skill passes its structural validation;
-- the skill is forward-tested on creating, modifying, and reviewing the rung's
-  application.
+- a valid, canonically formatted `surface.kdl`;
+- a reviewed `expected-ir.json` that exactly matches CLI export;
+- resolved references and useful invalid fixtures;
+- a runnable implementation produced from the specification;
+- automated acceptance tests for observable behaviour;
+- implementation assumptions in `decisions.md`;
+- updated human documentation when it clarifies existing 0.1 syntax;
+- an updated Surface skill and fresh create, modify, and diagnose evaluations;
+- a passing repository verification task.
 
-## Node Documentation Deliverable
-
-Each rung MUST add or update the human-facing documentation for every node it
-introduces or changes. Write these docs for someone authoring a Surface file,
-not as a mirror of the parser implementation. They should explain:
-
-- what the node describes and when to use it;
-- where it belongs in the file;
-- what values the author supplies;
-- which nested nodes are required or optional;
-- practical examples and common mistakes.
-
-Keep parser, diagnostic, and IR details in the source and tests unless an
-author needs them to write a correct file.
-
-Keep these references in `docs/` and link them from the relevant rung's
-**Delivered in** list, directly or through a node-reference index.
-
-## LLM Skill Deliverable
-
-The Surface skill is a versioned part of the format, not secondary documentation.
-It should enable an LLM to work correctly at the current rung without loading
-the entire design history.
-
-Each rung MUST update the skill's:
-
-- trigger description when its supported tasks change;
-- concise authoring workflow;
-- supported declaration and child-node reference;
-- validation checklist;
-- canonical example;
-- explicit current limitations;
-- forward-test prompts and expected acceptance conditions.
-
-At minimum, forward testing should ask a fresh LLM to:
-
-1. create the rung's application from a short product request;
-2. modify an existing valid Surface file without changing unrelated content;
-3. diagnose an invalid Surface file and suggest a valid correction.
-
-The skill should follow the standard skill package structure:
-
-```text
-surface/
-    SKILL.md
-    agents/
-        openai.yaml
-```
-
-Add `references/`, `scripts/`, or `assets/` only when they remove repeated work
-or keep essential detail out of `SKILL.md`. Validate the skill after every rung
-and keep the main instructions concise.
+Candidate and benchmark implementations may be committed before this full gate is
+satisfied, but they must be labelled accordingly.
 
 ## Application Ramp
 
@@ -134,472 +49,196 @@ and keep the main instructions concise.
 
 **Status:** Complete
 
-Build a single page that displays a greeting.
+Build one page displaying a greeting. Establish the file marker, application purpose,
+interface intent, screen placement, checked references, formatting, IR export, and the
+smallest possible implementation.
 
-Introduces:
-
-- the KDL-based Surface file;
-- the Surface version marker;
-- `application` declarations;
-- intent-driven `interface` declarations;
-- `screen` declarations;
-- checked interface references from screens;
-- prompt-only `context` notes on any node;
-- nested child blocks;
-- declaration identifiers;
-- strings;
-- comments;
-- the first formatter and IR export.
-
-This stage should validate that a Surface project contains exactly one
-application declaration.
-
-Delivered in:
-
-- [`examples/01-hello-world/surface.kdl`](./examples/01-hello-world/surface.kdl);
-- [`examples/01-hello-world/expected-ir.json`](./examples/01-hello-world/expected-ir.json);
-- [`examples/01-hello-world/invalid/`](./examples/01-hello-world/invalid/);
-- [`examples/01-hello-world/app/index.html`](./examples/01-hello-world/app/index.html);
-- [Rung 1 writing guide](./docs/README.md);
-- [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
+Delivered in [examples/01-hello-world](./examples/01-hello-world/).
 
 ### 2. Static FAQ
 
 **Status:** Complete
 
-Build a page containing several questions and answers.
+Build an ordered, content-heavy FAQ. Test multiline prompt content, comments,
+formatting, accessibility intent, and a URL described through screen logic without
+FAQ-specific syntax.
 
-Introduces:
-
-- detailed interface intent expressed through prompt context;
-- inline screen `logic` for one normative URL-path instruction;
-- multiline natural-language content;
-- ordering within prompt content;
-- comment preservation;
-- canonical formatting of nested content.
-
-This stage demonstrates that an interface can describe a content-heavy page
-without adding FAQ-specific `question` or `answer` nodes.
-
-Delivered in:
-
-- [`examples/02-static-faq/surface.kdl`](./examples/02-static-faq/surface.kdl);
-- [`examples/02-static-faq/expected-ir.json`](./examples/02-static-faq/expected-ir.json);
-- [`examples/02-static-faq/invalid/`](./examples/02-static-faq/invalid/);
-- [`examples/02-static-faq/app/index.html`](./examples/02-static-faq/app/index.html);
-- [`examples/02-static-faq/app/server.ts`](./examples/02-static-faq/app/server.ts);
-- [Rung 2 decisions and acceptance scenario](./examples/02-static-faq/decisions.md);
-- [Interface guide](./docs/node_interface.md);
-- [Screen guide](./docs/node_screen.md);
-- [Logic guide](./docs/node_logic.md);
-- [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
+Delivered in [examples/02-static-faq](./examples/02-static-faq/).
 
 ### 3. Contact Viewer
 
 **Status:** Complete
 
-Build a read-only page that displays a contact selected by identifier.
+Build a read-only contact lookup. Test typed collections, optional fields, private
+function input collections, checked input/output references, missing results, and
+ordered logic across functions, interfaces, and screens.
 
-Introduces:
-
-- `collection` declarations;
-- `function` declarations for named capabilities;
-- primitive field types expressed as KDL node annotations;
-- the bare `optional` field modifier for fields that are not required;
-- Boolean and null values;
-- private function collections and structured collection input/output references;
-- annotated references between top-level declarations;
-- block `logic` for ordered function, interface, and screen instructions;
-- checked declaration references from logic instructions;
-- context that relates functions, collections, interfaces, and screens.
-
-This stage established field syntax and contextual reference resolution with
-only the `string` and `boolean` types. Rung 5 later expands that type set.
-
-Delivered in:
-
-- [`examples/03-contact-viewer/surface.kdl`](./examples/03-contact-viewer/surface.kdl);
-- [`examples/03-contact-viewer/expected-ir.json`](./examples/03-contact-viewer/expected-ir.json);
-- [`examples/03-contact-viewer/invalid/`](./examples/03-contact-viewer/invalid/);
-- [`examples/03-contact-viewer/app/server.ts`](./examples/03-contact-viewer/app/server.ts);
-- [Rung 3 decisions and acceptance scenarios](./examples/03-contact-viewer/decisions.md);
-- [Collection guide](./docs/node_collection.md);
-- [Function guide](./docs/node_function.md);
-- [Interface guide](./docs/node_interface.md);
-- [Screen guide](./docs/node_screen.md);
-- [Logic guide](./docs/node_logic.md);
-- [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
+Delivered in [examples/03-contact-viewer](./examples/03-contact-viewer/).
 
 ### 4. Click Counter
 
 **Status:** Complete
 
-Build a counter that a visitor can increment and reset.
+Build a local counter with increment and reset. Confirm that interface logic can
+describe local interaction and observable state without a dedicated state, event, actor,
+or behaviour model.
 
-Reuses:
-
-- `application`, `interface`, and `screen` declarations;
-- `context` for presentation guidance;
-- block `logic` for ordered, normative interface instructions;
-- conditions and arithmetic expressed inside instruction strings;
-- an interface-local value and observable state changes;
-- implementation-level acceptance tests.
-
-The interface logic specifies an initial value of 0, an increment action, a
-reset action, and immediate visible updates. The example can be implemented and
-tested without modelling that local UI state as application data.
-
-At this rung, `actor`, `behaviour`, `event`, `scenario`, numeric field types,
-structured state, preconditions, and effects remain unreleased. Rung 5 later
-adds portable numeric types when the Todo List needs them.
-
-Rung 4 introduces no new Surface syntax.
-
-Delivered in:
-
-- [`examples/04-click-counter/surface.kdl`](./examples/04-click-counter/surface.kdl);
-- [`examples/04-click-counter/expected-ir.json`](./examples/04-click-counter/expected-ir.json);
-- [`examples/04-click-counter/invalid/`](./examples/04-click-counter/invalid/);
-- [`examples/04-click-counter/app/server.ts`](./examples/04-click-counter/app/server.ts);
-- [Rung 4 decisions and acceptance scenarios](./examples/04-click-counter/decisions.md);
-- [Interface guide](./docs/node_interface.md);
-- [Logic guide](./docs/node_logic.md);
-- [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
+Delivered in [examples/04-click-counter](./examples/04-click-counter/).
 
 ### 5. Todo List
 
 **Status:** Complete
 
-Build a personal todo list with open, completed, and archived tasks.
+Build a task list with open, completed, and archived items. Exercise application stacks,
+values, enums, portable types, shared collections, callable functions, mutable
+implementation state, validation, and grouped UI behaviour.
 
-Introduces:
+Delivered in [examples/05-todo-list](./examples/05-todo-list/).
 
-- application `stack` declarations with one target and open-ended technology
-  roles;
-- technology choices and optional versions in the semantic IR;
-- `value` declarations for constants and variables;
-- a broad set of portable types shared by values and collection fields;
-- the `enum` primitive with unique quoted options;
-- checked value references on enum fields;
-- values in the semantic IR and CLI reference output;
+### 6. Signup Determinism Benchmark
 
-Reuses:
+**Status:** Baseline complete
 
-- a global `todo` collection as the shared task contract;
-- a private function input collection for new task text;
-- `createTodo`, `completeTodo`, `reopenTodo`, and `archiveTodo` functions;
-- checked function and collection references;
-- interface `context` for accessible presentation intent;
-- ordered interface `logic` for function invocation, errors, grouping, and counts;
-- inline screen `logic` for the root URL path;
-- implementation-level state and acceptance tests.
+Build the same accessible signup application three times from one frozen Surface file
+and one identical generation brief. Compare observable behaviour, acceptance-test
+results, structure, and implementation choices.
 
-The enum value makes valid statuses machine-checkable while functions keep
-their transitions in ordered logic. `workflow`, `state`, and `transition`
-declarations remain unreleased until an application needs workflow invariants
-that logic strings cannot express.
+The application validates email, password, confirmation, and terms acceptance; reports
+field-level errors; prevents duplicate accounts; and exposes loading, error, and success
+states. The experiment asks whether Surface produces more consistent behaviour even when
+source code and visual design vary.
 
-Rung 5 adds values and the portable types required by this application.
-
-Delivered in:
-
-- [`examples/05-todo-list/surface.kdl`](./examples/05-todo-list/surface.kdl);
-- [`examples/05-todo-list/expected-ir.json`](./examples/05-todo-list/expected-ir.json);
-- [`examples/05-todo-list/invalid/`](./examples/05-todo-list/invalid/);
-- [`examples/05-todo-list/app/index.html`](./examples/05-todo-list/app/index.html);
-- [Rung 5 decisions and acceptance scenarios](./examples/05-todo-list/decisions.md);
-- [Technology stack guide](./docs/node_stack.md);
-- [Portable type guide](./docs/primitives.md);
-- [Value and enum guide](./docs/node_value.md);
-- [Collection guide](./docs/node_collection.md);
-- [Function guide](./docs/node_function.md);
-- [Interface guide](./docs/node_interface.md);
-- [Logic guide](./docs/node_logic.md);
-- [`skills/surface/SKILL.md`](./skills/surface/SKILL.md).
-
-### 6. Signup Form
-
-Build an accessible account-signup form with field validation.
-
-Introduces:
-
-- `component` declarations;
-- `requirement` declarations;
-- structured inputs;
-- validation errors;
-- length and format constraints;
-- loading, error, and success states;
-- accessibility requirements;
-- traceability from requirements to screens and components.
+Delivered in [examples/06-signup-determinism](./examples/06-signup-determinism/).
 
 ### 7. Private Notes
 
-Build a notes application in which users can only access their own notes and
-administrators can review reported notes.
+**Status:** Planned
 
-Introduces:
-
-- `policy` declarations;
-- resource ownership;
-- multiple actor roles;
-- allow and deny rules;
-- authorization failures;
-- negative acceptance scenarios;
-- policy references from behaviours, functions, and screens.
+Build private notes with ordinary users and administrators. Test whether collections,
+enums, functions, and normative function logic can state resource ownership, allow and
+deny behaviour, non-leaking failures, and negative acceptance cases clearly enough
+without a dedicated policy model.
 
 ### 8. URL Shortener API
 
-Build an HTTP API that creates short links and resolves them.
+**Status:** Candidate implemented
 
-Introduces:
+Build an HTTP API that creates unique short links and resolves public or protected
+links. Test methods, paths, path parameters, status mappings, authentication,
+uniqueness, URL values, and persistence using functions and ordered logic.
 
-- `endpoint` declarations;
-- HTTP operations;
-- methods and paths;
-- path parameters;
-- response status mappings;
-- unique fields;
-- URL domain values;
-- public and protected operations.
-
-This stage should establish whether endpoint operations use contextual or fully
-qualified references.
+Candidate in [examples/08-url-shortener-api](./examples/08-url-shortener-api/).
 
 ### 9. Reminder Service
 
-Build a service that schedules reminders and sends notifications through an
-external provider.
+**Status:** Planned
 
-Introduces:
-
-- `job` declarations;
-- `integration` declarations;
-- scheduled and event-triggered work;
-- integration operations;
-- timeouts and retry limits;
-- idempotency;
-- transient and permanent failure behaviour;
-- required secret names without secret values.
+Build scheduled reminders delivered through an external provider. Test whether functions
+and logic can state schedules, provider calls, required secret names, timeouts, retry
+limits, idempotency, and transient versus permanent failure without misrepresenting
+background execution.
 
 ### 10. Expense Approval
 
-Build an expense application with employee submission, manager approval limits,
-and finance-administrator review.
+**Status:** Planned
 
-Introduces:
-
-- `decision` declarations;
-- unresolved and proposed product decisions;
-- money and decimal values;
-- multi-step approval workflows;
-- complex authorization rules;
-- decisions that block implementation readiness;
-- richer success and failure scenarios.
+Build employee expense submission, manager limits, and finance review. Test money
+representation, multi-step approval, authorization, unresolved product choices, and
+success and failure cases. Record whether implementation-blocking decisions need
+representation beyond context.
 
 ### 11. File Converter
 
-Build an application that accepts a file, converts it using custom code, and
-provides the result for download.
+**Status:** Candidate implemented
 
-Introduces:
+Build a local binary file converter with custom deterministic code and a download
+result. Test byte contracts, implementation dependencies, deadlines, failure behaviour,
+and whether a function is sufficient for a custom capability.
 
-- `extension` declarations;
-- binary values;
-- external implementation contracts;
-- extension inputs and outputs;
-- implementation constraints;
-- extension dependencies;
-- timeout and failure behaviour for custom capabilities.
-
-This stage should test whether the released `logic` block can describe
-conversion precisely enough. Extend the syntax only if ordered instruction
-strings and checked references leave a concrete implementation ambiguity.
+Candidate in [examples/11-file-converter](./examples/11-file-converter/).
 
 ### 12. Secure Document Vault
 
-Build an encrypted document store for privacy-sensitive information.
+**Status:** Planned
 
-Introduces:
-
-- `constraint` declarations;
-- sensitive fields;
-- security and privacy categories;
-- encryption requirements;
-- retention obligations;
-- verification guidance;
-- trust boundaries and secret-management requirements.
+Build encrypted storage for privacy-sensitive documents. Test whether the frozen
+language can convey field sensitivity, encryption, retention, trust boundaries, secret
+management, and verification requirements without losing normative meaning.
 
 ### 13. Production Web Service
 
-Deploy one of the earlier applications with explicit operational requirements.
+**Status:** Planned
 
-Introduces:
-
-- `deployment` declarations;
-- environments and regions;
-- data residency;
-- availability targets;
-- backups and recovery;
-- scaling requirements;
-- metrics, logs, traces, and alerting.
-
-At the end of this stage, every standard Surface 0.1 declaration type should be
-covered by at least one application.
+Deploy an earlier application with environments, regions, data residency, availability,
+backup, recovery, scaling, metrics, logs, traces, and alerting. Test how much
+operational intent belongs in stack choices and how much remains outside Surface 0.1.
 
 ### 14. Modular Help Desk
 
-Build a help-desk application split across domain, behaviour, interface, screen,
-scenario, and operational files.
+**Status:** Planned; expected 0.1 boundary
 
-Introduces:
-
-- imports;
-- multi-file projects;
-- project-wide reference resolution;
-- duplicate declaration detection across files;
-- import-cycle diagnostics;
-- custom `x...` attributes;
-- custom `x...` declaration types;
-- preservation of unknown custom content.
+Build a help desk large enough to pressure a single file. Measure authoring, navigation,
+reference resolution, and duplicate-name problems. Record evidence for multi-file
+projects without adding imports to Surface 0.1.
 
 ### 15. Online Checkout
 
-Build a checkout flow with baskets, stock reservations, payments, receipts, and
-order fulfillment.
+**Status:** Candidate implemented
 
-Exercises together:
+Build baskets, stock reservation, payment, receipts, fulfillment, retries, idempotency,
+external failures, compensation, authorization, API operations, and UI flows. Test
+whether related collections, functions, stacks, context, and ordered logic remain
+understandable at capstone size.
 
-- multiple related collections;
-- payment and inventory integrations;
-- chained workflows;
-- asynchronous jobs;
-- idempotent payment behaviour;
-- external failures and compensation;
-- authorization policies;
-- unresolved product decisions;
-- complete API, UI, and scenario coverage.
-
-This is the first capstone for the complete Surface 0.1 declaration model.
+Candidate in [examples/15-online-checkout](./examples/15-online-checkout/).
 
 ### 16. Multi-Tenant Project Tracker
 
-Build a project tracker in which every resource belongs to a tenant and users
-may belong to several tenants with different roles.
+**Status:** Candidate implemented
 
-Tests:
+Build tenant-owned projects and work items with different roles per tenant. Test
+isolation, cross-cutting authorization, terminology consistency, large reference graphs,
+same-tenant relationships, optimistic updates, and semantic impact analysis.
 
-- tenant isolation;
-- cross-cutting policies;
-- reusable concepts;
-- large reference graphs;
-- terminology consistency;
-- requirement and constraint propagation;
-- semantic impact analysis.
-
-This application should expose whether namespaces, reusable templates, or
-reference aliases are needed.
+Candidate in
+[examples/16-multi-tenant-project-tracker](./examples/16-multi-tenant-project-tracker/).
 
 ### 17. Collaborative Board
 
-Build a shared board with live updates and intermittent offline use.
+**Status:** Planned; expected 0.1 boundary
 
-Tests future needs for:
-
-- WebSocket interfaces;
-- concurrent edits;
-- conflict resolution;
-- event ordering;
-- offline behaviour;
-- synchronization and eventual consistency.
-
-This application is expected to expose semantics beyond Surface 0.1 rather than
-forcing concurrency behaviour into controlled natural language indefinitely.
+Build live collaboration with intermittent offline use. Test WebSocket lifecycles,
+concurrent edits, conflict resolution, event ordering, synchronization, and eventual
+consistency. Do not force precise concurrency guarantees into vague prose merely to
+claim success.
 
 ### 18. Bank Transfer System
 
-Build an account-transfer system with immutable audit history.
+**Status:** Planned; expected 0.1 boundary
 
-Tests future needs for:
-
-- transaction boundaries;
-- consistency guarantees;
-- idempotency keys;
-- audit trails;
-- failure recovery;
-- compensating actions;
-- precise invariants;
-- executable policies and scenarios.
-
-This application should drive formal condition, invariant, and transaction
-semantics.
+Build account transfers with immutable audit history. Test transaction boundaries,
+consistency, idempotency, recovery, compensation, invariants, and executable acceptance
+behaviour. Treat any need for formal transaction or condition semantics as evidence for
+a future version.
 
 ### 19. Production Reconstruction Benchmark
 
-Specify and reconstruct a complete production-style application using only its
-Surface project and pinned toolchain inputs.
+**Status:** Planned
 
-Tests:
+Reconstruct a production-style application using only its Surface project and pinned
+toolchain inputs. Compare independent implementations for API, data, UI, tests,
+infrastructure, semantic changes, reproducibility, and conformance. This is the
+long-term test of whether Surface is more useful than a prose brief.
 
-- implementation-task generation;
-- API and database generation;
-- UI scaffolding;
-- test generation;
-- infrastructure generation;
-- semantic change analysis;
-- reproducibility;
-- conformance across independent generators.
+## What the Roadmap Measures
 
-This is the long-term measure of whether Surface can act as a stable application
-specification rather than only a documentation format.
+The roadmap is successful if it answers these questions:
 
-## Declaration Coverage
+- Can a human read and change the specification safely?
+- Can an LLM implement it without hidden conversation history?
+- Do independent implementations agree on observable behaviour?
+- Do checked references and IR provide value beyond Markdown?
+- Can later changes preserve unrelated intent?
+- Where does controlled natural language become genuinely ambiguous?
 
-| Declaration type | First application |
-| --- | --- |
-| `application` | 1. Hello World Page |
-| `interface` | 1. Hello World Page |
-| `screen` | 1. Hello World Page |
-| `collection` | 3. Contact Viewer |
-| `function` | 3. Contact Viewer |
-| `actor` | Not yet scheduled |
-| `behaviour` | Not yet scheduled |
-| `event` | Not yet scheduled |
-| `scenario` | Not yet scheduled |
-| `value` | 5. Todo List |
-| `workflow` | Not yet scheduled |
-| `component` | 6. Signup Form |
-| `requirement` | 6. Signup Form |
-| `policy` | 7. Private Notes |
-| `endpoint` | 8. URL Shortener API |
-| `job` | 9. Reminder Service |
-| `integration` | 9. Reminder Service |
-| `decision` | 10. Expense Approval |
-| `extension` | 11. File Converter |
-| `constraint` | 12. Secure Document Vault |
-| `deployment` | 13. Production Web Service |
-
-## Suggested Example Layout
-
-Each roadmap application should live in its own numbered directory:
-
-```text
-examples/
-    01-hello-world/
-        surface.kdl
-        expected-ir.json
-        invalid/
-            missing-application.kdl
-            duplicate-application.kdl
-    02-static-faq/
-        surface.kdl
-        expected-ir.json
-        invalid/
-    03-contact-viewer/
-        surface.kdl
-        expected-ir.json
-        invalid/
-```
-
-Later applications may split their specification across multiple `.kdl` files.
-Surface tooling identifies Surface documents by their `surface` node rather
-than assuming that every KDL document belongs to Surface.
+The goal is evidence, not declaration coverage.

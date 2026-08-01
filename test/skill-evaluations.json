@@ -16,7 +16,8 @@
         "A top-level interface uses context for presentation and one logic block for ordered initial state, function invocation, validation errors, exclusive grouping, and count updates.",
         "The screen uses the interface with use (interface), and inline logic describes / as its URL path.",
         "Every condition and transition remains inside a logic instruction string; no structured operator node is introduced.",
-        "No standalone enum, workflow, state, transition, actor, behaviour, event, scenario, action, button, or other unreleased node is introduced."
+        "No standalone enum, workflow, state, transition, actor, behaviour, event, scenario, action, button, or other unreleased node is introduced.",
+        "The frozen Surface 0.1 grammar is not extended to satisfy the request."
       ]
     },
     {
@@ -28,7 +29,8 @@
         "The existing enum value and todo status value reference are preserved unchanged.",
         "No workflow, structured state, transition, behaviour, event, action, button, or other unreleased node is added.",
         "The application stack, screen, existing intent, formatting, and unrelated content are preserved.",
-        "The result remains valid Surface 0.1 KDL."
+        "The result remains valid Surface 0.1 KDL.",
+        "The frozen Surface 0.1 grammar is not extended to satisfy the request."
       ]
     },
     {
@@ -40,7 +42,8 @@
         "It explains that enum is a value primitive with at least one unique quoted option and that enum fields require one checked value reference.",
         "It replaces the legacy screen route property with inline logic describing the URL path.",
         "The response distinguishes valid KDL from valid Surface.",
-        "Every suggested correction uses only released syntax."
+        "Every suggested correction uses only released syntax.",
+        "The response treats the Surface 0.1 grammar as frozen and does not propose adding syntax to it."
       ]
     }
   ]

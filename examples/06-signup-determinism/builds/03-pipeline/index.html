@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Account signup</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+      :root { --pico-border-radius: .35rem; }
+      body { background: #faf9f6; }
+      main { max-width: 42rem; padding-block: 4rem; }
+      header { border-bottom: .25rem solid #7c3aed; margin-bottom: 2rem; }
+      fieldset { margin-bottom: 0; }
+      output { display: block; color: #a11212; min-height: 1.5rem; }
+    </style>
+  </head>
+  <body>
+    <main class="container" id="main">
+      <header><h1>Create your account</h1><p>Use a strong password to get started.</p></header>
+      <form id="signup" novalidate>
+        <fieldset>
+          <label>Email address<input name="email" id="email" type="email" autocomplete="email" aria-describedby="error-email"></label><output id="error-email" for="email"></output>
+          <label>Password<input name="password" id="password" type="password" autocomplete="new-password" aria-describedby="error-password"></label><output id="error-password" for="password"></output>
+          <label>Confirm password<input name="confirmPassword" id="confirmPassword" type="password" autocomplete="new-password" aria-describedby="error-confirmPassword"></label><output id="error-confirmPassword" for="confirmPassword"></output>
+          <label><input name="acceptedTerms" id="acceptedTerms" type="checkbox" aria-describedby="error-acceptedTerms"> I accept the terms</label><output id="error-acceptedTerms" for="acceptedTerms"></output>
+        </fieldset>
+        <button>Create account</button>
+      </form>
+      <p id="live" role="status" aria-live="polite"></p>
+    </main>
+    <script>
+      const signup = document.querySelector("#signup");
+      const live = document.querySelector("#live");
+      const byName = (name) => signup.elements.namedItem(name);
+      const errorFor = (name) => document.querySelector(`#error-${name}`);
+      signup.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const order = ["email", "password", "confirmPassword", "acceptedTerms"];
+        order.forEach((name) => errorFor(name).value = "");
+        const saved = { email: byName("email").value.trim().toLowerCase(), acceptedTerms: byName("acceptedTerms").checked };
+        [...signup.elements].forEach((element) => element.disabled = true);
+        live.textContent = "Creating account";
+        const response = await fetch("/register", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: saved.email, password: byName("password").value, confirmPassword: byName("confirmPassword").value, acceptedTerms: saved.acceptedTerms }) });
+        const result = await response.json();
+        if (result.status === "success") {
+          document.querySelector("#main").innerHTML = '<article><h1>Account created</h1><p role="status">Your account is ready.</p></article>';
+          return;
+        }
+        byName("email").value = saved.email; byName("password").value = ""; byName("confirmPassword").value = ""; byName("acceptedTerms").checked = saved.acceptedTerms;
+        result.errors.forEach((error) => errorFor(error.field).value = error.message);
+        [...signup.elements].forEach((element) => element.disabled = false);
+        byName(result.errors[0].field).focus();
+        live.textContent = "Signup failed";
+      });
+    </script>
+  </body>
+</html>
